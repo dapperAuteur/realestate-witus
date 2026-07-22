@@ -2,16 +2,15 @@ import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { mediaAssets } from "@/db/schema";
 import { getStaffContext } from "@/lib/admin/guard";
-import { attachRoomPhoto } from "@/lib/rooms";
 import { err, ok } from "@/lib/result";
 
 // Second leg of the signed-upload flow: after the browser uploads straight to
 // Cloudinary, it registers the asset here (a11y rule: meaningful alt text or
 // explicitly empty, never a filename). Tenant folder is re-checked so a
-// signature for hotel A cannot register into hotel B.
+// signature for agency A cannot register into agency B.
 
 export async function POST(request: Request) {
-  const gate = await getStaffContext("front_desk");
+  const gate = await getStaffContext("agent");
   if (!gate.ok) {
     return NextResponse.json(err("FORBIDDEN", "Staff only."), { status: 403 });
   }
@@ -23,12 +22,11 @@ export async function POST(request: Request) {
     height?: number;
     bytes?: number;
     altText?: string;
-    roomTypeId?: string;
   } | null;
   const publicId = body?.publicId ?? "";
-  if (!publicId.startsWith(`stay-witus/${tenantId}/`)) {
+  if (!publicId.startsWith(`realestate-witus/${tenantId}/`)) {
     return NextResponse.json(
-      err("WRONG_FOLDER", "Upload does not belong to this property."),
+      err("WRONG_FOLDER", "Upload does not belong to this tenant."),
       { status: 400 },
     );
   }
@@ -48,9 +46,5 @@ export async function POST(request: Request) {
     })
     .returning({ id: mediaAssets.id });
 
-  if (body?.roomTypeId) {
-    const linked = await attachRoomPhoto(tenantId, body.roomTypeId, asset.id);
-    if (!linked.ok) return NextResponse.json(linked, { status: 400 });
-  }
   return NextResponse.json(ok({ mediaId: asset.id }));
 }

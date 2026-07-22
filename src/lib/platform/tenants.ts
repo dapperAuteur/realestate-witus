@@ -1,26 +1,16 @@
 import { asc, eq, sql } from "drizzle-orm";
-import { pgErrorCode } from "@/lib/booking/holds";
+import { pgErrorCode } from "@/lib/db-error";
 import { db } from "@/db";
 import { tenantDomains, tenants, type TenantFlags } from "@/db/schema";
 import { err, ok, type Result } from "@/lib/result";
 
-// Tenant CRUD for /platform (workstream 12): onboarding customer #2 without
-// SQL. Creating a tenant starts it comingSoon so nothing half-configured
-// ever faces guests.
+// Tenant CRUD for /platform: onboarding an agency without SQL. Creating a
+// tenant starts it comingSoon so nothing half-configured ever faces buyers.
 
 const SLUG_RE = /^[a-z0-9](?:[a-z0-9-]{1,38}[a-z0-9])?$/;
 
 /** The flags BAM toggles per tenant; platform flag is deliberately absent. */
-export const EDITABLE_FLAGS = [
-  "events",
-  "dining",
-  "concierge",
-  "virtualTour",
-  "announcements",
-  "hub",
-  "comingSoon",
-  "poweredBy",
-] as const;
+export const EDITABLE_FLAGS = ["comingSoon", "poweredBy"] as const;
 export type EditableFlag = (typeof EDITABLE_FLAGS)[number];
 
 export async function listTenantsAdmin() {
@@ -50,14 +40,14 @@ export async function createTenant(
       "Slugs are 3-40 lowercase letters, numbers, and dashes.",
     );
   }
-  if (!name.trim()) return err("INVALID_NAME", "Give the property a name.");
+  if (!name.trim()) return err("INVALID_NAME", "Give the agency a name.");
   try {
     const [row] = await db()
       .insert(tenants)
       .values({
         slug: cleanSlug,
         name: name.trim(),
-        // New tenants never face guests until BAM flips comingSoon off.
+        // New tenants never face buyers until BAM flips comingSoon off.
         flags: { comingSoon: true, poweredBy: true },
         theme: {},
       })
@@ -80,7 +70,7 @@ export async function updateTenantAdmin(
     flags: Partial<Record<EditableFlag, boolean>>;
   },
 ): Promise<Result<{ updated: boolean }>> {
-  if (!input.name.trim()) return err("INVALID_NAME", "Give the property a name.");
+  if (!input.name.trim()) return err("INVALID_NAME", "Give the agency a name.");
   const [current] = await db()
     .select({ flags: tenants.flags })
     .from(tenants)

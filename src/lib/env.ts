@@ -13,7 +13,8 @@ export const env = {
   MAILGUN_API_KEY: process.env.MAILGUN_API_KEY,
   MAILGUN_DOMAIN: process.env.MAILGUN_DOMAIN,
   MAILGUN_REGION: process.env.MAILGUN_REGION ?? "us",
-  MAIL_FROM: process.env.MAIL_FROM ?? "Stay.WitUS <no-reply@localhost>",
+  MAIL_FROM: process.env.MAIL_FROM ?? "RealEstate.WitUS <no-reply@localhost>",
+
 
   STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY,
   STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET,
@@ -36,13 +37,6 @@ export const env = {
 
   CRON_SECRET: process.env.CRON_SECRET,
 
-  // BAM Hotel demo logins (plans/07). Emails identify the two demo accounts;
-  // passwords are server-held — the demo buttons POST empty bodies and the
-  // route supplies credentials, so secrets never reach a browser.
-  DEMO_VISITOR_USER_EMAIL: process.env.DEMO_VISITOR_USER_EMAIL,
-  DEMO_VISITOR_PASSWORD: process.env.DEMO_VISITOR_PASSWORD,
-  DEMO_ADMIN_USER_EMAIL: process.env.DEMO_ADMIN_USER_EMAIL,
-  DEMO_ADMIN_PASSWORD: process.env.DEMO_ADMIN_PASSWORD,
   ADMIN_NOTIFY_EMAIL: process.env.ADMIN_NOTIFY_EMAIL,
   PLATFORM_BOOTSTRAP: process.env.PLATFORM_BOOTSTRAP === "true",
 } as const;
@@ -52,9 +46,3 @@ export const hasMailgun = Boolean(env.MAILGUN_API_KEY && env.MAILGUN_DOMAIN);
 export const hasStripePlatform = Boolean(env.STRIPE_SECRET_KEY);
 export const hasVercelDomains = Boolean(env.VERCEL_DOMAINS_TOKEN && env.VERCEL_PROJECT_ID);
 export const hasWitusInbox = Boolean(env.WITUS_INBOX_URL && env.WITUS_INBOX_HMAC_SECRET);
-export const hasDemoLogin = Boolean(
-  env.DEMO_VISITOR_USER_EMAIL &&
-    env.DEMO_VISITOR_PASSWORD &&
-    env.DEMO_ADMIN_USER_EMAIL &&
-    env.DEMO_ADMIN_PASSWORD,
-);

@@ -3,15 +3,20 @@
 This repo is **RealEstate.WitUS** (`realestate.witus.online`): virtual tours for commercial
 and residential real estate that's FOR SALE — service-captured 360° tours as branded
 listing pages with first-class **embeds** agents place on their own sites. It is NOT
-Stay.WitUS (hotels — though this codebase was seeded from that repo and still contains
-its template until the strip workstream lands), NOT Wanderlearn (education), NOT
-witus-learn (LMS). Registry: `gemini/witus/lib/products.ts`. Context: **HANDOFF.md first.**
+Stay.WitUS (hotels — this codebase was seeded from that repo, but the hotel domain was
+stripped in workstream 1; only the platform spine remains), NOT Wanderlearn (education),
+NOT witus-learn (LMS). Registry: `gemini/witus/lib/products.ts`.
+Context: **HANDOFF.md first** — its "Post-strip state" section lists what survives and
+which strip decisions (roles, flags, theme keys, disabled password auth) not to undo.
 
 ## Architecture invariants (inherited from the stay-witus spine — keep)
 
 - **Runtime multi-tenant:** every domain table carries `tenantId`; tenant-facing queries
   flow through `requireTenant()`. An agency/brokerage = a tenant; BAM's service listings
   live on the platform tenant. Cross-tenant queries only in `/platform`.
+- **Staff roles are linear: `owner > manager > agent`.** Auth is magic-link only
+  (`emailAndPassword` is off by design). Transactions go through `withTx` (`src/db/index.ts`),
+  never the default neon-http client.
 - **Tour engine is self-hosted Photo Sphere Viewer** (port of `wanderlearn/virtual-tour-kit`).
   Embeds are OUR iframe (`/embed/listings/[slug]`). RealSee dollhouse is an optional
   premium EMBED on a listing (host-allowlisted), never the core renderer.

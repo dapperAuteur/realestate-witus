@@ -15,7 +15,7 @@ const HOST_RE =
 export function validateHost(raw: string): Result<string> {
   const host = normalizeHost(raw.trim());
   if (!HOST_RE.test(host)) {
-    return err("INVALID_HOST", "Enter a bare domain like hotel.example.com.");
+    return err("INVALID_HOST", "Enter a bare domain like listings.example.com.");
   }
   return ok(host);
 }

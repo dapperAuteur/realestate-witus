@@ -8,7 +8,7 @@ import { err, ok } from "@/lib/result";
 // (Cloudinary account) supplies env — the content editor explains that.
 
 export async function POST() {
-  const gate = await getStaffContext("front_desk");
+  const gate = await getStaffContext("agent");
   if (!gate.ok) {
     return NextResponse.json(err("FORBIDDEN", "Staff only."), { status: 403 });
   }

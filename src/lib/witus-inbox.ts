@@ -13,7 +13,7 @@ export async function sendToInbox(
   if (!hasWitusInbox) return false;
   try {
     const body = JSON.stringify({
-      source: "stay-witus",
+      source: "realestate-witus",
       type,
       sentAt: new Date().toISOString(),
       payload,

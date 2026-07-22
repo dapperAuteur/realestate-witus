@@ -21,7 +21,7 @@ export default async function AdminSupportThreadPage({
   const { lang, id } = await params;
   if (!hasLocale(lang)) notFound();
   const dict = await getDictionary(lang);
-  const ctx = await requireStaffPage("front_desk", lang);
+  const ctx = await requireStaffPage("agent", lang);
   const s = dict.admin.support;
   const sp = await searchParams;
 

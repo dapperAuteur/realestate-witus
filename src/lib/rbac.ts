@@ -5,24 +5,19 @@ import { db } from "@/db";
 import { tenantMemberships, users, type TenantRole } from "@/db/schema";
 import { auth, hasAuth } from "@/lib/auth";
 
-// Per-tenant RBAC over tenant_memberships. Staff hierarchy is linear
-// (owner > manager > front_desk); partner and guest are lanes of their own,
-// never implied by a staff role.
+// Per-tenant RBAC over tenant_memberships. The staff hierarchy is linear:
+// owner > manager > agent. An agent works the listings and tours; a manager
+// runs the office; the owner also sees the agency's platform invoices.
 
-const STAFF_RANK: Partial<Record<TenantRole, number>> = {
-  front_desk: 1,
+const STAFF_RANK: Record<TenantRole, number> = {
+  agent: 1,
   manager: 2,
   owner: 3,
 };
 
-/** owner covers manager covers front_desk; partner/guest match only exactly. */
+/** owner covers manager covers agent. */
 export function roleSatisfies(actual: TenantRole, required: TenantRole): boolean {
-  const actualRank = STAFF_RANK[actual];
-  const requiredRank = STAFF_RANK[required];
-  if (actualRank !== undefined && requiredRank !== undefined) {
-    return actualRank >= requiredRank;
-  }
-  return actual === required;
+  return STAFF_RANK[actual] >= STAFF_RANK[required];
 }
 
 export interface SessionUser {
@@ -65,8 +60,8 @@ export async function getMembership(
 
 /**
  * The signed-in user's role on this tenant, or null when signed out / not a
- * member. The platform owner passes every tenant check (BAM operates all
- * properties' support).
+ * member. The platform owner passes every tenant check (BAM operates every
+ * agency's support and capture pipeline).
  */
 export async function requireRole(
   tenantId: string,

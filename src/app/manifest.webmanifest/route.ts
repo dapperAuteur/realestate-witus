@@ -1,15 +1,15 @@
 import { presetByKey } from "@/lib/brand-presets";
 import { resolveTenant } from "@/lib/tenant";
 
-// Per-HOST web app manifest: each hotel installs under its own name and
-// accent (white-label rule); the platform host stays Stay.WitUS.
+// Per-HOST web app manifest: each agency installs under its own name and
+// accent (white-label rule); the platform host stays RealEstate.WitUS.
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
   const tenant = await resolveTenant().catch(() => null);
   const isPlatform = !tenant || tenant.flags.platform;
-  const name = isPlatform ? "Stay.WitUS" : (tenant.theme.name ?? tenant.name);
+  const name = isPlatform ? "RealEstate.WitUS" : (tenant.theme.name ?? tenant.name);
   const preset = presetByKey(tenant?.theme.presetKey);
 
   return Response.json(

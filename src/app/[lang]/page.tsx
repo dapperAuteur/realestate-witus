@@ -1,6 +1,6 @@
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
-import { HotelHome } from "@/components/hotel/hotel-home";
+import { TenantHome } from "@/components/tenant-home";
 import { PlatformLanding } from "@/components/platform-landing";
 import { getDictionary, hasLocale } from "@/lib/dictionaries";
 import { getGlobalSetting, PROMO_BANNER_KEY } from "@/lib/platform/settings";
@@ -10,13 +10,13 @@ import { resolveTenant } from "@/lib/tenant";
 export const dynamic = "force-dynamic";
 
 // Tenant home. Four states:
-//  1. Platform host (stay.witus.online, previews, localhost) or a tenant
-//     flagged platform -> the Stay.WitUS product landing (DB-free path so the
-//     domain works before seeding)
-//  2. No tenant for this host  -> setup notice
+//  1. Platform host (realestate.witus.online, previews, localhost) or a tenant
+//     flagged platform -> the RealEstate.WitUS product landing (DB-free path so
+//     the domain works before seeding)
+//  2. No tenant for this host   -> setup notice
 //  3. Tenant flagged comingSoon -> launch placeholder
-//  4. Live tenant              -> hotel landing (booking widget lands with the
-//     booking workstream; this shell renders identity + booking entry point)
+//  4. Live tenant               -> agency landing (the listing grid lands with
+//     the listings workstream; this shell renders resolved brand identity)
 
 export default async function HomePage({
   params,
@@ -55,5 +55,5 @@ export default async function HomePage({
     );
   }
 
-  return <HotelHome tenant={tenant} dict={dict} lang={lang} />;
+  return <TenantHome tenant={tenant} dict={dict} lang={lang} />;
 }

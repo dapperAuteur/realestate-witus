@@ -105,8 +105,8 @@ export default async function AdminTeamPage({
             <label htmlFor="invite-role" className="text-sm font-medium">
               {a.roleField}
             </label>
-            <select id="invite-role" name="role" defaultValue="front_desk" className={INPUT}>
-              <option value="front_desk">{a.roles.front_desk}</option>
+            <select id="invite-role" name="role" defaultValue="agent" className={INPUT}>
+              <option value="agent">{a.roles.agent}</option>
               <option value="manager">{a.roles.manager}</option>
               <option value="owner">{a.roles.owner}</option>
             </select>

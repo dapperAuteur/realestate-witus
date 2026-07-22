@@ -1,8 +1,8 @@
 import { env, hasMailgun } from "@/lib/env";
 
 // Mailgun via raw REST (tour-manager-os pattern — no SDK dependency), with
-// witus-learn's per-tenant sender: `from` comes from the tenant row so hotel
-// mail sends as the hotel, never as "Stay.WitUS". Without Mailgun configured
+// witus-learn's per-tenant sender: `from` comes from the tenant row so agency
+// mail sends as the agency, never as "RealEstate.WitUS". Without Mailgun configured
 // it logs to the console so magic links still work in local dev.
 
 export interface SendEmailInput {

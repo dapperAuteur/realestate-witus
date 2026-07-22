@@ -13,7 +13,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Billing" };
 
 // Owner-side platform billing (owner role only): see invoices from
-// Stay.WitUS, pay by MoMo with the invoice code as reference, tap
+// RealEstate.WitUS, pay by MoMo with the invoice code as reference, tap
 // "I've sent it". Copy buttons on number + reference (minimize-error rule).
 
 export default async function AdminBillingPage({

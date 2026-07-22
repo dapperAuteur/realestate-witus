@@ -34,7 +34,7 @@ export default async function AdminSupportPage({
   const { lang } = await params;
   if (!hasLocale(lang)) notFound();
   const dict = await getDictionary(lang);
-  const ctx = await requireStaffPage("front_desk", lang);
+  const ctx = await requireStaffPage("agent", lang);
   const s = dict.admin.support;
   const sp = await searchParams;
   const threads = await listThreadsForUser(ctx.tenant.id, ctx.user.id);

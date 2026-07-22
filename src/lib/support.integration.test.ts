@@ -30,7 +30,7 @@ describe.skipIf(!hasDb)("support lifecycle against Neon", () => {
   beforeAll(async () => {
     const [tenant] = await db()
       .insert(tenants)
-      .values({ slug: `itest-sup-${randomUUID().slice(0, 8)}`, name: "Support Test Hotel" })
+      .values({ slug: `itest-sup-${randomUUID().slice(0, 8)}`, name: "Support Test Agency" })
       .returning({ id: tenants.id });
     tenantId = tenant.id;
     await db().insert(users).values({
@@ -50,7 +50,7 @@ describe.skipIf(!hasDb)("support lifecycle against Neon", () => {
       .insert(mediaAssets)
       .values({
         tenantId,
-        cloudinaryPublicId: `stay-witus/${tenantId}/itest-shot`,
+        cloudinaryPublicId: `realestate-witus/${tenantId}/itest-shot`,
         altText: "Support screenshot",
         status: "ready",
       })

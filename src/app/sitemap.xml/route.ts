@@ -1,10 +1,8 @@
-import { and, asc, eq } from "drizzle-orm";
-import { db } from "@/db";
-import { roomTypes } from "@/db/schema";
 import { resolveTenant } from "@/lib/tenant";
 
 // Per-HOST sitemap: each tenant domain advertises only its own pages
-// (white-label rule — a hotel's sitemap never mentions the platform).
+// (white-label rule — an agency's sitemap never mentions the platform).
+// Listing URLs join here with the listings workstream.
 
 export const dynamic = "force-dynamic";
 
@@ -21,15 +19,7 @@ export async function GET(request: Request) {
   if (!tenant || tenant.flags.platform) {
     entries.push(url(`${base}/en`, "1.0"), url(`${base}/en/roadmap`, "0.5"));
   } else if (!tenant.flags.comingSoon && tenant.isActive) {
-    entries.push(url(`${base}/en`, "1.0"), url(`${base}/en/book`, "0.9"));
-    if (tenant.flags.events) entries.push(url(`${base}/en/events`, "0.6"));
-    if (tenant.flags.concierge) entries.push(url(`${base}/en/partners/apply`, "0.3"));
-    const rooms = await db()
-      .select({ slug: roomTypes.slug })
-      .from(roomTypes)
-      .where(and(eq(roomTypes.tenantId, tenant.id), eq(roomTypes.isActive, true)))
-      .orderBy(asc(roomTypes.sortOrder));
-    for (const room of rooms) entries.push(url(`${base}/en/rooms/${room.slug}`, "0.8"));
+    entries.push(url(`${base}/en`, "1.0"));
   }
 
   return new Response(

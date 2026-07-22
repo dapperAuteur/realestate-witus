@@ -1,38 +1,17 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
-import { eq } from "drizzle-orm";
-import { db } from "@/db";
-import { hotelSettings } from "@/db/schema";
 import { requireStaffPage } from "@/lib/admin/guard";
-import { getTodayBoard, localToday, type TodayReservation } from "@/lib/admin/today";
 import { getDictionary, hasLocale } from "@/lib/dictionaries";
 
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = { title: "Today" };
+export const metadata: Metadata = { title: "Overview" };
 
-function Board({ title, rows, empty }: { title: string; rows: TodayReservation[]; empty: string }) {
-  return (
-    <section aria-label={title} className="rounded-xl border border-slate-200 p-5 dark:border-slate-800">
-      <h2 className="text-lg font-semibold">{title}</h2>
-      {rows.length === 0 ? (
-        <p className="mt-2 text-sm text-slate-500">{empty}</p>
-      ) : (
-        <ul className="mt-3 divide-y divide-slate-100 dark:divide-slate-800">
-          {rows.map((r) => (
-            <li key={r.id} className="flex flex-wrap items-baseline justify-between gap-2 py-2 text-sm">
-              <span className="font-medium">{r.guestName}</span>
-              <span className="text-slate-500">
-                {r.roomTypeName} · {r.code} · {r.paymentStatus.replace("_", " ")}
-              </span>
-            </li>
-          ))}
-        </ul>
-      )}
-    </section>
-  );
-}
+// The staff landing. The listings board replaces this shell when the listings
+// workstream lands; today it confirms who is signed in (the layout header) and
+// points at the surfaces that already work.
 
-export default async function AdminTodayPage({
+export default async function AdminOverviewPage({
   params,
 }: {
   params: Promise<{ lang: string }>;
@@ -40,41 +19,55 @@ export default async function AdminTodayPage({
   const { lang } = await params;
   if (!hasLocale(lang)) notFound();
   const dict = await getDictionary(lang);
-  const gate = { ctx: await requireStaffPage("front_desk", lang) };
-  const a = dict.admin.today;
+  const { role } = await requireStaffPage("agent", lang);
+  const a = dict.admin.overview;
 
-  const [settings] = await db()
-    .select({ timezone: hotelSettings.timezone })
-    .from(hotelSettings)
-    .where(eq(hotelSettings.tenantId, gate.ctx.tenant.id))
-    .limit(1);
-  const today = localToday(settings?.timezone ?? "Africa/Accra");
-  const board = await getTodayBoard(gate.ctx.tenant.id, today);
-  if (!board.ok) throw new Error(board.error);
-  const b = board.data;
-
-  const stats = [
-    { label: a.inHouse, value: b.inHouseCount },
-    { label: a.awaitingApproval, value: b.awaitingApprovalCount },
-    { label: a.pendingPayment, value: b.pendingPaymentCount },
+  const doors = [
+    { href: `/${lang}/admin/design`, label: dict.admin.nav.design },
+    { href: `/${lang}/admin/team`, label: dict.admin.nav.team },
+    { href: `/${lang}/admin/support`, label: dict.admin.nav.support },
+    ...(role === "owner"
+      ? [{ href: `/${lang}/admin/billing`, label: dict.admin.nav.billing }]
+      : []),
   ];
 
   return (
-    <div className="flex flex-col gap-6">
-      <dl className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        {stats.map((s) => (
-          <div key={s.label} className="rounded-xl border border-slate-200 p-4 dark:border-slate-800">
-            <dt className="text-sm text-slate-500">{s.label}</dt>
-            <dd className="text-3xl font-bold" style={{ color: "var(--brand-accent)" }}>
-              {s.value}
-            </dd>
-          </div>
-        ))}
-      </dl>
-      <div className="grid gap-6 sm:grid-cols-2">
-        <Board title={a.arrivals} rows={b.arrivals} empty={a.nobody} />
-        <Board title={a.departures} rows={b.departures} empty={a.nobody} />
-      </div>
+    <div className="flex flex-col gap-8">
+      <p className="max-w-xl text-slate-600 dark:text-slate-400">{a.intro}</p>
+
+      <section aria-labelledby="doors-heading">
+        <h2 id="doors-heading" className="text-lg font-semibold">
+          {a.doorsTitle}
+        </h2>
+        <ul className="mt-3 flex flex-wrap gap-2">
+          {doors.map((door) => (
+            <li key={door.href}>
+              <Link
+                href={door.href}
+                className="inline-flex min-h-11 items-center rounded-full border border-slate-300 px-4 text-sm font-medium focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current dark:border-slate-700"
+              >
+                {door.label}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <section aria-labelledby="next-heading">
+        <h2 id="next-heading" className="text-lg font-semibold">
+          {a.nextTitle}
+        </h2>
+        <ul className="mt-3 flex flex-col gap-2 text-sm text-slate-600 dark:text-slate-400">
+          {a.next.map((item) => (
+            <li
+              key={item}
+              className="rounded-lg border border-slate-200 p-3 dark:border-slate-800"
+            >
+              {item}
+            </li>
+          ))}
+        </ul>
+      </section>
     </div>
   );
 }

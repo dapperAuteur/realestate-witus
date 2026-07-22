@@ -9,9 +9,10 @@ Self-hosted tour engine (Photo Sphere Viewer) so tours are owned, not rented; an
 RealSee dollhouse layer covers listings that warrant full 3D. Service-led: we capture and
 build; agents, brokerages, and developers buy listings.
 
-> **Status:** seeded from the Stay.WitUS platform template (tenancy, auth, billing,
-> platform admin, domain manager, Mailgun, Cloudinary, support, tests). The hotel domain
-> is being stripped and replaced with listings + tours — see HANDOFF.md and plans/01.
+> **Status:** the platform spine is in place and the seed template's hotel domain is
+> gone (workstream 1 complete): runtime tenancy, Better Auth magic links, platform
+> billing, /platform admin with the domain manager, Mailgun, Cloudinary, support, audit
+> log, and the test rig. Listings, tours, and embeds are next — see HANDOFF.md.
 
 ## Stack
 

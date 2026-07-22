@@ -1,158 +1,97 @@
 {
   "common": {
-    "brand": "Stay.WitUS",
+    "brand": "RealEstate.WitUS",
     "loading": "Loading",
     "backHome": "Back to home",
     "signedInAs": "Signed in as",
-    "adminLink": "Front desk",
+    "adminLink": "Agency admin",
     "platformLink": "Platform admin",
     "signOut": "Sign out"
   },
   "home": {
-    "bookYourStay": "Book your stay",
-    "checkIn": "Check-in",
-    "checkOut": "Check-out",
-    "guests": "Guests",
-    "searchRooms": "See available rooms",
     "comingSoon": "Launching soon",
-    "comingSoonBody": "This site is being prepared. Check back shortly."
-  },
-  "book": {
-    "totalForStay": "total for",
-    "nights": "nights",
-    "total": "Total",
-    "dueNow": "Deposit due now",
-    "reserve": "Reserve this room",
-    "soldOut": "Sold out for these dates",
-    "noRooms": "No rooms are set up yet. Please contact the property directly.",
-    "holdNotice": "We are holding this room for you for 15 minutes while you complete your details.",
-    "detailsTitle": "Your details",
-    "nameLabel": "Full name",
-    "emailLabel": "Email address",
-    "phoneLabel": "Phone (optional)",
-    "adultsLabel": "Adults",
-    "childrenLabel": "Children",
-    "requestsLabel": "Special requests (optional)",
-    "promoLabel": "Promo code (optional)",
-    "policyTitle": "Cancellation policy",
-    "policyFreeUntil": "Free cancellation until {days} days before check-in.",
-    "policyFreeAlways": "Free cancellation any time before check-in.",
-    "policyPenaltyAfter": "Later cancellations owe {percent}% of the stay.",
-    "policyNonRefundable": "Bookings are non-refundable once confirmed.",
-    "optInLabel": "Email me occasional offers and news from this property. Unsubscribe anytime.",
-    "discount": "Discount",
-    "confirmAndPay": "Confirm and pay deposit",
-    "confirm": "Confirm reservation",
-    "holdGoneTitle": "That hold has expired",
-    "holdGoneBody": "Holds last 15 minutes. Your dates may still be available, please search again.",
-    "searchAgain": "Search again",
-    "doneConfirmedTitle": "You are booked",
-    "doneConfirmedBody": "Your deposit was received and your reservation is confirmed. A confirmation email is on its way.",
-    "doneProcessingTitle": "Almost there",
-    "doneProcessingBody": "We are waiting for your payment to be confirmed. This usually takes under a minute; check your email for the confirmation.",
-    "donePayIssueBody": "Your reservation is saved, but the payment step could not start. The property will contact you to arrange the deposit, or you can reach them directly.",
-    "doneRequestTitle": "Request received",
-    "doneRequestBody": "The property will review your request and confirm by email.",
-    "summaryLabel": "Reservation summary",
-    "codeLabel": "Your reservation code",
-    "keepCode": "Keep this code. It is how you and the property refer to your reservation.",
-    "depositPaid": "Deposit paid",
-    "payNow": "Pay the deposit now",
-    "notFoundTitle": "Reservation not found",
-    "notFoundBody": "Check the link in your confirmation email, or contact the property.",
-    "errors": {
-      "GENERIC": "Something went wrong. Please try again.",
-      "INVALID_DATE": "Those dates do not look right. Please pick them again.",
-      "INVALID_RANGE": "Check-out must be after check-in.",
-      "STAY_TOO_LONG": "That stay is longer than we can book online. Contact the property directly.",
-      "NO_AVAILABILITY": "That room type just sold out for these dates. Another room may still be free.",
-      "HOLD_NOT_FOUND": "Your hold expired. Please search again.",
-      "INVALID_GUEST": "Please give us your name and a valid email address.",
-      "PAYMENT_NOT_CONFIGURED": "Online payment is not available yet for this property.",
-      "PROVIDER_ERROR": "The payment service had a problem. Your reservation is saved; please try paying again shortly.",
-      "PROMO_INVALID": "That promo code is not valid for this stay. Remove it or try another."
-    }
+    "comingSoonBody": "This site is being prepared. Check back shortly.",
+    "listingsSoon": "Listings and virtual tours from this agency appear here shortly."
   },
   "landing": {
-    "headline": "Hotel websites that take bookings themselves",
-    "subhead": "A complete website for your property: real-time room booking with mobile money and cards, events, a vetted local concierge, and guest messaging. You manage everything from your phone; we handle the rest.",
+    "headline": "Virtual tours that sell the property before the first showing",
+    "subhead": "We shoot your listing in 360 degrees and publish it as a fast, branded listing page. Every listing ships an embed you drop straight into your own site.",
     "featuresLabel": "What you get",
     "features": [
       {
-        "title": "Bookings with deposits",
-        "body": "Guests confirm a room in cedis by MTN MoMo, Telecel Cash, AirtelTigo Money, or card. Card-country properties can run Stripe instead."
+        "title": "A tour we capture for you",
+        "body": "We shoot the property and build the walkthrough. You approve it. No app to learn, no gear to buy, no upload queue to babysit."
       },
       {
-        "title": "Run it yourself",
-        "body": "Rooms, prices, photos, menus, events, and your local guide, all editable by your team in minutes. No developer needed."
+        "title": "An embed for your own site",
+        "body": "Copy one snippet into your listing page, your MLS profile, or your email. The tour fits any width and loads fast on a phone."
       },
       {
-        "title": "A concierge your guests trust",
-        "body": "Drivers, guides, and nightlife contacts you vet, one WhatsApp tap away. Partners apply on the site and keep their own profiles current."
-      },
-      {
-        "title": "Reach your guests",
-        "body": "Send updates to current, upcoming, or past guests: an event with a reserve button, or simply that the water is back on."
+        "title": "A listing page that converts",
+        "body": "Full-bleed photography, the tour high on the page, the facts buyers scan for, and an inquiry form that reaches you directly."
       },
       {
         "title": "Your brand, your domain",
-        "body": "Your logo, your colors, your web address. Confirmation emails come from your property's name."
+        "body": "Your logo, your colors, your web address. Buyers see your agency, never ours."
+      },
+      {
+        "title": "Sold listings keep working",
+        "body": "A sold property keeps its tour live with a sold badge. Your best work stays online as proof for the next seller."
       },
       {
         "title": "Built for real connectivity",
-        "body": "Mobile-first and fast on 3G, with guest essentials that stay readable offline."
+        "body": "Mobile-first and fast on 3G. The tour waits behind a poster image until a buyer taps to explore."
       }
     ],
-    "statusBadge": "First property launches December 2026",
-    "statusBody": "Stay.WitUS is onboarding its first properties now. Interested in yours? Reach out through witus.online.",
-    "demoCta": "Explore the demo hotel",
+    "statusBadge": "Taking capture slots now",
+    "statusBody": "RealEstate.WitUS is taking its first listings. Have a property to shoot? Reach out through witus.online.",
     "roadmapCta": "See the public roadmap"
   },
   "roadmap": {
     "title": "Roadmap",
-    "intro": "What we are building for properties on Stay.WitUS, in the order we are building it. Dates are targets we work toward, not promises.",
+    "intro": "What we are building for agents and brokerages on RealEstate.WitUS, in the order we are building it. Dates are targets we work toward, not promises.",
     "phases": [
       {
         "label": "Building now",
-        "timeframe": "For the December 2026 launch",
+        "timeframe": "For the first paid listings",
         "items": [
           {
-            "title": "Real-time booking with deposits",
-            "body": "Live room availability, short holds while a guest checks out, and deposits in cedis by MTN MoMo, Telecel Cash, AirtelTigo Money, or card. The reservation engine is built so a double-booking is impossible, even under simultaneous requests."
+            "title": "Listings and 360 tours",
+            "body": "A branded listing page per property: photography, the facts buyers scan for, and a multi-scene 360 walkthrough you move through by tapping doorways. The tour engine is ours, so there is no per-tour vendor fee riding on your listing."
           },
           {
-            "title": "Your website, run by your team",
-            "body": "Rooms, prices, photos, events, and your local guide, editable without a developer. Your logo, your colors, your domain: section order and layout are yours to arrange."
+            "title": "Embeds you own",
+            "body": "One snippet per listing, copyable in a tap, that drops the tour into your own website. It sizes itself to the space you give it and shares as a proper link card."
           },
           {
-            "title": "Vetted concierge partners",
-            "body": "Drivers, guides, and nightlife contacts apply on your site. You approve who appears; guests reach them directly on WhatsApp."
+            "title": "Buyer inquiries",
+            "body": "A soft inquiry form on every listing page. No popups, no gates. Messages reach you and stay attached to the listing."
           },
           {
-            "title": "Guest announcements",
-            "body": "Send updates to current, upcoming, or past guests: an event with a reserve button, or simply that the water is back on."
+            "title": "Your brand, your domain",
+            "body": "Your logo, colors, and web address across every listing page, set up from your admin without a developer."
           }
         ]
       },
       {
         "label": "Next",
-        "timeframe": "Early 2027",
+        "timeframe": "First fast-follows",
         "items": [
           {
-            "title": "Guest community hub",
-            "body": "A private space for your guests: area tips, house updates, and event RSVPs, inspired by the WhatsApp groups great hosts already run."
+            "title": "Floor plans synced to the tour",
+            "body": "A floor plan beside the viewer with a live position marker, so a buyer always knows where in the property they are standing. Tap a room on the plan to jump there."
           },
           {
-            "title": "Partner ratings",
-            "body": "Guests rate concierge partners after a stay, so your roster keeps earning its place."
+            "title": "Dollhouse view for premium listings",
+            "body": "An optional 3D dollhouse and auto-generated floor plan on the properties that warrant it, layered onto the same listing page."
           },
           {
-            "title": "Calendar sync with Airbnb and Booking.com",
-            "body": "Two-way iCal so your direct site and the big platforms never sell the same night twice."
+            "title": "Faster tour building",
+            "body": "Wire a forty-scene commercial walkthrough by dragging connections on a map of the tour, then fine-tune each doorway. Bulk imports for large jobs."
           },
           {
-            "title": "Paid event ticketing and Spanish",
-            "body": "Sell tickets to hotel events, and serve guests in Spanish with human-translated pages."
+            "title": "View analytics",
+            "body": "How many buyers opened the tour, how long they stayed, and which rooms held them. Per listing, in plain numbers."
           }
         ]
       },
@@ -161,151 +100,25 @@
         "timeframe": "On the horizon",
         "items": [
           {
-            "title": "Charge to room",
-            "body": "Guests add drinks and extras to their stay and settle once, by cash, MoMo, or card."
+            "title": "Multi-building and campus properties",
+            "body": "Apartment blocks, complexes, and campuses as one property with many units, where a single lobby tour serves every unit listing."
           },
           {
-            "title": "Channel manager and WhatsApp Business",
-            "body": "Deeper distribution and guest messaging where your guests already are."
+            "title": "Ownership transfer",
+            "body": "Hand a property and its tours to another agency when the listing moves, with both sides confirming and the embeds never breaking."
           },
           {
-            "title": "Multi-property owners",
-            "body": "Run a second property from the same account, with its own brand and domain."
+            "title": "Self-serve capture",
+            "body": "Shoot and publish your own tours on the same engine, once the service pipeline has proven the workflow."
           }
         ]
       }
     ],
-    "outro": "Something your property needs that is not here? Tell us through witus.online."
-  },
-  "sections": {
-    "aboutTitle": "About",
-    "roomsTitle": "Rooms",
-    "roomsFrom": "From",
-    "roomsPerNight": "per night",
-    "roomsSleeps": "Sleeps",
-    "diningTitle": "Dining",
-    "eventsTitle": "What's on",
-    "conciergeTitle": "Trusted local partners",
-    "conciergeWhatsApp": "WhatsApp",
-    "conciergeCall": "Call",
-    "partnerCategories": {
-      "driver": "Driver",
-      "tour_guide": "Tour guide",
-      "nightlife": "Nightlife",
-      "food": "Food",
-      "wellness": "Wellness",
-      "shopping": "Shopping",
-      "emergency": "Emergency",
-      "other": "Local partner"
-    },
-    "guideTitle": "Local guide",
-    "guideWalkable": "Walkable",
-    "guideDayTrip": "Day trip",
-    "guideMinutesWalk": "min walk",
-    "guideMinutesDrive": "min drive",
-    "tourTitle": "Virtual tour",
-    "tourCta": "Step inside",
-    "contactTitle": "Find us",
-    "contactCheckIn": "Check-in from",
-    "contactCheckOut": "check-out by",
-    "contactWhatsApp": "Message on WhatsApp",
-    "contactCall": "Call the front desk",
-    "contactEmail": "Email"
-  },
-  "room": {
-    "from": "From",
-    "perNight": "per night",
-    "sleeps": "Sleeps",
-    "bookCta": "Check availability",
-    "backToRooms": "All rooms"
-  },
-  "nav": {
-    "book": "Book",
-    "events": "Events",
-    "home": "Home"
-  },
-  "demoRibbon": {
-    "text": "This is the Stay.WitUS demo hotel. Everything resets at midnight.",
-    "cta": "Try the owner dashboard"
-  },
-  "events": {
-    "title": "What's on",
-    "intro": "Hotel evenings, cultural nights, and area happenings. Reserve a spot where offered.",
-    "empty": "Nothing scheduled right now. Check back soon.",
-    "spotsLeft": "spots left",
-    "fullBadge": "Full",
-    "rsvpTitle": "Reserve your spot",
-    "nameField": "Your name",
-    "emailField": "Email",
-    "phoneField": "Phone (optional)",
-    "partyField": "Party size",
-    "submit": "Reserve",
-    "reservedTitle": "You're on the list",
-    "reservedBody": "Your spot is reserved. A confirmation email is on its way.",
-    "errors": {
-      "GENERIC": "That did not work. Please try again.",
-      "INVALID_GUEST": "Give us your name and a valid email.",
-      "INVALID_PARTY": "Party size must be between 1 and 10.",
-      "ALREADY_RSVPED": "This email already has a spot reserved for this event.",
-      "EVENT_FULL": "This event just filled up. Sorry!"
-    }
-  },
-  "venue": {
-    "title": "Host your event here",
-    "intro": "Rooftop dinners, birthdays, launches. Tell us what you're planning and the team will come back with options.",
-    "nameField": "Your name",
-    "emailField": "Email",
-    "phoneField": "Phone (optional)",
-    "typeField": "What kind of event? (optional)",
-    "dateField": "Preferred date (optional)",
-    "altDateField": "Backup date (optional)",
-    "partyField": "How many people? (optional)",
-    "budgetField": "Budget range (optional)",
-    "messageField": "Anything else we should know? (optional)",
-    "submit": "Send inquiry",
-    "sentTitle": "Inquiry received",
-    "sentBody": "The team will be in touch shortly. Thank you.",
-    "errors": {
-      "GENERIC": "That did not work. Please try again.",
-      "INVALID_GUEST": "Give us your name and a valid email."
-    }
-  },
-  "partnerApply": {
-    "title": "Work with our guests",
-    "intro": "Drivers, guides, food, nightlife, wellness: apply to be recommended to guests. The hotel reviews every application; guests contact you directly.",
-    "nameField": "Your name or business name",
-    "categoryField": "What you offer",
-    "blurbField": "One or two sentences guests should read about you",
-    "phoneField": "Phone (optional)",
-    "whatsappField": "WhatsApp number (international format, +233...)",
-    "emailField": "Email (for your edit link, optional)",
-    "priceField": "Price note, like \"from GHS 120 airport\" (optional)",
-    "coverageField": "Where you operate (optional)",
-    "consentLabel": "I agree to be listed publicly on this hotel's site with the details above.",
-    "submit": "Send application",
-    "sentTitle": "Application received",
-    "sentBody": "The hotel team reviews every application and will be in touch. Thank you.",
-    "errors": {
-      "GENERIC": "That did not work. Please try again.",
-      "INVALID_NAME": "Tell us your name or business name.",
-      "INVALID_CATEGORY": "Pick what kind of service you offer.",
-      "INVALID_WHATSAPP": "WhatsApp numbers need international format, like +233201234567.",
-      "NO_CONTACT": "Give at least one way to reach you.",
-      "NO_CONSENT": "Tick the box to agree to being listed publicly."
-    }
-  },
-  "partnerEdit": {
-    "title": "Update your listing",
-    "intro": "Change what guests see about you. The hotel is notified of updates.",
-    "expiredTitle": "This link has expired",
-    "expiredBody": "Edit links work for 30 days. Ask the hotel team to send you a fresh one.",
-    "save": "Save my listing",
-    "savedTitle": "Listing updated",
-    "savedBody": "Your changes are live. You can keep using this link for 30 days from when it was sent."
+    "outro": "Something your listings need that is not here? Tell us through witus.online."
   },
   "setup": {
     "title": "No site is configured for this address",
-    "body": "This host is not mapped to a property yet. If you are the site owner, add the domain from your admin dashboard."
+    "body": "This host is not mapped to an agency yet. If you are the site owner, add the domain from your admin dashboard."
   },
   "signIn": {
     "title": "Sign in",
@@ -314,34 +127,77 @@
     "submit": "Email me a sign-in link",
     "sent": "Check your email. If that address has access, a sign-in link is on its way. It expires in 10 minutes.",
     "invalid": "That does not look like an email address. Please check it and try again.",
-    "unavailable": "Sign-in is not available right now. Please try again later.",
-    "demoHeading": "Just exploring?",
-    "demoHint": "One tap, no email needed. Owner sees everything; front desk sees daily operations. Everything resets at midnight.",
-    "demoAdmin": "Try the demo as the owner",
-    "demoVisitor": "Try the demo as front desk"
+    "unavailable": "Sign-in is not available right now. Please try again later."
   },
   "admin": {
     "title": "Front desk",
     "roleLabel": "Signed in as",
     "nav": {
-      "today": "Today",
-      "reservations": "Reservations",
-      "calendar": "Calendar",
-      "pricing": "Pricing",
+      "overview": "Overview",
       "design": "Design",
       "team": "Team",
-      "content": "Content",
-      "guide": "Guide",
-      "announce": "Announce",
-      "partners": "Partners",
-      "events": "Events",
-      "rooms": "Rooms",
-      "settings": "Settings",
-      "billing": "Billing",
-      "support": "Support"
+      "support": "Support",
+      "billing": "Billing"
+    },
+    "invite": {
+      "title": "Join the team",
+      "body": "You have been invited to help run",
+      "signedInAs": "You are signed in as",
+      "accept": "Accept invitation",
+      "wrongAccount": "This invite was sent to a different email address. Sign in with that address to accept it.",
+      "invalid": "This invite has expired or was already used. Ask for a new one."
+    },
+    "overview": {
+      "intro": "Your agency workspace. Listings and virtual tours arrive with the next release.",
+      "nextTitle": "What lands next",
+      "next": [
+        "Listings and 360 tours",
+        "Embed snippets for your own site",
+        "Buyer inquiries by email"
+      ],
+      "doorsTitle": "Available now"
+    },
+    "design": {
+      "intro": "Pick the look your listing pages inherit. Every option stays accessible and mobile-first by construction.",
+      "template": "Template",
+      "templateHint": "The overall design system. Colors, fonts, sections, and photos stay yours in every template.",
+      "templates": {
+        "classic": {
+          "name": "Classic",
+          "blurb": "Compact and quietly competent. Cards, borders, clarity."
+        },
+        "editorial": {
+          "name": "Editorial Boutique",
+          "blurb": "Photography-first. Full-screen hero, big serif headlines, magazine rhythm."
+        },
+        "warm": {
+          "name": "Warm Minimal",
+          "blurb": "Soft, rounded, borderless. Feels like a friendly lobby."
+        }
+      },
+      "preset": "Color preset",
+      "fontPair": "Font pairing",
+      "save": "Save design",
+      "saved": "Design saved. Open your homepage to see it."
+    },
+    "team": {
+      "members": "Team",
+      "noMembers": "No staff yet.",
+      "pending": "Pending invites",
+      "noPending": "No pending invites.",
+      "inviteTitle": "Invite a team member",
+      "emailLabel": "Email address",
+      "roleField": "Role",
+      "roles": {
+        "agent": "Agent",
+        "manager": "Manager",
+        "owner": "Owner"
+      },
+      "send": "Send invite",
+      "revoke": "Revoke"
     },
     "support": {
-      "intro": "Something broken, confusing, or missing? Open a thread; Stay.WitUS answers here.",
+      "intro": "Something broken, confusing, or missing? Open a thread; RealEstate.WitUS answers here.",
       "newTitle": "New thread",
       "subjectField": "Subject",
       "categoryField": "Category",
@@ -368,18 +224,18 @@
       "statuses": {
         "open": "Open",
         "waiting_user": "Replied - your turn",
-        "waiting_admin": "Waiting on Stay.WitUS",
+        "waiting_admin": "Waiting on RealEstate.WitUS",
         "resolved_pending_confirm": "Marked fixed - confirm?",
         "resolved_user_confirmed": "Fixed",
         "resolved_user_disputed": "Disputed",
         "closed": "Closed"
       },
-      "confirmPrompt": "Stay.WitUS marked this resolved. Did the fix work?",
+      "confirmPrompt": "RealEstate.WitUS marked this resolved. Did the fix work?",
       "confirmYes": "Yes, it's fixed",
       "confirmNo": "No, still broken",
       "disputeField": "What's still wrong?",
       "you": "You",
-      "admin": "Stay.WitUS",
+      "admin": "RealEstate.WitUS",
       "recording": "Screen recording",
       "errors": {
         "GENERIC": "That did not work. Please try again.",
@@ -390,321 +246,26 @@
       }
     },
     "billing": {
-      "intro": "Invoices from Stay.WitUS for running this site. Pay by MoMo using the invoice code as your transfer reference.",
+      "intro": "Invoices from RealEstate.WitUS for running this site. Pay by MoMo using the invoice code as your transfer reference.",
       "momoTitle": "How to pay by MTN MoMo",
       "momoSend": "Send the amount to",
       "momoRef": "Use this exact reference",
       "claim": "I've sent it",
-      "claimed": "Marked as sent. Stay.WitUS confirms receipt shortly.",
+      "claimed": "Marked as sent. RealEstate.WitUS confirms receipt shortly.",
       "empty": "No invoices.",
       "due": "due",
       "paid": "Paid",
       "statusSent": "Awaiting payment",
       "statusClaimed": "Awaiting confirmation"
     },
-    "settings": {
-      "intro": "The operational knobs: contact details, times, how booking behaves, and your cancellation policy. Every new booking snapshots the policy as it stood.",
-      "nameField": "Hotel name",
-      "addressField": "Address",
-      "phoneField": "Phone",
-      "whatsappField": "WhatsApp (international format)",
-      "groupField": "Guest WhatsApp group link (https)",
-      "emailField": "Front-desk email (gets application and booking notices)",
-      "checkinField": "Check-in from",
-      "checkoutField": "Check-out by",
-      "timezoneField": "Timezone",
-      "modeField": "Booking mode",
-      "modes": { "instant_deposit": "Instant book, deposit", "instant_full": "Instant book, full prepay", "request": "Request to book" },
-      "depositField": "Deposit percent",
-      "holdField": "Hold minutes",
-      "policyLegend": "Cancellation policy (shown to guests at booking)",
-      "policyFreeField": "Free cancellation until N days before check-in (blank = none)",
-      "policyPenaltyField": "Penalty percent after that (blank = none)",
-      "policyPreview": "Guests will read:",
-      "policyNone": "No policy set: nothing is shown or enforced.",
-      "save": "Save settings"
-    },
-    "rooms": {
-      "intro": "Photos sell the room. Upload real photography; the first photo becomes the card image everywhere.",
-      "photoField": "Photo",
-      "altField": "Photo description for screen readers",
-      "decorative": "Purely decorative (no description needed)",
-      "upload": "Upload photo",
-      "uploading": "Uploading...",
-      "uploadDone": "Uploaded.",
-      "uploadFailed": "Upload failed. Try again.",
-      "mediaPending": "Photo uploads need the media library env (operator task 05 for Cloudinary).",
-      "removePhoto": "Remove",
-      "nameField": "Name",
-      "descriptionField": "Description",
-      "rateField": "Base rate (pesewas)",
-      "occupancyField": "Sleeps",
-      "bedsField": "Beds",
-      "sizeField": "Size m²",
-      "sortField": "Position",
-      "activeField": "Bookable",
-      "save": "Save",
-      "empty": "No room types yet. Create your first one above.",
-      "createTitle": "New room type",
-      "createButton": "Create room type",
-      "unitsTitle": "Units (physical rooms)",
-      "unitNumberField": "Unit number",
-      "unitFloorField": "Floor",
-      "unitAdd": "Add unit",
-      "unitOn": "activate",
-      "unitOff": "deactivate",
-      "unitDelete": "Delete unit"
-    },
-    "events": {
-      "intro": "Create events, publish them, and watch the RSVP list fill. Announce them to guests from the Announce tab.",
-      "createTitle": "New event",
-      "titleField": "Title",
-      "descriptionField": "Description",
-      "kindField": "Kind",
-      "kinds": { "hotel": "Hotel event", "cultural": "Cultural", "seasonal": "Seasonal", "area": "Area happening" },
-      "startsField": "Starts (local time)",
-      "locationField": "Location",
-      "capacityField": "Capacity (blank = unlimited)",
-      "rsvpField": "Guests can reserve spots",
-      "publishedField": "Published",
-      "create": "Create event",
-      "save": "Save",
-      "delete": "Delete",
-      "rsvps": "reserved",
-      "rsvpListTitle": "Reservations",
-      "cancelRsvp": "Cancel",
-      "noRsvps": "No reservations yet.",
-      "empty": "No events yet. The Highlife night writes itself.",
-      "inquiriesTitle": "Venue inquiries",
-      "inquiriesEmpty": "No inquiries yet. The venue page collects them.",
-      "inquiryStatuses": {
-        "new": "New",
-        "contacted": "Contacted",
-        "quoted": "Quoted",
-        "confirmed": "Confirmed",
-        "declined": "Declined",
-        "archived": "Archived"
-      },
-      "setStatus": "Update"
-    },
-    "partners": {
-      "intro": "Applications wait at the top. Approve who you trust; suspend hides someone instantly and kills their edit links.",
-      "statuses": { "applied": "Applied", "approved": "Approved", "suspended": "Suspended", "archived": "Archived" },
-      "approve": "Approve",
-      "suspend": "Suspend",
-      "restore": "Re-approve",
-      "archive": "Archive",
-      "sendLink": "Email edit link",
-      "linkIssued": "Edit link created. It was emailed when the partner has an email; either way, copy it below and WhatsApp it to them.",
-      "copyLink": "edit link",
-      "applyUrlHint": "Partners apply themselves at:",
-      "empty": "No partners yet. Share the application link."
-    },
-    "announce": {
-      "intro": "Write once, reach the right guests. Email goes only to people who ticked the offers box when booking; the WhatsApp button is for your own group.",
-      "composeTitle": "New announcement",
-      "titleField": "Title",
-      "bodyField": "Message",
-      "audienceField": "Email audience",
-      "audiences": {
-        "past_guests": "Past guests",
-        "upcoming_guests": "Upcoming guests",
-        "current_guests": "Guests in house",
-        "all_subscribers": "Everyone opted in"
-      },
-      "optedIn": "opted in",
-      "urgentField": "Urgent (site banner highlights it)",
-      "urgentBadge": "Urgent",
-      "saveDraft": "Save draft",
-      "statusDraft": "Draft",
-      "statusPublished": "On the site",
-      "statusSent": "Emailed",
-      "send": "Send email",
-      "resend": "Send to new opt-ins",
-      "publish": "Show on site",
-      "unpublish": "Remove from site",
-      "whatsapp": "Share to WhatsApp",
-      "copyText": "announcement text",
-      "sentFlash": "Emails sent:",
-      "empty": "Nothing yet. Your first announcement could be this week's event."
-    },
-    "content": {
-      "intro": "Your words, your photos. Nothing shows on the site until you tick Published.",
-      "sectionNames": {
-        "hero": "Welcome",
-        "about": "About",
-        "dining": "Dining",
-        "virtual_tour": "Virtual tour"
-      },
-      "titleField": "Heading",
-      "bodyField": "Text (blank line starts a new paragraph)",
-      "imageUrlField": "Photo link (https, from your media library)",
-      "imageAltField": "Photo description for screen readers",
-      "embedUrlField": "Tour link (https)",
-      "publishedField": "Published",
-      "save": "Save",
-      "mediaPending": "Photo uploads arrive once the media library is connected (operator task 05). Until then, paste an https photo link."
-    },
-    "guide": {
-      "intro": "The places you actually send guests to. Only published entries appear on your site.",
-      "nameField": "Name",
-      "zoneField": "Zone",
-      "zones": { "walkable": "Walkable", "day_trip": "Day trip" },
-      "categoryField": "Category",
-      "categories": {
-        "food_drink": "Food & drink",
-        "nightlife": "Nightlife",
-        "culture": "Culture",
-        "shopping": "Shopping",
-        "health": "Health",
-        "beach": "Beach",
-        "nature": "Nature",
-        "other": "Other"
-      },
-      "walkField": "Minutes on foot",
-      "driveField": "Minutes by car",
-      "blurbField": "One or two sentences guests should know",
-      "mapField": "Map link (https)",
-      "sortField": "Position",
-      "publishedField": "Published",
-      "save": "Save",
-      "add": "Add a place",
-      "create": "Add place",
-      "delete": "Delete",
-      "empty": "No places yet. Add the spots you recommend every week."
-    },
-    "team": {
-      "members": "Team",
-      "noMembers": "No staff yet.",
-      "pending": "Pending invites",
-      "noPending": "No pending invites.",
-      "inviteTitle": "Invite a team member",
-      "emailLabel": "Email address",
-      "roleField": "Role",
-      "roles": {
-        "front_desk": "Front desk",
-        "manager": "Manager",
-        "owner": "Owner"
-      },
-      "send": "Send invite",
-      "revoke": "Revoke"
-    },
-    "invite": {
-      "title": "Join the team",
-      "body": "You have been invited to help run",
-      "signedInAs": "You are signed in as",
-      "accept": "Accept invitation",
-      "wrongAccount": "This invite was sent to a different email address. Sign in with that address to accept it.",
-      "invalid": "This invite has expired or was already used. Ask for a new one."
-    },
-    "today": {
-      "arrivals": "Arriving today",
-      "departures": "Leaving today",
-      "nobody": "Nobody today.",
-      "inHouse": "In house",
-      "awaitingApproval": "Requests to review",
-      "pendingPayment": "Awaiting payment"
-    },
-    "reservations": {
-      "filterLabel": "Show",
-      "all": "All",
-      "empty": "No reservations match.",
-      "guest": "Guest",
-      "room": "Room",
-      "dates": "Dates",
-      "state": "Status",
-      "payment": "Payment",
-      "total": "Total",
-      "actions": {
-        "approve": "Approve",
-        "check_in": "Check in",
-        "check_out": "Check out",
-        "cancel": "Cancel",
-        "no_show": "No-show"
-      }
-    },
-    "calendar": {
-      "prevMonth": "Previous month",
-      "nextMonth": "Next month",
-      "unit": "Unit",
-      "free": "Free",
-      "block": "Block",
-      "unblock": "Unblock",
-      "legend": "B = booking, X = blockout, H = hold. Tap a free day to block it; tap an X to release it.",
-      "noUnits": "No units yet. Add room types and units first."
-    },
-    "pricing": {
-      "roomTypeLabel": "Room type",
-      "show": "Show",
-      "baseRate": "Base rate",
-      "perNight": "per night",
-      "overrides": "Price overrides touching this month",
-      "noOverrides": "None. The base rate applies every night.",
-      "addOverride": "Add an override",
-      "labelField": "Name",
-      "start": "First night",
-      "end": "Last night",
-      "rateField": "Nightly rate in pesewas (GHS 500.00 = 50000)",
-      "priorityField": "Priority (higher wins)",
-      "daysField": "Only these days (none checked = every day)",
-      "dows": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
-      "create": "Add override",
-      "delete": "Delete",
-      "deleteConfirm": "Delete this override",
-      "promoTitle": "Promo codes",
-      "promoIntro": "Guests type the code at checkout; the discount comes off the stay total and the deposit follows.",
-      "promoCodeField": "Code (letters, numbers, dashes)",
-      "promoKindField": "Type",
-      "promoPercent": "Percent off",
-      "promoFixed": "Amount off (pesewas)",
-      "promoValueField": "Value",
-      "promoRoomField": "Room type (optional)",
-      "promoAnyRoom": "Any room",
-      "promoStartsField": "Valid from (check-in date)",
-      "promoEndsField": "Valid to",
-      "promoMaxField": "Max uses (blank = unlimited)",
-      "promoUsed": "used",
-      "promoCreate": "Create code",
-      "promoActivate": "Activate",
-      "promoDeactivate": "Deactivate",
-      "promoEmpty": "No codes yet."
-    },
-    "design": {
-      "intro": "Arrange your homepage. Everything here stays inside layouts we designed, so your site keeps working on every phone.",
-      "template": "Template",
-      "templateHint": "The overall design system. Colors, fonts, sections, and photos stay yours in every template.",
-      "templates": {
-        "classic": { "name": "Classic", "blurb": "Compact and quietly competent. Cards, borders, clarity." },
-        "editorial": { "name": "Editorial Boutique", "blurb": "Photography-first. Full-screen hero, big serif headlines, magazine rhythm." },
-        "warm": { "name": "Warm Minimal", "blurb": "Soft, rounded, borderless. Feels like a friendly lobby." }
-      },
-      "preset": "Color preset",
-      "fontPair": "Font pairing",
-      "sections": "Homepage sections",
-      "orderField": "Position",
-      "visibleField": "Visible",
-      "variantField": "Layout",
-      "heroNote": "The welcome section is always visible.",
-      "save": "Save design",
-      "saved": "Design saved. Open your homepage to see it."
-    },
     "ok": "Done.",
     "errors": {
       "GENERIC": "That did not work. Please try again.",
-      "PROMO_BAD_CODE": "Codes are 3-24 letters, numbers, or dashes.",
-      "PROMO_BAD_VALUE": "Percent codes need 1-90; fixed codes need a positive pesewa amount.",
-      "PROMO_EXISTS": "That code already exists.",
-      "INVALID_CONTENT": "Give the announcement a title and a message.",
-      "OCCUPIED": "A booking or blockout already covers those dates.",
-      "INVALID_TRANSITION": "That reservation has moved on. Refresh and try again.",
-      "INVALID_LABEL": "Give the override a name.",
-      "INVALID_RATE": "Rate must be a positive whole number in pesewas.",
-      "INVALID_RANGE": "The end date is before the start date.",
-      "INVALID_DATE": "Those dates do not look right."
+      "INVALID_CONTENT": "Fill in the required fields."
     }
   },
   "platform": {
-    "title": "Stay.WitUS Platform",
+    "title": "RealEstate.WitUS Platform",
     "tenantsPage": {
       "title": "Properties",
       "createTitle": "New property",
@@ -717,12 +278,6 @@
       "domains": "domains",
       "billingLink": "Billing",
       "flagLabels": {
-        "events": "Events",
-        "dining": "Dining",
-        "concierge": "Concierge",
-        "virtualTour": "Virtual tour",
-        "announcements": "Announcements",
-        "hub": "Guest hub",
         "comingSoon": "Coming soon page",
         "poweredBy": "Powered-by badge"
       },
@@ -749,19 +304,30 @@
       "invoicesTitle": "Invoices",
       "newInvoice": "New invoice",
       "kindField": "Kind",
-      "kinds": { "setup": "Setup", "monthly": "Monthly", "custom": "Custom" },
+      "kinds": {
+        "setup": "Setup",
+        "monthly": "Monthly",
+        "custom": "Custom"
+      },
       "descriptionField": "Description",
       "amountField": "Amount (minor units)",
       "dueField": "Due date",
       "send": "Create & send",
       "void": "Void",
       "markPaid": "Mark paid",
-      "statuses": { "draft": "Draft", "sent": "Sent", "paid": "Paid", "void": "Void", "overdue": "Overdue" },
+      "statuses": {
+        "draft": "Draft",
+        "sent": "Sent",
+        "paid": "Paid",
+        "void": "Void",
+        "overdue": "Overdue"
+      },
       "errors": {
         "GENERIC": "That did not work. Please try again.",
         "INVALID_AMOUNT": "Amounts are positive whole minor units.",
         "INVALID_CURRENCY": "Currency is a 3-letter code like USD or GHS."
-      }
+      },
+      "show": "Show"
     },
     "supportPage": {
       "title": "Support",
@@ -779,7 +345,7 @@
       "older": "Older entries"
     },
     "bannerTitle": "Landing-page promo banner",
-    "bannerHint": "Shown across the top of stay.witus.online. Leave empty to hide. Your words - review before saving.",
+    "bannerHint": "Shown across the top of realestate.witus.online. Leave empty to hide. Your words - review before saving.",
     "bannerField": "Banner text",
     "bannerSave": "Save banner",
     "domains": {
@@ -806,7 +372,7 @@
       "add": "Attach",
       "errors": {
         "GENERIC": "That did not work. Please try again.",
-        "INVALID_HOST": "Enter a bare domain like hotel.example.com.",
+        "INVALID_HOST": "Enter a bare domain like listings.example.com.",
         "HOST_TAKEN": "That domain is already mapped to another property.",
         "TENANT_NOT_FOUND": "Property not found.",
         "VERCEL_ATTACH": "The mapping saved, but Vercel could not attach the domain. Check task 05 env vars, then press Check."

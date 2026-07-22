@@ -11,11 +11,11 @@ import { deliveryUrl } from "@/lib/media/cloudinary";
 import { err, ok, type Result } from "@/lib/result";
 import { sendToInbox } from "@/lib/witus-inbox";
 
-// Support (workstream 11, lifted from wanderlearn's model): hotel STAFF open
+// Support (lifted from wanderlearn's model): agency STAFF open
 // threads; BAM answers cross-tenant from /platform/support. Lifecycle:
 // open <-> waiting_admin/waiting_user -> resolved_pending_confirm ->
-// confirmed | disputed (dispute reopens the admin queue). Guests never see
-// this - their channel is the hotel itself.
+// confirmed | disputed (dispute reopens the admin queue). Buyers never see
+// this - their channel is the agency itself.
 
 export type ThreadStatus =
   | "open"

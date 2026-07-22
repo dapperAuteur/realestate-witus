@@ -5,7 +5,7 @@ import { hasDatabase, hasMailgun } from "@/lib/env";
 export function GET() {
   return NextResponse.json(
     ok({
-      service: "stay-witus",
+      service: "realestate-witus",
       database: hasDatabase,
       mailgun: hasMailgun,
     }),

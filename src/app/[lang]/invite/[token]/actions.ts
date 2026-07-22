@@ -21,7 +21,7 @@ export async function acceptInviteAction(formData: FormData): Promise<void> {
   if (!result.ok) {
     redirect(`/${lang}/invite/${encodeURIComponent(token)}?error=${result.code}`);
   }
-  // Accepted on the wrong hotel's domain: the membership (scoped to the
+  // Accepted on the wrong agency's domain: the membership (scoped to the
   // invite's own tenant) is fine, but /admin here would 404 — send home.
   if (result.data.tenantId !== tenant.id) {
     redirect(`/${lang}`);

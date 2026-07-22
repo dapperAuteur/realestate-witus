@@ -4,28 +4,16 @@ import { tenants, type TenantTheme } from "@/db/schema";
 import { normalizeBrandPreset } from "@/lib/brand-presets";
 import { normalizeFontPair } from "@/lib/font-pairs";
 import { normalizeTemplate } from "@/lib/templates";
-import {
-  normalizeSectionVariant,
-  SECTION_KEYS,
-  type SectionKey,
-} from "@/lib/sections";
 import { err, ok, type Result } from "@/lib/result";
 
-// The /admin/design write chokepoint (rung 2). Everything client-supplied is
-// normalized against the curated registries before it touches tenants.theme —
-// unknown keys collapse to defaults, never to an error page or stored junk.
+// The /admin/design write chokepoint. Everything client-supplied is normalized
+// against the curated registries before it touches tenants.theme — unknown
+// keys collapse to defaults, never to an error page or stored junk.
 
 export interface DesignUpdateInput {
   templateKey?: string;
   presetKey?: string;
   fontPairKey?: string;
-  sectionOrder?: string[];
-  sectionHidden?: string[];
-  sectionVariants?: Record<string, string>;
-}
-
-function isSectionKey(value: string): value is SectionKey {
-  return (SECTION_KEYS as readonly string[]).includes(value);
 }
 
 export function normalizeDesignInput(input: DesignUpdateInput): Partial<TenantTheme> {
@@ -39,28 +27,6 @@ export function normalizeDesignInput(input: DesignUpdateInput): Partial<TenantTh
   }
   if (input.fontPairKey !== undefined) {
     patch.fontPairKey = normalizeFontPair(input.fontPairKey) ?? undefined;
-  }
-  if (input.sectionOrder !== undefined) {
-    const seen = new Set<string>();
-    patch.sectionOrder = input.sectionOrder.filter((k) => {
-      if (!isSectionKey(k) || seen.has(k)) return false;
-      seen.add(k);
-      return true;
-    });
-  }
-  if (input.sectionHidden !== undefined) {
-    patch.sectionHidden = input.sectionHidden.filter(
-      (k) => isSectionKey(k) && k !== "hero",
-    );
-  }
-  if (input.sectionVariants !== undefined) {
-    const variants: Record<string, string> = {};
-    for (const [key, variant] of Object.entries(input.sectionVariants)) {
-      if (isSectionKey(key)) {
-        variants[key] = normalizeSectionVariant(key, variant);
-      }
-    }
-    patch.sectionVariants = variants;
   }
   return patch;
 }

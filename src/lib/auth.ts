@@ -8,8 +8,8 @@ import { sendEmail } from "@/lib/mailer";
 import { getTenantByHost } from "@/lib/tenant";
 
 // Product-local Better Auth (no shared WitUS OIDC — learnwitus white-label
-// precedent). Passwordless only: staff arrive by invite, partners and guests
-// by magic link. Lazy singleton so builds without env never construct it.
+// precedent). Passwordless only: staff arrive by invite and sign in by magic
+// link. Lazy singleton so builds without env never construct it.
 
 let _auth: ReturnType<typeof buildAuth> | null = null;
 
@@ -32,14 +32,13 @@ function buildAuth() {
         isPlatformOwner: { type: "boolean", defaultValue: false, input: false },
       },
     },
-    // Password sign-IN exists solely for the two demo accounts (the only
-    // credential accounts that exist); public sign-UP stays off. Everyone
-    // real uses magic links.
-    emailAndPassword: { enabled: true, disableSignUp: true },
+    // No credential accounts exist: everyone signs in by magic link, so the
+    // password rail stays off entirely rather than sitting unused.
+    emailAndPassword: { enabled: false },
     // Tenant custom domains get appended here once domain management ships;
     // wildcard covers *.witus.online tenants and previews today.
     trustedOrigins: [
-      "https://stay.witus.online",
+      "https://realestate.witus.online",
       "https://*.witus.online",
       "http://localhost:3000",
     ],
@@ -47,11 +46,11 @@ function buildAuth() {
       magicLink({
         expiresIn: 60 * 10,
         sendMagicLink: async ({ email, url }, request) => {
-          // Per-tenant sender: mail from a hotel's domain says the hotel,
-          // never Stay.WitUS (white-label rule).
+          // Per-tenant sender: mail from an agency's domain says the agency,
+          // never RealEstate.WitUS (white-label rule).
           const host = request?.headers?.get("host");
           const tenant = host ? await getTenantByHost(host).catch(() => null) : null;
-          const brand = tenant?.theme.name ?? tenant?.name ?? "Stay.WitUS";
+          const brand = tenant?.theme.name ?? tenant?.name ?? "RealEstate.WitUS";
           await sendEmail({
             to: email,
             from: tenant?.email.from,

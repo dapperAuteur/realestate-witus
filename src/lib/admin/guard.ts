@@ -17,7 +17,7 @@ export interface StaffContext {
  * pages get that distinction from `reason`.
  */
 export const getStaffContext = cache(async (
-  min: TenantRole = "front_desk",
+  min: TenantRole = "agent",
 ): Promise<
   | { ok: true; ctx: StaffContext }
   | { ok: false; reason: "no_tenant" | "no_session" | "forbidden" }

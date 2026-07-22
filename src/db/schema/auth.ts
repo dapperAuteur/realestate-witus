@@ -1,7 +1,7 @@
 import { boolean, index, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 
 // Better Auth core tables (drizzle adapter shape). Auth is product-local:
-// staff are invited, partners and guests use magic links. No shared WitUS
+// staff arrive by invite and sign in with magic links. No shared WitUS
 // OIDC for customer tenants (learnwitus white-label precedent — never reveal
 // the shared backend by redirecting to accounts.witus.online).
 
@@ -82,24 +82,3 @@ export const staffInvites = pgTable(
   (t) => [index("staff_invites_tenant_idx").on(t.tenantId)],
 );
 
-/**
- * Optional post-booking "stay account": links a user to a reservation they
- * verified by magic link. Booking itself never requires an account. Unlocks
- * the guest hub (P2), faster RSVP, and verified partner feedback.
- */
-export const stayAccounts = pgTable(
-  "stay_accounts",
-  {
-    id: uuid("id").primaryKey().defaultRandom(),
-    tenantId: uuid("tenant_id").notNull(),
-    userId: text("user_id")
-      .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
-    reservationId: uuid("reservation_id").notNull(),
-    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-  },
-  (t) => [
-    index("stay_accounts_user_idx").on(t.userId),
-    index("stay_accounts_reservation_idx").on(t.reservationId),
-  ],
-);

@@ -20,24 +20,14 @@ export default async function AdminLayout({
   if (!hasLocale(lang)) notFound();
   const dict = await getDictionary(lang);
 
-  const { tenant, user, role } = await requireStaffPage("front_desk", lang);
+  const { tenant, user, role } = await requireStaffPage("agent", lang);
   const a = dict.admin;
 
   const tabs = [
-    { href: `/${lang}/admin`, label: a.nav.today },
-    { href: `/${lang}/admin/reservations`, label: a.nav.reservations },
-    { href: `/${lang}/admin/calendar`, label: a.nav.calendar },
-    { href: `/${lang}/admin/rooms`, label: a.nav.rooms },
-    { href: `/${lang}/admin/pricing`, label: a.nav.pricing },
-    { href: `/${lang}/admin/events`, label: a.nav.events },
-    { href: `/${lang}/admin/announce`, label: a.nav.announce },
-    { href: `/${lang}/admin/partners`, label: a.nav.partners },
-    { href: `/${lang}/admin/content`, label: a.nav.content },
-    { href: `/${lang}/admin/guide`, label: a.nav.guide },
+    { href: `/${lang}/admin`, label: a.nav.overview },
     { href: `/${lang}/admin/design`, label: a.nav.design },
     { href: `/${lang}/admin/team`, label: a.nav.team },
     { href: `/${lang}/admin/support`, label: a.nav.support },
-    { href: `/${lang}/admin/settings`, label: a.nav.settings },
     // Platform invoices are the owner's business only.
     ...(role === "owner"
       ? [{ href: `/${lang}/admin/billing`, label: a.nav.billing }]

@@ -33,9 +33,9 @@ export type Tx = Parameters<
 /**
  * Interactive transaction over the WebSocket Pool driver. The default db()
  * client is neon-http, which cannot hold a session — so anything needing
- * FOR UPDATE SKIP LOCKED or multi-statement atomicity (the unit-claim path)
- * comes through here. Pool per call, closed in finally: booking writes are
- * rare enough that correctness beats connection reuse.
+ * FOR UPDATE SKIP LOCKED or multi-statement atomicity comes through here.
+ * Pool per call, closed in finally: transactional writes are rare enough
+ * that correctness beats connection reuse.
  */
 export async function withTx<T>(fn: (tx: Tx) => Promise<T>): Promise<T> {
   if (!env.DATABASE_URL) {

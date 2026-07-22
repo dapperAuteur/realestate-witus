@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 // Catches every notFound() under /[lang] — wrong-role admin visits, unknown
-// tenants, bad reservation codes. not-found boundaries receive no params, so
+// tenants, stale listing slugs. not-found boundaries receive no params, so
 // links go to "/" (middleware sends it to the default locale) and the copy is
 // a sanctioned literal-string exception like error.tsx.
 

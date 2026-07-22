@@ -1,6 +1,6 @@
 # HANDOFF — RealEstate.WitUS project context
 
-*Created 2026-07-16 at project kickoff. Purpose: let a Claude session opened in THIS repo work with full context. Sessions here do not inherit other directories' memory — this file plus CLAUDE.md is the bridge. **The code in this repo is currently the Stay.WitUS template, verbatim** (seeded from stay-witus main at "Merge branch 'bundle/support-screenshots'"); workstream 1 strips and renames it per plans/01.*
+*Created 2026-07-16 at project kickoff; updated 2026-07-21 when the template strip landed. Purpose: let a Claude session opened in THIS repo work with full context. Sessions here do not inherit other directories' memory — this file plus CLAUDE.md is the bridge. **Workstream 1 is done** (`bundle/template-strip`): the Stay.WitUS hotel domain is gone and the platform spine is renamed to RealEstate.WitUS. See "Post-strip state" below for exactly what survives.*
 
 ## What this is
 
@@ -37,9 +37,51 @@ RealEstate.WitUS (`realestate.witus.online`) is BAM's **virtual-tour product for
 | Template parent + its handoff/lessons | `claude/stay-witus` (its HANDOFF.md documents the platform spine this repo inherits, incl. the neon-http vs withTx transaction lesson and admin-guard streaming lesson) |
 | Repo-local plans (gitignored) | `plans/`: 01 template-strip plan, 02 floor-plan-sync SWOT, user-tasks/ |
 
+## Post-strip state (what the code actually is now, 2026-07-21)
+
+**Schema — 16 tables, one baseline migration** (`src/db/migrations/0000_baseline.sql`, citext
+prepended by hand; the old 0000-0002 history is gone and was never applied to any live DB):
+`tenants`, `tenant_domains`, `tenant_memberships`, `platform_settings`, `users`, `sessions`,
+`accounts`, `verifications`, `staff_invites`, `platform_invoices`, `tenant_billing`,
+`media_assets`, `email_log`, `support_threads`, `support_messages`, `audit_log`.
+
+**Deliberate changes beyond a pure delete — do not undo by reflex:**
+- **Roles are now `owner > manager > agent`** (was owner/manager/front_desk + partner + guest).
+  `roleSatisfies` is a plain linear rank; the partner and guest lanes are gone with their flows.
+- **`emailAndPassword` is disabled** in Better Auth. It only existed for the two demo hotel
+  accounts. Magic link is the only door; `PLATFORM_BOOTSTRAP=true` opens the owner window.
+- **`TenantFlags` is down to `platform | comingSoon | poweredBy`.** The hotel feature toggles
+  (events, dining, concierge, hub, virtualTour, announcements) are gone. `EDITABLE_FLAGS` in
+  `lib/platform/tenants.ts` is the /platform editor's list.
+- **`TenantTheme` keeps `templateKey`/`presetKey`/`fontPairKey` and dropped
+  `sectionOrder`/`sectionHidden`/`sectionVariants`** — the section registry was a catalog of
+  hotel sections (rooms, dining, concierge). The template/preset/font-pair *mechanism* is
+  intact and `/admin/design` still drives it. **`galleryMode` (plans/03) lands here** with the
+  listings workstream, alongside a new listing-page section registry.
+- **`tenants.payment` (guest→hotel Paystack/Stripe config) is dropped.** Platform billing
+  (customer→BAM: Stripe + MoMo claim-then-confirm) is untouched and still works.
+- `pgErrorCode` moved from the deleted `lib/booking/holds.ts` to **`src/lib/db-error.ts`**.
+  `withTx` is still in `src/db/index.ts` (the neon-http-can't-hold-transactions lesson).
+- **No demo tenant.** `pnpm seed:tenants` seeds only the platform tenant; demo seeds, demo
+  logins, the demo ribbon, and all three cron routes are gone (`vercel.json` crons is `[]`).
+
+**Surfaces that survive:** `/[lang]` (platform landing + agency home shell), `/roadmap`,
+`/sign-in`, `/invite/[token]`, `/admin` (overview, design, team, support, billing),
+`/platform` (tenants, domains, billing, logs, support), `api/auth`, `api/health`, `api/media/*`,
+`og`, `sitemap.xml`, `manifest.webmanifest`, middleware locale redirect.
+
+**Placeholder code that exists to be replaced, not extended:** `src/components/tenant-home.tsx`
+and `tenant-header.tsx` (they prove brand/template resolution end to end and nothing more),
+and `src/app/[lang]/admin/page.tsx` (a door list where the listings board goes).
+
+**All landing and roadmap copy is a Claude-written draft** pending BAM's rewrite
+(user-task 04) — the content rule says humans own what customers read.
+
 ## Short-term plan (workstream order)
 
-1. **Template strip** (plans/01): remove hotel schema/routes/components/seeds/tests (booking, rooms, events, partners, announcements, hotel settings); keep tenancy/auth/billing/platform/domains/support/audit/media; rename identity strings (stay → realestate; platform host `realestate.witus.online`); fresh migrations baseline; all retained tests green.
+1. ~~**Template strip** (plans/01)~~ — **done 2026-07-21**, `bundle/template-strip`.
+   tsc + vitest + build green; no "stay.witus"/"hotel"/"booking" outside the baseline
+   migration's history note.
 2. **Listings + tours schema:** listings, tour_scenes, scene_links/hotspots (port kit types into Drizzle), listing_media, listing_inquiries, view counters. Tenant-scoped like everything else.
 3. **PSV tour player:** port virtual-tour-kit components into `src/components/tour/`, dynamic import (no SSR), mobile-first.
 4. **Public listing page + embed route + snippet generator** (click-to-copy, responsive iframe, OG image) + inquiry form (→ Mailgun to agent + platform; witus-inbox later).

@@ -1,10 +1,13 @@
-// pnpm seed:tenants — the platform tenant + the Osu customer skeleton.
+// pnpm seed:tenants — the platform tenant for realestate.witus.online.
 // Idempotent by slug: existing tenants are updated in place, never deleted.
-// BAM runs this (user-task 04); Claude never seeds production itself.
+// BAM runs this; Claude never seeds production itself.
+//
+// Only the platform tenant is seeded. BAM's own service listings live on it;
+// agency tenants are created from /platform when an engagement starts, so no
+// placeholder customer rows exist to clean up later.
 
-import { eq } from "drizzle-orm";
 import { db } from "../src/db";
-import { hotelSettings, tenantDomains, tenants } from "../src/db/schema";
+import { tenantDomains, tenants } from "../src/db/schema";
 
 async function upsertTenant(values: typeof tenants.$inferInsert) {
   const [row] = await db()
@@ -33,36 +36,14 @@ async function ensureDomain(tenantId: string, host: string) {
 
 async function main() {
   const platformId = await upsertTenant({
-    slug: "stay-witus",
-    name: "Stay.WitUS",
-    tagline: "Hotel websites that take bookings themselves",
+    slug: "realestate-witus",
+    name: "RealEstate.WitUS",
+    tagline: "Virtual tours that sell the property before the first showing",
     flags: { platform: true },
     theme: {},
   });
-  await ensureDomain(platformId, "stay.witus.online");
+  await ensureDomain(platformId, "realestate.witus.online");
   console.log("platform tenant ready:", platformId);
-
-  // Customer #1 skeleton. BAM renames it and attaches the real domain when
-  // the engagement fills in the blanks; comingSoon keeps guests out.
-  const osuId = await upsertTenant({
-    slug: "osu-hotel",
-    name: "Osu Hotel (rename me)",
-    tagline: null,
-    flags: { comingSoon: true },
-    theme: { presetKey: "forest" },
-  });
-  const [settings] = await db()
-    .select({ tenantId: hotelSettings.tenantId })
-    .from(hotelSettings)
-    .where(eq(hotelSettings.tenantId, osuId));
-  if (!settings) {
-    await db().insert(hotelSettings).values({
-      tenantId: osuId,
-      hotelName: "Osu Hotel (rename me)",
-      timezone: "Africa/Accra",
-    });
-  }
-  console.log("osu skeleton ready:", osuId);
 }
 
 main().then(

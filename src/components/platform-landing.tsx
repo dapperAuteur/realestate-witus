@@ -3,7 +3,7 @@ import { SiteFooter } from "@/components/site-footer";
 import type { Dictionary } from "@/lib/dictionaries";
 import type { Locale } from "@/lib/locales";
 
-// The Stay.WitUS product landing, shown on platform hosts (stay.witus.online,
+// The RealEstate.WitUS product landing, shown on platform hosts (realestate.witus.online,
 // vercel.app previews, localhost) while tenant features are built out.
 // Copy is a working draft — BAM reviews and owns the words before any
 // marketing push (content rule: humans own what customers read).
@@ -35,7 +35,7 @@ export function PlatformLanding({
           className="text-sm font-semibold uppercase tracking-wide"
           style={{ color: "var(--brand-accent)" }}
         >
-          Stay.WitUS
+          RealEstate.WitUS
         </p>
         <h1 className="text-4xl font-bold leading-tight sm:text-5xl">{d.headline}</h1>
         <p className="max-w-xl text-lg text-slate-600 dark:text-slate-400">{d.subhead}</p>
@@ -67,13 +67,6 @@ export function PlatformLanding({
         </p>
         <p className="mt-3 text-sm text-slate-600 dark:text-slate-400">{d.statusBody}</p>
         <p className="mt-4 flex flex-wrap gap-x-6 gap-y-2">
-          <a
-            href="https://demo.stay.witus.online"
-            className="inline-flex min-h-11 items-center rounded-full px-5 text-sm font-semibold focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current"
-            style={{ background: "var(--brand-accent)", color: "var(--brand-accent-fg)" }}
-          >
-            {d.demoCta}
-          </a>
           <Link
             href={`/${lang}/roadmap`}
             className="inline-flex min-h-11 items-center text-sm font-semibold underline underline-offset-4 focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current"

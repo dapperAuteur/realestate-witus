@@ -210,7 +210,7 @@ export default async function PlatformDomainsPage({
               id="dom-host"
               name="host"
               required
-              placeholder="demo.stay.witus.online"
+              placeholder="listings.example.com"
               className={INPUT}
             />
           </div>

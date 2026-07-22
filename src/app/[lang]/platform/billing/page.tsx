@@ -111,7 +111,7 @@ export default async function PlatformBillingPage({
           </select>
         </div>
         <button type="submit" className={BUTTON}>
-          {dict.admin.pricing.show}
+          {d.show}
         </button>
       </form>
 

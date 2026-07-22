@@ -20,13 +20,13 @@ const hasDb = Boolean(
 
 describe("validateHost", () => {
   it("normalizes and accepts real hostnames", () => {
-    expect(validateHost("Demo.Stay.WitUS.online")).toEqual({
+    expect(validateHost("Demo.RealEstate.WitUS.online")).toEqual({
       ok: true,
-      data: "demo.stay.witus.online",
+      data: "demo.realestate.witus.online",
     });
-    expect(validateHost("hotel.example.com:443")).toEqual({
+    expect(validateHost("listings.example.com:443")).toEqual({
       ok: true,
-      data: "hotel.example.com",
+      data: "listings.example.com",
     });
   });
 

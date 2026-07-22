@@ -3,20 +3,20 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: { default: "Stay.WitUS", template: "%s | Stay.WitUS" },
+  title: { default: "RealEstate.WitUS", template: "%s | RealEstate.WitUS" },
   description:
-    "Hotel websites with booking, concierge, and guest messaging. A WitUS platform.",
+    "Virtual tours for real estate that is for sale. Branded listing pages with embeds agents own. A WitUS platform.",
   openGraph: {
-    title: "Stay.WitUS",
+    title: "RealEstate.WitUS",
     description:
-      "Hotel websites with booking, concierge, and guest messaging. A WitUS platform.",
+      "Virtual tours for real estate that is for sale. Branded listing pages with embeds agents own. A WitUS platform.",
     type: "website",
     images: [{ url: "/og", width: 1200, height: 630 }],
   },
   manifest: "/manifest.webmanifest",
   // Ecosystem favicon: 02-duality variant (gemini/witus/public/brand/README.md) —
   // the one variant that carries contrast on light tabs. Platform surface only;
-  // hotel tenants get tenants.theme.faviconUrl once per-tenant metadata lands.
+  // agency tenants get tenants.theme.faviconUrl once per-tenant metadata lands.
   icons: {
     icon: [
       { url: "/brand/witus/favicon.svg", type: "image/svg+xml" },

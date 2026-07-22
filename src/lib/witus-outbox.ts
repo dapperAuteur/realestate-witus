@@ -1,8 +1,8 @@
 import { createHmac } from "node:crypto";
 import { env } from "@/lib/env";
 
-// WitUS Outbox sender (workstream 16): publishable moments (announcement or
-// event goes live) become social-post drafts in BAM's outbox. HMAC-signed,
+// WitUS Outbox sender: publishable moments (a listing or tour goes live)
+// become social-post drafts in BAM's outbox. HMAC-signed,
 // best-effort, and DOUBLE-gated: env presence AND the explicit
 // OUTBOX_TRIGGER_ENABLED switch (task 06 says keep it false until tested).
 
@@ -16,7 +16,7 @@ export async function sendToOutbox(
   if (!hasOutbox()) return false;
   try {
     const body = JSON.stringify({
-      source: "stay-witus",
+      source: "realestate-witus",
       type,
       sentAt: new Date().toISOString(),
       payload,

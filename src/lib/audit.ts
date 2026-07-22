@@ -5,7 +5,7 @@ import { auditLog } from "@/db/schema";
 // Platform audit trail (workstream 12 tail), surfaced in /platform/logs.
 // writeAudit is FIRE-AND-FORGET by contract: an audit failure must never
 // fail the action it records. data carries non-PII context only — ids,
-// codes, statuses; never bodies, tokens, or guest contact details.
+// codes, statuses; never bodies, tokens, or contact details.
 
 export interface AuditEntry {
   tenantId?: string | null;

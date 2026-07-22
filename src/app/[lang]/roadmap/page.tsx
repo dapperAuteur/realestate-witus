@@ -10,8 +10,8 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = { title: "Roadmap" };
 
-// Platform surface only: hotel domains 404 here (their guests should never
-// see Stay.WitUS product pages — white-label rule). Copy is a working draft
+// Platform surface only: agency domains 404 here (their buyers should never
+// see RealEstate.WitUS product pages — white-label rule). Copy is a working draft
 // derived from the approved build plan; BAM owns the words.
 
 export default async function RoadmapPage({
@@ -39,7 +39,7 @@ export default async function RoadmapPage({
             className="text-sm font-semibold uppercase tracking-wide"
             style={{ color: "var(--brand-accent)" }}
           >
-            Stay.WitUS
+            RealEstate.WitUS
           </p>
           <h1 className="mt-2 text-4xl font-bold leading-tight">{r.title}</h1>
           <p className="mt-3 max-w-xl text-lg text-slate-600 dark:text-slate-400">

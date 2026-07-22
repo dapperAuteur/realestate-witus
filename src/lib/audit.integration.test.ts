@@ -42,8 +42,8 @@ describe.skipIf(!hasDb)("audit log against Neon", () => {
     });
     await writeAudit({
       tenantId,
-      kind: "booking.transition",
-      summary: "Reservation checked in",
+      kind: "listing.transition",
+      summary: "Listing marked sold",
     });
 
     const all = await listAudit({ tenantId });

@@ -12,7 +12,7 @@ export function hasLocale(value: string): value is Locale {
 
 /**
  * Where middleware should send a locale-less path, or null to pass through.
- * "/" → "/en", "/rooms" → "/en/rooms"; api/_next/static files untouched.
+ * "/" → "/en", "/listings" → "/en/listings"; api/_next/static files untouched.
  * When es lands, this is where Accept-Language negotiation slots in.
  */
 export function localeRedirectTarget(pathname: string): string | null {

@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getDictionary, hasLocale } from "@/lib/dictionaries";
-import { DEMO_TENANT_SLUG } from "@/lib/demo/seed";
-import { hasDemoLogin } from "@/lib/env";
 import { resolveTenant } from "@/lib/tenant";
 import { requestMagicLink } from "./actions";
 
@@ -10,9 +8,9 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = { title: "Sign in" };
 
-// Magic-link sign-in for staff, partners, and stay accounts. Plain form +
-// server action: works without client JS, on any tenant domain (the email
-// sends from that hotel's own sender).
+// Magic-link sign-in for staff. Plain form + server action: works without
+// client JS, on any tenant domain (the email sends from that agency's own
+// sender).
 
 export default async function SignInPage({
   params,
@@ -28,7 +26,7 @@ export default async function SignInPage({
   const { status } = await searchParams;
 
   const tenant = await resolveTenant().catch(() => null);
-  const brand = tenant?.theme.name ?? tenant?.name ?? "Stay.WitUS";
+  const brand = tenant?.theme.name ?? tenant?.name ?? "RealEstate.WitUS";
 
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col justify-center px-6 py-16">
@@ -39,38 +37,6 @@ export default async function SignInPage({
         {s.body} {brand}.
       </p>
 
-      {hasDemoLogin && tenant?.slug === DEMO_TENANT_SLUG ? (
-        <section
-          aria-label={s.demoHeading}
-          className="mt-6 rounded-xl border border-slate-200 p-4 dark:border-slate-800"
-        >
-          <h2 className="text-sm font-semibold">{s.demoHeading}</h2>
-          <p className="mt-1 text-xs text-slate-500">{s.demoHint}</p>
-          <div className="mt-3 flex flex-wrap gap-2">
-            <form method="post" action="/api/demo-login">
-              <input type="hidden" name="role" value="admin" />
-              <input type="hidden" name="lang" value={lang} />
-              <button
-                type="submit"
-                className="inline-flex min-h-11 items-center rounded-full px-5 text-sm font-semibold focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current"
-                style={{ background: "var(--brand-accent)", color: "var(--brand-accent-fg)" }}
-              >
-                {s.demoAdmin}
-              </button>
-            </form>
-            <form method="post" action="/api/demo-login">
-              <input type="hidden" name="role" value="visitor" />
-              <input type="hidden" name="lang" value={lang} />
-              <button
-                type="submit"
-                className="inline-flex min-h-11 items-center rounded-full border border-slate-300 px-5 text-sm font-medium focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current dark:border-slate-700"
-              >
-                {s.demoVisitor}
-              </button>
-            </form>
-          </div>
-        </section>
-      ) : null}
 
       {status === "sent" ? (
         <p

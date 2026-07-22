@@ -11,10 +11,10 @@ import {
 import { users } from "./auth";
 import { tenants } from "./tenancy";
 
-// PLATFORM billing: the hotel (tenant owner) pays BAM for the product.
-// Distinct from guest→hotel payments (booking.ts payments table).
-// Rails: card via BAM's Stripe (B4C LLC, US — Stripe works for BAM even though
-// Ghana hotels can't merchant on it), or MoMo transfer to BAM's MoMo number.
+// PLATFORM billing: the agency (tenant owner) pays BAM for listings, tours,
+// and hosting. Rails: card via BAM's Stripe (B4C LLC, US — Stripe works for
+// BAM even though Ghana customers can't merchant on it), or MoMo transfer to
+// BAM's MoMo number.
 // MoMo flow is claim-then-confirm: the invoice shows BAM's number + a unique
 // reference; the payer sends and taps "I've sent it" (momoClaimedAt); BAM
 // confirms in /platform/billing which marks the invoice paid.

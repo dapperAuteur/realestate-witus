@@ -4,10 +4,9 @@ import { tenants } from "./tenancy";
 /**
  * Platform event log, surfaced in /platform/logs (BAM's dashboard).
  * kind is dot-namespaced: "auth.sign_in", "admin.tenant.update",
- * "booking.confirmed", "webhook.paystack", "webhook.stripe", "email.sent",
- * "billing.invoice.paid", "partner.approved", ...
+ * "webhook.stripe", "email.sent", "billing.invoice.paid", ...
  * data holds non-PII context only (ids, codes, statuses) — never message
- * bodies, tokens, or guest contact details.
+ * bodies, tokens, or contact details.
  */
 export const auditLog = pgTable(
   "audit_log",

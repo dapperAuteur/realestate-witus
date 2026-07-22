@@ -1,13 +1,13 @@
 import { randomBytes } from "node:crypto";
 import { and, desc, eq, isNotNull, isNull, ne, sql } from "drizzle-orm";
-import { pgErrorCode } from "@/lib/booking/holds";
+import { pgErrorCode } from "@/lib/db-error";
 import { db } from "@/db";
-import { hotelSettings, platformInvoices, tenantBilling, tenants } from "@/db/schema";
+import { platformInvoices, tenantBilling, tenants } from "@/db/schema";
 import { env } from "@/lib/env";
 import { sendEmail } from "@/lib/mailer";
 import { err, ok, type Result } from "@/lib/result";
 
-// Platform billing (workstream 12): the hotel owner pays BAM. MoMo is
+// Platform billing: the agency owner pays BAM for listings and tours. MoMo is
 // claim-then-confirm — the invoice code IS the transfer reference; the payer
 // taps "I've sent it"; BAM confirms in /platform/billing. Nothing here moves
 // money; it records agreements and receipts.
@@ -122,14 +122,7 @@ async function notifyInvoice(
       .from(tenantBilling)
       .where(eq(tenantBilling.tenantId, tenantId))
       .limit(1);
-    const [settings] = billing?.email
-      ? [null]
-      : await db()
-          .select({ email: hotelSettings.email })
-          .from(hotelSettings)
-          .where(eq(hotelSettings.tenantId, tenantId))
-          .limit(1);
-    const to = billing?.email ?? settings?.email;
+    const to = billing?.email;
     if (!to) return;
     const [tenant] = await db()
       .select({ name: tenants.name })
@@ -147,9 +140,9 @@ async function notifyInvoice(
         : [];
     await sendEmail({
       to,
-      subject: `Stay.WitUS invoice ${code} — ${amount}`,
+      subject: `RealEstate.WitUS invoice ${code} — ${amount}`,
       text: [
-        `Invoice ${code} for ${tenant?.name ?? "your property"}: ${amount}.`,
+        `Invoice ${code} for ${tenant?.name ?? "your agency"}: ${amount}.`,
         ...momo,
         "",
         "Questions? Reply to this email.",

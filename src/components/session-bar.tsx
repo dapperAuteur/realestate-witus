@@ -7,7 +7,7 @@ import { resolveTenant } from "@/lib/tenant";
 
 // Signed-in indicator + the door to the next surface (BAM: users could not
 // tell they were logged in or where admin lives). Renders NOTHING for
-// signed-out visitors — guest pages stay clean; sign-in lives in the footer.
+// signed-out visitors — public pages stay clean; sign-in lives in the footer.
 
 export async function SessionBar({
   lang,
@@ -29,7 +29,7 @@ export async function SessionBar({
         : await getMembership(tenant.id, user.id).catch(() => null)
       : null;
   const showAdmin = Boolean(
-    staffRole && roleSatisfies(staffRole, "front_desk"),
+    staffRole && roleSatisfies(staffRole, "agent"),
   );
   const showPlatform = user.isPlatformOwner && !isTenantSite;
 

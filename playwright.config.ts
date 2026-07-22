@@ -1,10 +1,9 @@
 import { defineConfig, devices } from "@playwright/test";
 
-// E2E + a11y gate (ecosystem rule; workstream 15). Chromium-only for speed —
+// E2E + a11y gate (ecosystem rule). Chromium-only for speed —
 // host-resolver-rules map the real tenant hostnames onto the local server so
 // multi-tenant routing runs exactly as in production. Requires `pnpm build`
-// first; run with `pnpm test:e2e`. Tests are READ-ONLY against the seeded
-// demo data (no bookings clicked — the nightly reset is not a test janitor).
+// first; run with `pnpm test:e2e`. Tests are READ-ONLY against seeded data.
 
 const PORT = 3199;
 
@@ -25,7 +24,7 @@ export default defineConfig({
     baseURL: `http://localhost:${PORT}`,
     launchOptions: {
       args: [
-        `--host-resolver-rules=MAP stay.witus.online 127.0.0.1, MAP demo.stay.witus.online 127.0.0.1`,
+        `--host-resolver-rules=MAP realestate.witus.online 127.0.0.1`,
       ],
     },
   },

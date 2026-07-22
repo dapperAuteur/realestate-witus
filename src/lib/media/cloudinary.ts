@@ -39,7 +39,7 @@ export interface SignedUpload {
 export function signUploadRequest(tenantId: string): SignedUpload | null {
   if (!hasCloudinary()) return null;
   const timestamp = Math.floor(Date.now() / 1000);
-  const folder = `stay-witus/${tenantId}`;
+  const folder = `realestate-witus/${tenantId}`;
   return {
     cloudName: env.CLOUDINARY_CLOUD_NAME as string,
     apiKey: env.CLOUDINARY_API_KEY as string,

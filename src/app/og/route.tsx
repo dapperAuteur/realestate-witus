@@ -2,8 +2,8 @@ import { ImageResponse } from "next/og";
 import { presetByKey } from "@/lib/brand-presets";
 import { resolveTenant } from "@/lib/tenant";
 
-// Per-tenant Open Graph card, generated from the brand: accent panel, hotel
-// name in large type, tagline. Hotels that upload theme.ogDefaultUrl skip
+// Per-tenant Open Graph card, generated from the brand: accent panel, agency
+// name in large type, tagline. Agencies that upload theme.ogDefaultUrl skip
 // this (tenantMetadata prefers the real photo); this is the guaranteed-good
 // fallback so shared links never look broken.
 
@@ -12,10 +12,10 @@ export const dynamic = "force-dynamic";
 export async function GET() {
   const tenant = await resolveTenant().catch(() => null);
   const isPlatform = !tenant || tenant.flags.platform;
-  const name = isPlatform ? "Stay.WitUS" : (tenant.theme.name ?? tenant.name);
+  const name = isPlatform ? "RealEstate.WitUS" : (tenant.theme.name ?? tenant.name);
   const tagline = isPlatform
-    ? "Hotel websites that take bookings themselves"
-    : (tenant.tagline ?? "Book your stay");
+    ? "Virtual tours that sell the property before the first showing"
+    : (tenant.tagline ?? "Explore the listings");
   const preset = presetByKey(tenant?.theme.presetKey);
 
   return new ImageResponse(

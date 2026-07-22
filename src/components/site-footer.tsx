@@ -3,7 +3,7 @@ import type { Locale } from "@/lib/locales";
 
 // Ecosystem footer per gemini/witus/public/brand/footer-recipe.md, swapped to
 // this app's palette (slate neutrals, emerald accent, dark mode). PLATFORM
-// SURFACE ONLY: hotel tenant pages never render it (white-label rule — same
+// SURFACE ONLY: agency tenant pages never render it (white-label rule — same
 // as the recipe's FlashLearnAI white-label note). The Rise Wellness copy and
 // disclaimer are verbatim from the recipe; only the app-name token changed.
 
@@ -45,10 +45,10 @@ export function SiteFooter({ lang }: { lang: Locale }) {
             className="mb-2 h-12 w-auto"
           />
           <p className="font-extrabold text-slate-900 dark:text-slate-100">
-            Stay.WitUS
+            RealEstate.WitUS
           </p>
           <p className="text-xs text-slate-500">
-            Hotel websites that take bookings themselves
+            Virtual tours for real estate that is for sale
           </p>
         </div>
 
@@ -78,7 +78,7 @@ export function SiteFooter({ lang }: { lang: Locale }) {
 
           <div>
             <p className="mb-2 font-semibold text-slate-900 dark:text-slate-100">
-              Stay.WitUS
+              RealEstate.WitUS
             </p>
             <ul className="space-y-1">
               <li>
@@ -195,7 +195,7 @@ function RiseWellnessCallout() {
           Rise Wellness of Indiana
         </h2>
         <p className="mt-0.5 text-xs text-slate-500">
-          Independent mental health provider · Not affiliated with Stay.WitUS
+          Independent mental health provider · Not affiliated with RealEstate.WitUS
         </p>
       </header>
 
@@ -281,7 +281,7 @@ function RiseWellnessCallout() {
       {/* === NON-NEGOTIABLE DISCLAIMER — app-name token only === */}
       <p className="mt-4 text-[11px] leading-relaxed text-slate-500">
         Rise Wellness of Indiana is an independent organization. They are not
-        affiliated with, employed by, or endorsed by Stay.WitUS, CentenarianOS,
+        affiliated with, employed by, or endorsed by RealEstate.WitUS, CentenarianOS,
         B4C LLC, AwesomeWebStore.com, or Anthony McDonald. We are grateful for
         their collaboration on mental health safety resources for our
         community.

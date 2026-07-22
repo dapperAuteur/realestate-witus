@@ -13,18 +13,17 @@ import { sendEmail } from "@/lib/mailer";
 
 // Staff invites: the owner emails a single-use, expiring link; accepting
 // requires signing in with THE SAME email (tokens cannot be forwarded to a
-// different account). Roles are staff-only — partners and guests arrive
-// through their own flows.
+// different account).
 
 const INVITE_TTL_DAYS = 7;
-const STAFF_ROLES: TenantRole[] = ["owner", "manager", "front_desk"];
+const STAFF_ROLES: TenantRole[] = ["owner", "manager", "agent"];
 
 export interface CreateInviteInput {
   tenantId: string;
   email: string;
   role: TenantRole;
   invitedBy: string;
-  /** Absolute URL prefix for the accept link, e.g. https://hotel.com/en/invite */
+  /** Absolute URL prefix for the accept link, e.g. https://agency.com/en/invite */
   acceptUrlBase: string;
 }
 
@@ -36,7 +35,7 @@ export async function createStaffInvite(
     return err("INVALID_EMAIL", "That does not look like an email address.");
   }
   if (!STAFF_ROLES.includes(input.role)) {
-    return err("INVALID_ROLE", "Staff roles are owner, manager, or front desk.");
+    return err("INVALID_ROLE", "Staff roles are owner, manager, or agent.");
   }
 
   const token = randomBytes(24).toString("base64url");
@@ -60,9 +59,9 @@ export async function createStaffInvite(
   await sendEmail({
     to: email,
     from: tenant?.email.from,
-    subject: `You are invited to help run ${tenant?.name ?? "a property"}`,
+    subject: `You are invited to help run ${tenant?.name ?? "an agency"}`,
     text: [
-      `You have been invited to join ${tenant?.name ?? "a property"} as ${input.role.replace("_", " ")}.`,
+      `You have been invited to join ${tenant?.name ?? "an agency"} as ${input.role}.`,
       "",
       `Accept here (sign in with this email address): ${input.acceptUrlBase}/${token}`,
       "",

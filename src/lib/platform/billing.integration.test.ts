@@ -37,7 +37,7 @@ describe.skipIf(!hasDb)("platform admin against Neon", () => {
       ok: false,
       code: "INVALID_SLUG",
     });
-    const created = await createTenant(slug, "Platform Test Hotel");
+    const created = await createTenant(slug, "Platform Test Agency");
     expect(created.ok).toBe(true);
     if (!created.ok) return;
     tenantId = created.data.id;
@@ -51,14 +51,15 @@ describe.skipIf(!hasDb)("platform admin against Neon", () => {
     expect(mine?.flags).toMatchObject({ comingSoon: true, poweredBy: true });
 
     const updated = await updateTenantAdmin(tenantId, {
-      name: "Platform Test Hotel",
+      name: "Platform Test Agency",
       tagline: "Testing",
       isActive: true,
-      flags: { events: true, comingSoon: false, poweredBy: true },
+      flags: { comingSoon: false, poweredBy: true },
     });
     expect(updated.ok).toBe(true);
     const after = (await listTenantsAdmin()).find((t) => t.id === tenantId);
-    expect(after?.flags).toMatchObject({ events: true, comingSoon: false, dining: false });
+    // platform stays untouched; editable flags take the submitted values.
+    expect(after?.flags).toMatchObject({ comingSoon: false, poweredBy: true });
   });
 
   it("pricing upserts with validation", async () => {

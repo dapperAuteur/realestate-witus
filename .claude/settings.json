@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3 -)",
+      "Bash(pnpm add *)",
+      "Bash(pnpm seed:tenants)",
+      "Bash(pnpm seed:demo)",
+      "Bash(curl -sS -o /dev/null \"http://localhost:3115/api/health\")",
+      "Bash(curl -sS -H \"Host: demo.stay.witus.online\" http://localhost:3115/en)",
+      "Bash(curl -sS -H \"Host: demo.stay.witus.online\" \"http://localhost:3115/en/book?checkIn=2026-08-10&checkOut=2026-08-13\")",
+      "Bash(curl -sS -H \"Host: demo.stay.witus.online\" \"http://localhost:3115/en/book?checkIn=2026-12-20&checkOut=2026-12-22\")",
+      "Bash(grep -oE \"GHS[^<]{0,10}\")",
+      "Bash(curl -sS -H \"Host: stay.witus.online\" http://localhost:3115/en)",
+      "Bash(node -e ' *)",
+      "Bash(curl -sS -o /dev/null \"http://localhost:3116/api/health\")",
+      "Bash(curl -sS -H \"Host: stay.witus.online\" http://localhost:3116/en/platform)",
+      "Bash(curl -sS -H \"Host: stay.witus.online\" http://localhost:3116/en/nope/nada)",
+      "Bash(python3 -c \"import json; json.load\\(open\\('src/dictionaries/en.json'\\)\\); print\\('json valid'\\)\")",
+      "Bash(curl -sS -o /dev/null \"http://localhost:3117/api/health\")",
+      "Bash(curl -sS -H \"Host: demo.stay.witus.online\" http://localhost:3117/en)",
+      "Bash(curl -sS -H \"Host: stay.witus.online\" http://localhost:3117/en)",
+      "Bash(curl -sS -o /dev/null \"http://localhost:3118/api/health\")",
+      "Bash(curl -sS -H \"Host: demo.stay.witus.online\" http://localhost:3118/en)"
+    ]
+  }
+}

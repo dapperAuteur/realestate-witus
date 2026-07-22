@@ -1,0 +1,8 @@
+#!/bin/sh
+# WitUS branch-hygiene guard: refuse commits made directly on main/master.
+branch="$(git branch --show-current)"
+if [ "$branch" = "main" ] || [ "$branch" = "master" ]; then
+  echo "✗ Direct commits to $branch are blocked. Create a branch: git checkout -b feat/<slug>" >&2
+  exit 1
+fi
+exit 0

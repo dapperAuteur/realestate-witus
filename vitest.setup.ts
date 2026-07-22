@@ -9,10 +9,21 @@ for (const file of [".env.local", ".env"]) {
   }
 }
 
-// Test-only auth fallbacks so the Better Auth integration suite can run
-// without production secrets (it still needs the database URL to do anything).
-process.env.BETTER_AUTH_SECRET ??= "vitest-only-secret-never-production";
-process.env.BETTER_AUTH_URL ??= "http://localhost:3000";
+// Test-only fallbacks so the integration suites can run without production
+// secrets (they still need the database URL to do anything).
+//
+// EMPTY counts as unset: a key can be declared in .env.local with no value
+// yet, and `??=` would happily keep the empty string and fail deep inside
+// Better Auth instead of here.
+function fallback(key: string, value: string): void {
+  if (!process.env[key]) process.env[key] = value;
+}
+
+fallback("BETTER_AUTH_SECRET", "vitest-only-secret-never-production");
+fallback("BETTER_AUTH_URL", "http://localhost:3000");
+// Only used to build delivery URLs (pure string work, no network), so the
+// support attachment assertions stay deterministic wherever they run.
+fallback("CLOUDINARY_CLOUD_NAME", "vitest-cloud");
 
 // Tests must NEVER send real email: strip Mailgun creds (now present in
 // .env.local) so the mailer always uses its console dev-log fallback — the

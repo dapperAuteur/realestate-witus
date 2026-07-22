@@ -13,6 +13,10 @@ RealEstate.WitUS (`realestate.witus.online`) is BAM's **virtual-tour product for
 3. **Codebase seeded from stay-witus** (this repo): inherits proven runtime tenancy, Better Auth magic-link identity + rbac, platform billing (BAM's Stripe + MoMo claim-then-confirm), /platform admin with domain manager (Vercel API), Mailgun per-tenant sender, Cloudinary signed uploads, support system with screenshots, audit log, test rig (Vitest + Neon integration patterns + Playwright config). Strip the hotel domain (booking/rooms/events/partners/announcements), keep the platform spine.
 4. **Customers are agents/brokerages/developers with paid listings; embeds are public** once a listing is live (responsive iframe snippet, click-to-copy per BAM's UI rules) with view analytics. No token/domain-locking friction in v1. FSBO owners and gating variants are future options, not now.
 
+**Design decisions (BAM, 2026-07-16 — see plans/03 for the research):** listing pages = brand theater that converts (full-bleed hero, in-page tour high on the page with tap-to-load poster, facts strip, soft inline inquiry; sold listings keep live tours with a badge) · **shadcn/ui for admin/platform surfaces only** (public pages stay hand-rolled Tailwind) · **public listing pages are light-locked** (photography-first; dark mode remains on admin) · **Leaflet + OSM** for maps · **gallery ships BOTH lightbox-first and scroll-snap strip with an admin toggle** (`galleryMode` in theme JSONB, tenant default + per-listing override) so BAM compares live.
+
+**Schema forward-compatibility (from plans/05, MUST inform workstream 2):** `listings` carry `propertyId` + nullable `buildingId`/`unitId` + a property-kind enum from day one — multi-family/commercial/campus hierarchy, shared-scene inheritance (one lobby tour serving many unit listings), and tenant-to-tenant **ownership transfer** are designed backlog (plans/05), and the flat single-family case just leaves the FKs null.
+
 ## Product shape (v1 target)
 
 - **Listing:** address/title, sale metadata (price, beds/baths or commercial specs, status: available/under-offer/sold), photo gallery, the 360° tour (PSV scenes + hotspots), optional RealSee dollhouse embed, optional floor plan, agent contact card, inquiry form.
@@ -42,7 +46,7 @@ RealEstate.WitUS (`realestate.witus.online`) is BAM's **virtual-tour product for
 5. **Admin (service workflow):** BAM/staff CRUD for listings/scenes + hotspot editor (yaw/pitch click-capture), publish flow, sale-status transitions; agency tenants via existing /platform.
 6. **Billing hookup** (listing packages on existing invoices) + product landing page.
 
-**Later:** RealSee premium embed field (host-allowlisted), floor-plan sync (plans/02 SWOT first), analytics dashboard, self-serve SaaS tier, the before/after + construction-progress vertical (merge the spec in), Ghana/diaspora marketing content.
+**Later:** RealSee premium embed field (host-allowlisted), floor-plan sync (plans/02), **node-GUI tour builder over the same data model** (plans/04 — graph mode for quick wiring + scene mode for yaw/pitch fine-tune, both on CRUD), **property hierarchy + ownership transfer** (plans/05), **CSV/floor-plan/campus-map imports** (plans/06), analytics dashboard, self-serve SaaS tier, the before/after + construction-progress vertical (merge the spec in), Ghana/diaspora marketing content.
 
 ## Working rules (inherited; several bit us before)
 

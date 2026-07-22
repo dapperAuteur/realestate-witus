@@ -3,11 +3,11 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: { default: "RealEstate.WitUS", template: "%s | RealEstate.WitUS" },
+  title: { default: "RealEstate.WitUS.Online", template: "%s | RealEstate.WitUS" },
   description:
     "Virtual tours for real estate that is for sale. Branded listing pages with embeds agents own. A WitUS platform.",
   openGraph: {
-    title: "RealEstate.WitUS",
+    title: "RealEstate.WitUS.Online",
     description:
       "Virtual tours for real estate that is for sale. Branded listing pages with embeds agents own. A WitUS platform.",
     type: "website",

@@ -1,9 +1,23 @@
 "use client";
 
+import { useEffect } from "react";
+import * as Sentry from "@sentry/nextjs";
+
 // Last-resort 500 boundary (root layout crashed, so this renders its own
 // <html>). Client boundary: literal strings are the sanctioned exception.
 
-export default function GlobalError({ reset }: { error: Error; reset: () => void }) {
+export default function GlobalError({
+  error,
+  reset,
+}: {
+  error: Error & { digest?: string };
+  reset: () => void;
+}) {
+  // Report the root crash for a real stack trace. A no-op when no DSN is configured.
+  useEffect(() => {
+    Sentry.captureException(error);
+  }, [error]);
+
   return (
     <html lang="en">
       <body

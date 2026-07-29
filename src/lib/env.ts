@@ -37,6 +37,14 @@ export const env = {
 
   CRON_SECRET: process.env.CRON_SECRET,
 
+  // Error monitoring (Better Stack, ingesting over the Sentry protocol). All three are optional:
+  // with no DSN the SDK never initializes and the app behaves exactly as it did before. The
+  // sentry.*.config.ts files read process.env directly, since they load before app code and the
+  // public DSN has to stay a literal process.env.NEXT_PUBLIC_* read for Next to inline it.
+  SENTRY_DSN: process.env.SENTRY_DSN,
+  NEXT_PUBLIC_SENTRY_DSN: process.env.NEXT_PUBLIC_SENTRY_DSN,
+  SENTRY_ENVIRONMENT: process.env.SENTRY_ENVIRONMENT,
+
   ADMIN_NOTIFY_EMAIL: process.env.ADMIN_NOTIFY_EMAIL,
   PLATFORM_BOOTSTRAP: process.env.PLATFORM_BOOTSTRAP === "true",
 } as const;

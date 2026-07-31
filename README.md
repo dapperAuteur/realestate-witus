@@ -52,5 +52,30 @@ did before. Set them in Vercel to switch it on (see `.env.example` and user-task
 - Server errors are tagged `tenant.host` (the request Host, which is how tenants resolve), so a
   crash is attributable to a brand without a DB lookup and without any PII.
 
+## Uptime checks (`/api/health`)
+
+**Point uptime monitors at `/api/health`, not at `/`.** The homepage can answer 200 from cache
+while Postgres is unreachable, so a green check on `/` proves nothing. `/api/health` runs a real
+`select 1` against the database on every request, capped at a 4 second timeout.
+
+| Result | Status | Body |
+|---|---|---|
+| Database answered | `200` | `{"ok":true,"checks":{"db":"ok"}}` |
+| Database unreachable, timed out, or `DATABASE_URL` unset | `503` | `{"ok":false,"error":"database_unreachable"}` |
+
+`HEAD` is supported too and carries the same verdict in the status code with an empty body.
+
+- **Public and unauthenticated**, and it leaks nothing: no version, env values, counts, tenant
+  data, or user data. The error string is a fixed literal, never the driver's message (a Neon
+  connection failure stringifies with the full `postgres://user:pass@host` URL), in the response
+  **and** in the logs.
+- **Tenant-agnostic by construction:** `GET` takes no `Request`, so it cannot read the Host header
+  or reach the tenant resolver. It reports whether the app and database are alive, never whether a
+  particular brand exists, so an unknown host or a domain mid-DNS-cutover cannot read as an outage.
+- **Never cached:** `force-dynamic`, `revalidate = 0`, and `Cache-Control: no-store` on every
+  response, so a monitor never grades a stale body.
+- Playwright's `webServer` readiness probe also uses this URL, so `pnpm test:e2e` now waits for a
+  live database rather than for the process to merely accept connections.
+
 Key invariants: [CLAUDE.md](CLAUDE.md). Full context + plan: [HANDOFF.md](HANDOFF.md).
 # realestate-witus

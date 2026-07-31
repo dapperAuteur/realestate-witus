@@ -12,7 +12,7 @@ export const dynamic = "force-dynamic";
 export async function GET() {
   const tenant = await resolveTenant().catch(() => null);
   const isPlatform = !tenant || tenant.flags.platform;
-  const name = isPlatform ? "RealEstate.WitUS" : (tenant.theme.name ?? tenant.name);
+  const name = isPlatform ? "RealEstate.WitUS.Online" : (tenant.theme.name ?? tenant.name);
   const tagline = isPlatform
     ? "Virtual tours that sell the property before the first showing"
     : (tenant.tagline ?? "Explore the listings");

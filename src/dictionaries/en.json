@@ -1,6 +1,8 @@
 {
   "common": {
     "brand": "RealEstate.WitUS",
+    "brandFull": "RealEstate.WitUS.Online",
+    "brandShort": "REWitUS",
     "loading": "Loading",
     "backHome": "Back to home",
     "signedInAs": "Signed in as",
@@ -14,8 +16,48 @@
     "listingsSoon": "Listings and virtual tours from this agency appear here shortly."
   },
   "landing": {
+    "eyebrow": "RealEstate.WitUS.Online",
     "headline": "Virtual tours that sell the property before the first showing",
     "subhead": "We shoot your listing in 360 degrees and publish it as a fast, branded listing page. Every listing ships an embed you drop straight into your own site.",
+    "ctaPrimary": "Walk through the demo",
+    "ctaSecondary": "See the roadmap",
+    "heroMockLabel": "Illustration of the tour viewer: a panorama with navigation hotspots, a scene strip along the bottom, and a fullscreen control.",
+    "heroMockScene": "Living room",
+    "heroMockScenes": [
+      "Living room",
+      "Kitchen",
+      "Terrace",
+      "Main bedroom"
+    ],
+    "howTitle": "How a listing gets made",
+    "how": [
+      {
+        "step": "1",
+        "title": "We shoot it",
+        "body": "You send the address and access details. We capture the property in 360 degrees, room by room, and build the walkthrough. Nothing for your team to learn or upload."
+      },
+      {
+        "step": "2",
+        "title": "You approve it",
+        "body": "You get a private link to the finished listing page. Tell us what to change. Nothing goes public until you say so."
+      },
+      {
+        "step": "3",
+        "title": "You embed it",
+        "body": "The listing goes live on its own page and gives you a snippet. Paste it into your own site once; it keeps working for the life of the listing."
+      }
+    ],
+    "embedTitle": "The embed is the point",
+    "embedIntro": "Most tour vendors host your tour on their domain and put their brand around it. Yours lives on your listing page and inside your own website, sized to whatever space you give it.",
+    "embedSteps": [
+      "Open the listing in your agency dashboard.",
+      "Tap the snippet to copy it. It is one line of HTML.",
+      "Paste it into your listing page where you want the tour to sit."
+    ],
+    "embedSnippetLabel": "example embed snippet",
+    "embedSnippetNote": "Every live listing generates its own snippet with its own address. This is the shape of it.",
+    "embedPreviewLabel": "Illustration of the embedded tour inside an agency website, with a slim bar naming the property and linking to the full listing.",
+    "embedPreviewBar": "View full listing",
     "featuresLabel": "What you get",
     "features": [
       {
@@ -43,8 +85,20 @@
         "body": "Mobile-first and fast on 3G. The tour waits behind a poster image until a buyer taps to explore."
       }
     ],
+    "includedTitle": "What a listing includes",
+    "included": [
+      "The 360 capture session and the built walkthrough",
+      "A branded listing page on your domain",
+      "The embed snippet and its link preview card",
+      "Photography gallery and the property facts strip",
+      "An inquiry form that reaches you directly",
+      "Hosting for as long as the listing runs, sold listings included"
+    ],
+    "pricingTitle": "What it costs",
+    "pricingBody": "Pricing depends on the property: size, how many rooms need capture, and whether you want the 3D dollhouse layer. Residential and commercial are quoted differently. Ask and we will price your first one before you commit to anything.",
     "statusBadge": "Taking capture slots now",
     "statusBody": "RealEstate.WitUS is taking its first listings. Have a property to shoot? Reach out through witus.online.",
+    "contactCta": "Ask about a property",
     "roadmapCta": "See the public roadmap"
   },
   "roadmap": {
@@ -120,6 +174,10 @@
     "title": "No site is configured for this address",
     "body": "This host is not mapped to an agency yet. If you are the site owner, add the domain from your admin dashboard."
   },
+  "demoRibbon": {
+    "text": "This is a live demo agency. Everything resets nightly.",
+    "cta": "Try the dashboard"
+  },
   "signIn": {
     "title": "Sign in",
     "body": "We will email you a one-time link to sign in to",
@@ -127,7 +185,11 @@
     "submit": "Email me a sign-in link",
     "sent": "Check your email. If that address has access, a sign-in link is on its way. It expires in 10 minutes.",
     "invalid": "That does not look like an email address. Please check it and try again.",
-    "unavailable": "Sign-in is not available right now. Please try again later."
+    "unavailable": "Sign-in is not available right now. Please try again later.",
+    "demoHeading": "Try the demo",
+    "demoHint": "Signs you straight in. No email needed. Everything resets nightly.",
+    "demoAdmin": "Try the demo as the owner",
+    "demoVisitor": "Try the demo as an agent"
   },
   "admin": {
     "title": "Front desk",

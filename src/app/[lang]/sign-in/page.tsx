@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getDictionary, hasLocale } from "@/lib/dictionaries";
+import { DEMO_TENANT_SLUG } from "@/lib/demo/seed";
+import { hasDemoLogin } from "@/lib/env";
 import { resolveTenant } from "@/lib/tenant";
 import { requestMagicLink } from "./actions";
 
@@ -37,6 +39,38 @@ export default async function SignInPage({
         {s.body} {brand}.
       </p>
 
+      {hasDemoLogin && tenant?.slug === DEMO_TENANT_SLUG ? (
+        <section
+          aria-label={s.demoHeading}
+          className="mt-6 rounded-xl border border-slate-200 p-4 dark:border-slate-800"
+        >
+          <h2 className="text-sm font-semibold">{s.demoHeading}</h2>
+          <p className="mt-1 text-xs text-slate-500">{s.demoHint}</p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <form method="post" action="/api/demo-login">
+              <input type="hidden" name="role" value="admin" />
+              <input type="hidden" name="lang" value={lang} />
+              <button
+                type="submit"
+                className="inline-flex min-h-11 items-center rounded-full px-5 text-sm font-semibold focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current"
+                style={{ background: "var(--brand-accent)", color: "var(--brand-accent-fg)" }}
+              >
+                {s.demoAdmin}
+              </button>
+            </form>
+            <form method="post" action="/api/demo-login">
+              <input type="hidden" name="role" value="visitor" />
+              <input type="hidden" name="lang" value={lang} />
+              <button
+                type="submit"
+                className="inline-flex min-h-11 items-center rounded-full border border-slate-300 px-5 text-sm font-semibold focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current dark:border-slate-700"
+              >
+                {s.demoVisitor}
+              </button>
+            </form>
+          </div>
+        </section>
+      ) : null}
 
       {status === "sent" ? (
         <p

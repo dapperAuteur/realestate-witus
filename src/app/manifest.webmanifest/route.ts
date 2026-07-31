@@ -9,13 +9,17 @@ export const dynamic = "force-dynamic";
 export async function GET() {
   const tenant = await resolveTenant().catch(() => null);
   const isPlatform = !tenant || tenant.flags.platform;
-  const name = isPlatform ? "RealEstate.WitUS" : (tenant.theme.name ?? tenant.name);
+  const name = isPlatform
+    ? "RealEstate.WitUS.Online"
+    : (tenant.theme.name ?? tenant.name);
+  // REWitUS is the short form for home-screen icons, where long names truncate.
+  const shortName = isPlatform ? "REWitUS" : (tenant?.theme.shortName ?? name);
   const preset = presetByKey(tenant?.theme.presetKey);
 
   return Response.json(
     {
       name,
-      short_name: tenant?.theme.shortName ?? name,
+      short_name: shortName,
       start_url: "/en",
       display: "standalone",
       background_color: "#ffffff",

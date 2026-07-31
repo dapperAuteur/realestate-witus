@@ -36,6 +36,14 @@ export const env = {
 
   CRON_SECRET: process.env.CRON_SECRET,
 
+  // Error monitoring (Better Stack, ingesting over the Sentry protocol). All three are optional:
+  // with no DSN the SDK never initializes and the app behaves exactly as it did before. The
+  // sentry.*.config.ts files read process.env directly, since they load before app code and the
+  // public DSN has to stay a literal process.env.NEXT_PUBLIC_* read for Next to inline it.
+  SENTRY_DSN: process.env.SENTRY_DSN,
+  NEXT_PUBLIC_SENTRY_DSN: process.env.NEXT_PUBLIC_SENTRY_DSN,
+  SENTRY_ENVIRONMENT: process.env.SENTRY_ENVIRONMENT,
+
   // Demo logins. Emails identify the two demo accounts; passwords are
   // server-held — the demo buttons POST a role only and /api/demo-login
   // supplies the credential, so the secret never reaches a browser.

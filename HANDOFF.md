@@ -48,8 +48,8 @@ prepended by hand; the old 0000-0002 history is gone and was never applied to an
 **Deliberate changes beyond a pure delete — do not undo by reflex:**
 - **Roles are now `owner > manager > agent`** (was owner/manager/front_desk + partner + guest).
   `roleSatisfies` is a plain linear rank; the partner and guest lanes are gone with their flows.
-- **`emailAndPassword` is disabled** in Better Auth. It only existed for the two demo hotel
-  accounts. Magic link is the only door; `PLATFORM_BOOTSTRAP=true` opens the owner window.
+- **`emailAndPassword` is enabled with `disableSignUp`** — restored 2026-07-22 for the demo
+  accounts, which are the only credential accounts that exist. Everyone real uses magic link.
 - **`TenantFlags` is down to `platform | comingSoon | poweredBy`.** The hotel feature toggles
   (events, dining, concierge, hub, virtualTour, announcements) are gone. `EDITABLE_FLAGS` in
   `lib/platform/tenants.ts` is the /platform editor's list.
@@ -62,8 +62,42 @@ prepended by hand; the old 0000-0002 history is gone and was never applied to an
   (customer→BAM: Stripe + MoMo claim-then-confirm) is untouched and still works.
 - `pgErrorCode` moved from the deleted `lib/booking/holds.ts` to **`src/lib/db-error.ts`**.
   `withTx` is still in `src/db/index.ts` (the neon-http-can't-hold-transactions lesson).
-- **No demo tenant.** `pnpm seed:tenants` seeds only the platform tenant; demo seeds, demo
-  logins, the demo ribbon, and all three cron routes are gone (`vercel.json` crons is `[]`).
+- **Two tenants are seeded:** `pnpm seed:tenants` (platform) and `pnpm seed:demo`
+  (`demo-agency`, host `demo.realestate.witus.online`). The hotel crons are gone;
+  `vercel.json` carries only the nightly demo reset.
+
+## Naming (BAM, 2026-07-22)
+
+Four stylizations, each with a home. Do not mix them within a surface.
+
+| Form | Where it goes |
+|---|---|
+| `RealEstate.WitUS.Online` | Full identity: root `<title>`, OG card, footer wordmark, landing eyebrow |
+| `RealEstate.WitUS` | The product name in prose and chrome. The default. |
+| `RealEstateWitUS` | Compact display where dots read badly |
+| `REWitUS` | Tight spaces: manifest `short_name` (home-screen icons truncate) |
+
+`common.brand` / `brandFull` / `brandShort` in `en.json` carry the first three.
+Machine identifiers stay kebab-case `realestate-witus` (health `service`, outbox `source`,
+Cloudinary folder prefix) — those are ids, not display names.
+
+## The demo (2026-07-22)
+
+`demo.realestate.witus.online` runs the `demo-agency` tenant ("Meridian Property Group",
+fictional). Two credential accounts show off RBAC: **owner** (everything incl. Billing) and
+**agent** (no design, team, or billing). `/api/demo-login` takes a role, supplies the
+password server-side, and redirects into `/en/admin` — the secret never reaches a browser,
+and the route only answers on the demo host. The sign-in page shows the buttons and the
+layout shows a ribbon, both gated on `hasDemoLogin`.
+
+`src/lib/demo/seed.ts` owns the tenant + wipe/reseed shape; `seedDemoContent` is
+**deliberately a no-op today**, not a missing step — sample listings and a real 360 tour
+drop into it when workstream 2 lands, and the nightly reset already calls it.
+
+**Env gotcha that cost real time:** an EMPTY key behaves exactly like a missing one
+(`Boolean("")` is false). `.env.local` had most keys declared blank, which made auth fail
+with a confusing "BETTER_AUTH_SECRET is not set". `vitest.setup.ts` now treats empty as
+unset for its test-only fallbacks. See user-task 05.
 
 **Surfaces that survive:** `/[lang]` (platform landing + agency home shell), `/roadmap`,
 `/sign-in`, `/invite/[token]`, `/admin` (overview, design, team, support, billing),

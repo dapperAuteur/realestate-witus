@@ -32,9 +32,10 @@ function buildAuth() {
         isPlatformOwner: { type: "boolean", defaultValue: false, input: false },
       },
     },
-    // No credential accounts exist: everyone signs in by magic link, so the
-    // password rail stays off entirely rather than sitting unused.
-    emailAndPassword: { enabled: false },
+    // Password sign-IN exists solely for the two demo accounts (the only
+    // credential accounts that exist); public sign-UP stays off. Everyone
+    // real uses magic links.
+    emailAndPassword: { enabled: true, disableSignUp: true },
     // Tenant custom domains get appended here once domain management ships;
     // wildcard covers *.witus.online tenants and previews today.
     trustedOrigins: [

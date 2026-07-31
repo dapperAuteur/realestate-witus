@@ -1,7 +1,11 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import { SessionBar } from "@/components/session-bar";
 import { TenantHeader } from "@/components/tenant-header";
+import { DEMO_TENANT_SLUG } from "@/lib/demo/seed";
+import { hasDemoLogin } from "@/lib/env";
+import { getSessionUser } from "@/lib/rbac";
 import { brandCssVars } from "@/lib/brand-presets";
 import { getDictionary, hasLocale } from "@/lib/dictionaries";
 import { fontPairCssVars } from "@/lib/fonts";
@@ -31,6 +35,10 @@ export default async function LangLayout({
   const dict = await getDictionary(lang);
 
   const tenant = await resolveTenant().catch(() => null);
+  const showDemoRibbon =
+    tenant?.slug === DEMO_TENANT_SLUG &&
+    hasDemoLogin &&
+    !(await getSessionUser().catch(() => null));
   const vars = {
     ...brandCssVars(tenant?.theme.presetKey),
     ...fontPairCssVars(tenant?.theme.fontPairKey),
@@ -42,6 +50,20 @@ export default async function LangLayout({
       className="min-h-dvh"
     >
       <SessionBar lang={lang} dict={dict} />
+      {showDemoRibbon ? (
+        <aside
+          role="note"
+          className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 border-b border-slate-200 bg-slate-900 px-4 py-2 text-center text-xs text-white dark:border-slate-800 dark:bg-slate-100 dark:text-slate-900"
+        >
+          <span>{dict.demoRibbon.text}</span>
+          <Link
+            href={`/${lang}/sign-in`}
+            className="inline-flex min-h-8 items-center font-semibold underline underline-offset-4 focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current"
+          >
+            {dict.demoRibbon.cta}
+          </Link>
+        </aside>
+      ) : null}
       {tenant && !tenant.flags.platform ? (
         <TenantHeader tenant={tenant} dict={dict} lang={lang} />
       ) : null}

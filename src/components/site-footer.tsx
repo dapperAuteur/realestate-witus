@@ -45,7 +45,7 @@ export function SiteFooter({ lang }: { lang: Locale }) {
             className="mb-2 h-12 w-auto"
           />
           <p className="font-extrabold text-slate-900 dark:text-slate-100">
-            RealEstate.WitUS
+            RealEstate.WitUS.Online
           </p>
           <p className="text-xs text-slate-500">
             Virtual tours for real estate that is for sale

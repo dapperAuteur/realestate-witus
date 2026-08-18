@@ -19,6 +19,10 @@ export function localeRedirectTarget(pathname: string): string | null {
   if (
     pathname.startsWith("/api/") ||
     pathname.startsWith("/_next/") ||
+    // Reverse-proxied to PostHog by next.config.ts. The middleware matcher already
+    // excludes it; this is the second line of defence, and the testable one — a locale
+    // redirect here would send ingest to /en/ingest/e/ and drop every analytics event.
+    pathname.startsWith("/ingest/") ||
     pathname === "/og" // generated OG card, not a page
   ) {
     return null;

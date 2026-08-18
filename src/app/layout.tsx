@@ -1,5 +1,6 @@
 import { Analytics } from "@vercel/analytics/next";
 import type { Metadata } from "next";
+import { PostHogProvider } from "@/lib/analytics/posthog-provider";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -32,6 +33,23 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" suppressHydrationWarning>
       <body className="min-h-dvh bg-white text-slate-900 antialiased dark:bg-slate-950 dark:text-slate-100">
         {children}
+        <PostHogProvider
+          // Read here, in a Server Component, and passed down — rather than reading
+          // process.env inside the client component — so the env surface stays in one
+          // place. `?? null` is meaningful: it is what puts the provider in its
+          // supported keyless state instead of initialising with `undefined`, so this
+          // ships dark until BAM sets the vars on the Vercel project.
+          apiKey={process.env.NEXT_PUBLIC_POSTHOG_KEY ?? null}
+          // "/ingest" is proxied to PostHog by next.config.ts so ad blockers can't drop
+          // events and an agency's own domain never makes a visible vendor request.
+          // NEXT_PUBLIC_POSTHOG_HOST stays the source of truth for the real upstream
+          // host and is used for server-side capture, not the browser.
+          apiHost="/ingest"
+        />
+        {/* Vercel Web Analytics: cookieless pageview counts + Web Vitals, no consent
+            surface. Complements PostHog (which owns product events, witus plan 26)
+            rather than replacing it. Sends nothing until Web Analytics is ENABLED on
+            the Vercel project. */}
         <Analytics />
       </body>
     </html>

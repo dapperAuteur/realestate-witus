@@ -8,7 +8,8 @@
     "signedInAs": "Signed in as",
     "adminLink": "Agency admin",
     "platformLink": "Platform admin",
-    "signOut": "Sign out"
+    "signOut": "Sign out",
+    "signOutWitus": "Sign out of WitUS"
   },
   "home": {
     "comingSoon": "Launching soon",
@@ -186,6 +187,12 @@
     "sent": "Check your email. If that address has access, a sign-in link is on its way. It expires in 10 minutes.",
     "invalid": "That does not look like an email address. Please check it and try again.",
     "unavailable": "Sign-in is not available right now. Please try again later.",
+    "witusHeading": "WitUS team",
+    "witusHint": "Use your WitUS account to sign in to the platform.",
+    "witusButton": "Sign in with WitUS",
+    "witusContinueAs": "Continue as {name}",
+    "witusRedirecting": "Redirecting",
+    "witusNotYou": "Not you? Use the email form below.",
     "demoHeading": "Try the demo",
     "demoHint": "Signs you straight in. No email needed. Everything resets nightly.",
     "demoAdmin": "Try the demo as the owner",

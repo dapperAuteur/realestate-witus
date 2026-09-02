@@ -4,6 +4,7 @@ import type { Dictionary } from "@/lib/dictionaries";
 import { getMembership, getSessionUser } from "@/lib/rbac";
 import { roleSatisfies } from "@/lib/rbac";
 import { resolveTenant } from "@/lib/tenant";
+import { witusEcosystemEnabled } from "@/lib/witus-sso";
 
 // Signed-in indicator + the door to the next surface (BAM: users could not
 // tell they were logged in or where admin lives). Renders NOTHING for
@@ -32,6 +33,11 @@ export async function SessionBar({
     staffRole && roleSatisfies(staffRole, "agent"),
   );
   const showPlatform = user.isPlatformOwner && !isTenantSite;
+  // Say what the button actually does. On the WitUS-branded platform host sign-out is
+  // global (it ends the shared session at the IdP too, see sign-out-action.ts); on an
+  // agency tenant domain it is purely local and must not name WitUS at all. Same gate,
+  // resolved on the server from the request Host, so label and behaviour cannot diverge.
+  const globalSignOut = await witusEcosystemEnabled();
 
   return (
     <div className="border-b border-slate-200 bg-slate-50 text-xs dark:border-slate-800 dark:bg-slate-900">
@@ -62,7 +68,7 @@ export async function SessionBar({
               type="submit"
               className="inline-flex min-h-11 items-center underline-offset-4 hover:underline focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current"
             >
-              {c.signOut}
+              {globalSignOut ? c.signOutWitus : c.signOut}
             </button>
           </form>
         </span>

@@ -16,8 +16,9 @@ build; agents, brokerages, and developers buy listings.
 
 ## Stack
 
-Next.js (App Router) · Neon Postgres + Drizzle · Better Auth (product-local) ·
-Tailwind v4 · Photo Sphere Viewer · Mailgun · Cloudinary · Vitest + Playwright · pnpm
+Next.js (App Router) · Neon Postgres + Drizzle · Better Auth (product-local; optional
+ecosystem OIDC on the branded host only) · Tailwind v4 · Photo Sphere Viewer · Mailgun ·
+Cloudinary · Vitest + Playwright · pnpm
 
 ## Develop
 
@@ -35,6 +36,48 @@ pnpm dev
 | `pnpm dev` / `build` / `start` | Next.js |
 | `pnpm typecheck` / `test` | tsc / Vitest (Neon integration tests skip without a DB URL) |
 | `pnpm db:generate` / `db:migrate` | Drizzle migrations (prod runs are BAM's, via user-task) |
+
+## Ecosystem SSO ("Sign in with WitUS")
+
+**Only `realestate.witus.online` participates in the WitUS ecosystem. An agency's own domain must
+never reach `accounts.witus.online`** — one request from it would both reveal that the ecosystem
+exists and tell it that someone visited that agency. That gate is the headline fact here, not the
+feature.
+
+[src/lib/witus-sso.ts](src/lib/witus-sso.ts) owns it. `shouldShowWitusSignIn` is a pure function
+requiring **all** of: OIDC credentials configured, a resolvable branded host (derived from
+`BETTER_AUTH_URL`, never a hardcoded hostname), the request arriving *on* that host, and a tenant
+outcome that is not a customer agency. It fails **closed** on every uncertainty, including a failed
+tenant lookup: a false negative costs a magic link, a false positive leaks the shared backend to an
+agency's buyers. `witusEcosystemEnabled` is an alias of the same binding — the same gate, not a
+second copy — and it guards all three crossing surfaces: the button, the silent probe, and sign-out.
+Defence in depth beyond it: the IdP registers exactly one redirect URI for slug `realestate`, so an
+agency host fails at the IdP with a 400 even if this gate were wrong.
+
+**"Continue as ⟨name⟩".** `/[lang]/sign-in` renders the magic-link form immediately and, in parallel,
+asks the IdP's `/api/ecosystem/session` (CORS, credentialed, 4s timeout) whether this browser already
+holds a WitUS session; if it answers, the button relabels itself. **A blocked, failed, or timed-out
+probe is completely invisible** — no error, no spinner, no layout shift — which is the designed state
+under Safari ITP and Firefox Total Cookie Protection, where the IdP's cookie never rides along as a
+third-party cookie. The name is display copy from a cross-origin response and **is never a
+credential**: identity is established only by the OIDC code flow the click starts, which re-checks
+the host gate. `runSilentSsoProbe` takes `fetch` as an argument so
+[src/lib/silent-sso.test.ts](src/lib/silent-sso.test.ts) can prove an ineligible host makes **zero**
+network calls rather than merely looking as if it would. A one-shot marker (`sessionStorage` +
+`?sso=tried`, written *before* the redirect) stops a stale IdP session from looping the visitor.
+
+**Global sign-out.** On the branded host, signing out here signs you out of every WitUS app; on an
+agency domain it stays entirely local. **Order is the safety property:** the local session is
+destroyed first, then `src/app/[lang]/sign-out-action.ts` redirects
+to the IdP's `oauth2/endsession` with `client_id` and a `post_logout_redirect_uri` of
+`https://realestate.witus.online/` — trailing slash included, because Better Auth exact-matches it
+against the registry, and locale-less because `/` then 307s to `/en` here. An IdP that is unreachable
+or refuses the logout still leaves you signed out here.
+
+Both features are dark unless `WITUS_OIDC_CLIENT_ID` and `WITUS_OIDC_CLIENT_SECRET` are set;
+`WITUS_OIDC_DISCOVERY_URL` is optional and every IdP URL is derived from it, so
+`accounts.witus.online` is named in one place (see `.env.example` and
+[src/lib/env.ts](src/lib/env.ts)).
 
 ## Error monitoring (Better Stack)
 

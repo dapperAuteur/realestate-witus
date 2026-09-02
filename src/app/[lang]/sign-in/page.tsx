@@ -1,10 +1,13 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { WitusSignInButton } from "@/components/witus-sign-in-button";
 import { getDictionary, hasLocale } from "@/lib/dictionaries";
 import { DEMO_TENANT_SLUG } from "@/lib/demo/seed";
-import { hasDemoLogin } from "@/lib/env";
+import { hasDemoLogin, witusSilentSsoEndpoint } from "@/lib/env";
+import { getSessionUser } from "@/lib/rbac";
 import { resolveTenant } from "@/lib/tenant";
-import { requestMagicLink } from "./actions";
+import { showWitusSignIn } from "@/lib/witus-sso";
+import { requestMagicLink, signInWithWitus } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -29,6 +32,12 @@ export default async function SignInPage({
 
   const tenant = await resolveTenant().catch(() => null);
   const brand = tenant?.theme.name ?? tenant?.name ?? "RealEstate.WitUS";
+  // True only on the WitUS-branded platform host, so an agency's buyers never see a
+  // WitUS-branded option on their agency's own site. The action re-checks this
+  // independently, since a server action is a public POST endpoint.
+  const witusSignIn = await showWitusSignIn();
+  // Nothing to ask the IdP on behalf of someone who is already signed in here.
+  const signedIn = Boolean(await getSessionUser().catch(() => null));
 
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col justify-center px-6 py-16">
@@ -69,6 +78,33 @@ export default async function SignInPage({
               </button>
             </form>
           </div>
+        </section>
+      ) : null}
+
+      {witusSignIn ? (
+        <section
+          aria-label={s.witusHeading}
+          className="mt-6 rounded-xl border border-slate-200 p-4 dark:border-slate-800"
+        >
+          <h2 className="text-sm font-semibold">{s.witusHeading}</h2>
+          <p className="mt-1 text-xs text-slate-500">{s.witusHint}</p>
+          <form action={signInWithWitus} className="mt-3">
+            <input type="hidden" name="lang" value={lang} />
+            {/* The IdP endpoint is passed ONLY here, inside `witusSignIn ? ... : null`,
+                so an agency tenant's browser never receives the URL at all — it cannot
+                probe a host it was never told about, even if this component changed. */}
+            <WitusSignInButton
+              enabled={witusSignIn}
+              silentCheckUrl={witusSilentSsoEndpoint}
+              signedIn={signedIn}
+              copy={{
+                signIn: s.witusButton,
+                continueAs: s.witusContinueAs,
+                redirecting: s.witusRedirecting,
+                notYou: s.witusNotYou,
+              }}
+            />
+          </form>
         </section>
       ) : null}
 

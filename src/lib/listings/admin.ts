@@ -436,3 +436,42 @@ export async function assignableAgents(tenant: { id: string; flags: { platform?:
         .orderBy(asc(users.email));
   return rows.map((row) => ({ id: row.id, label: row.name ? `${row.name} (${row.email})` : row.email }));
 }
+
+/**
+ * What the seller report adds up (seller-report.ts): view counters and
+ * inquiries for one listing since `from` (YYYY-MM-DD, UTC). Counts and kinds
+ * only; the report never shows who asked.
+ */
+export async function sellerReportRows(tenantId: string, listing: { id: string; propertyId: string }, from: string) {
+  const listingId = listing.id;
+  const [views, inquiries, [property]] = await Promise.all([
+    db()
+      .select({
+        day: listingViews.day,
+        surface: listingViews.surface,
+        pageViews: listingViews.pageViews,
+        tourOpens: listingViews.tourOpens,
+      })
+      .from(listingViews)
+      .where(and(eq(listingViews.tenantId, tenantId), eq(listingViews.listingId, listingId), gte(listingViews.day, from))),
+    db()
+      .select({
+        day: sql<string>`to_char(${listingInquiries.createdAt} at time zone 'UTC', 'YYYY-MM-DD')`,
+        kind: listingInquiries.kind,
+      })
+      .from(listingInquiries)
+      .where(
+        and(
+          eq(listingInquiries.tenantId, tenantId),
+          eq(listingInquiries.listingId, listingId),
+          sql`${listingInquiries.createdAt} >= ${from}::date`,
+        ),
+      ),
+    db()
+      .select()
+      .from(properties)
+      .where(and(eq(properties.tenantId, tenantId), eq(properties.id, listing.propertyId)))
+      .limit(1),
+  ]);
+  return { views, inquiries, property: property ?? null };
+}

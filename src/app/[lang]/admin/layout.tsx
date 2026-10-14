@@ -45,7 +45,7 @@ export default async function AdminLayout({
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-8">
-      <header className="flex flex-wrap items-baseline justify-between gap-2">
+      <header className="flex flex-wrap items-baseline justify-between gap-2 print:hidden">
         <h1 className="text-2xl font-bold">
           {tenant.theme.name ?? tenant.name}{" "}
           <span className="text-base font-normal text-slate-500">{a.title}</span>
@@ -54,7 +54,7 @@ export default async function AdminLayout({
           {a.roleLabel} {user.email} ({role})
         </p>
       </header>
-      <nav aria-label={a.title} className="mt-4 overflow-x-auto">
+      <nav aria-label={a.title} className="mt-4 overflow-x-auto print:hidden">
         <ul className="flex gap-2 text-sm">
           {tabs.map((tab) => (
             <li key={tab.href}>

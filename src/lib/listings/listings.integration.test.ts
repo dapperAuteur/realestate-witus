@@ -45,8 +45,10 @@ import {
   listingEditData,
   listingsBoard,
   movePhoto,
+  sellerReportRows,
 } from "./admin";
 import { submitInquiry } from "./inquiries";
+import { reportDays, sellerReport } from "./seller-report";
 import type { ListingInput, PropertyInput } from "./listing-input";
 import { importTourCsv } from "@/lib/tour/import";
 import { applyPrivacyEdit } from "@/lib/tour/privacy";
@@ -499,6 +501,16 @@ describe.skipIf(!ready)("listings and tours against the database", () => {
     expect(rows).toHaveLength(1);
     expect(rows[0]).toMatchObject({ kind: "tour_request", source: "tour", email: "kofi@example.com", status: "new" });
     expect((await listingsBoard(tenantId))[0].newInquiries).toBe(1);
+
+    // The seller report adds up the same rows: today's views (the test above) and this inquiry.
+    const listing = (await findOwnedListing(tenantId, listingId))!;
+    const days = reportDays(7, new Date());
+    const rowsForReport = await sellerReportRows(tenantId, listing, days[0]);
+    expect(rowsForReport.property?.addressLine1).toBe("14 Ring Road");
+    expect(rowsForReport.inquiries).toEqual([{ day: days[6], kind: "tour_request" }]);
+    const report = sellerReport(days, rowsForReport.views, rowsForReport.inquiries);
+    expect(report.totals).toMatchObject({ views: 3, opens: 1, page: { views: 2, opens: 1 }, embed: { views: 1, opens: 0 }, inquiries: 1, tourRequests: 1 });
+    expect(report.days.slice(0, 6).every((d) => d.views === 0)).toBe(true);
   });
 
   it("offers only this agency's team as agents", async () => {

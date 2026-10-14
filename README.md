@@ -9,10 +9,32 @@ Self-hosted tour engine (Photo Sphere Viewer) so tours are owned, not rented; an
 RealSee dollhouse layer covers listings that warrant full 3D. Service-led: we capture and
 build; agents, brokerages, and developers buy listings.
 
-> **Status:** the platform spine is in place and the seed template's hotel domain is
-> gone (workstream 1 complete): runtime tenancy, Better Auth magic links, platform
-> billing, /platform admin with the domain manager, Mailgun, Cloudinary, support, audit
-> log, and the test rig. Listings, tours, and embeds are next — see HANDOFF.md.
+> **Status:** built and in final testing, waiting on the first real listing (user task 11).
+> The platform spine (runtime tenancy, Better Auth magic links, platform billing, /platform
+> admin with the domain manager, Mailgun, Cloudinary, support, audit log) carries the
+> listings and tours below. Progress and open decisions: HANDOFF.md.
+
+## Features
+
+For buyers, on the listing page and in the embed:
+- A branded listing page: photos, the facts buyers scan for, a sticky "Request a tour", and a
+  multi-room 360 tour you walk by tapping doorways (`/[lang]/listings/[slug]`).
+- The same tour as an iframe for the agent's own site (`/embed/listings/[slug]`), with a
+  copy-paste snippet in the admin.
+- Floor plans, one per floor, with every room pinned; the plan follows the buyer between floors.
+- Before / After: a room at two times, lined up from the same spot.
+
+For agents, in the admin (`/[lang]/admin/listings`):
+- Bulk room creation from 360 photos (resized in the browser to fit Cloudinary's limits),
+  arrow and hotspot placement, bulk publish, and graph checks (orphans, dead ends, unplaced
+  doorways).
+- Build a tour from a spreadsheet (CSV): preview first, line-numbered errors, safe to run twice.
+- A room map to check and wire doorways; the Connections list is its accessible equivalent.
+- Hide people and gear: face blur, boxes, and a floor cover (blur, pixelate, or a patch with
+  the agency's logo), baked into a new copy. The original moves out of buyers' reach, or can
+  be deleted.
+- Inquiries by email and in the admin, and a seller report (views, tour opens, inquiries over
+  7, 30 or 90 days) to print or save as a PDF.
 
 ## Stack
 
@@ -34,6 +56,7 @@ pnpm dev
 |---|---|
 | `pnpm dev` / `build` / `start` | Next.js |
 | `pnpm typecheck` / `test` | tsc / Vitest (Neon integration tests skip without a DB URL) |
+| `pnpm lint` | ESLint, then the em-dash guard (`pnpm check:em-dashes`) on user-visible copy |
 | `pnpm db:generate` / `db:migrate` | Drizzle migrations (prod runs are BAM's, via user-task) |
 
 ## Error monitoring (Better Stack)

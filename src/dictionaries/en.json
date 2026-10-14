@@ -112,8 +112,8 @@
     "intro": "What we are building for agents and brokerages on RealEstate.WitUS, in the order we are building it. Dates are targets we work toward, not promises.",
     "phases": [
       {
-        "label": "Building now",
-        "timeframe": "For the first paid listings",
+        "label": "Built, in final testing",
+        "timeframe": "Live with the first listing",
         "items": [
           {
             "title": "Listings and 360 tours",
@@ -128,6 +128,32 @@
             "body": "A soft inquiry form on every listing page. No popups, no gates. Messages reach you and stay attached to the listing."
           },
           {
+            "title": "Floor plans in the tour",
+            "body": "One plan per floor, with every room pinned on it. Inside the tour the plan follows the buyer from floor to floor; tap a room on the plan to jump there."
+          },
+          {
+            "title": "Hide people and gear",
+            "body": "Blur faces, cover photos on the wall, and put a patch with your logo over the tripod. The edit is saved into a new copy, so the original can't be recovered from the listing."
+          },
+          {
+            "title": "Before and after",
+            "body": "Show a room at two times, lined up from the same spot, in the tour and on the listing page."
+          },
+          {
+            "title": "Faster tour building",
+            "body": "Build a forty-room tour from a spreadsheet, then check and fix its doorways on a map of the rooms before fine-tuning each one."
+          },
+          {
+            "title": "A report for your seller",
+            "body": "Views, tour opens and inquiries for 7, 30 or 90 days, ready to print or save as a PDF. Counts only: nobody who looked is named."
+          }
+        ]
+      },
+      {
+        "label": "Building now",
+        "timeframe": "For the first paid listings",
+        "items": [
+          {
             "title": "Your brand, your domain",
             "body": "Your logo, colors, and web address across every listing page, set up from your admin without a developer."
           }
@@ -138,20 +164,12 @@
         "timeframe": "First fast-follows",
         "items": [
           {
-            "title": "Floor plans synced to the tour",
-            "body": "A floor plan beside the viewer with a live position marker, so a buyer always knows where in the property they are standing. Tap a room on the plan to jump there."
-          },
-          {
             "title": "Dollhouse view for premium listings",
             "body": "An optional 3D dollhouse and auto-generated floor plan on the properties that warrant it, layered onto the same listing page."
           },
           {
-            "title": "Faster tour building",
-            "body": "Wire a forty-scene commercial walkthrough by dragging connections on a map of the tour, then fine-tune each doorway. Bulk imports for large jobs."
-          },
-          {
-            "title": "View analytics",
-            "body": "How many buyers opened the tour, how long they stayed, and which rooms held them. Per listing, in plain numbers."
+            "title": "Deeper tour analytics",
+            "body": "Which rooms held buyers longest and where they left the tour, per listing, in plain numbers."
           }
         ]
       },
@@ -478,6 +496,38 @@
         "views": "{n} views",
         "opens": "{n} tour opens"
       },
+      "report": {
+        "title": "Seller report",
+        "open": "Open the seller report",
+        "openHint": "Views, tour opens and inquiries over 7, 30 or 90 days, ready to print or save as a PDF for your seller.",
+        "back": "Back to the listing",
+        "print": "Print or save as PDF",
+        "rangeLabel": "Report period",
+        "range": "Last {n} days",
+        "period": "{from} to {to}",
+        "prepared": "Prepared {date} by {agency}",
+        "views": "Views",
+        "opens": "Tour opens",
+        "openRate": "Opened the 360 tour",
+        "openRateHint": "of views",
+        "noRate": "No views yet",
+        "inquiries": "Inquiries",
+        "tourRequests": "{n} asked for a tour",
+        "whereTitle": "Where buyers saw it",
+        "page": "This listing page",
+        "embed": "Your own website, through the embed",
+        "whereLine": "{views} views, {opens} tour opens",
+        "dailyTitle": "Day by day",
+        "chartAlt": "Views and tour opens per day, {from} to {to}. {busiest}.",
+        "chartAltQuiet": "Views and tour opens per day, {from} to {to}. No views in this period.",
+        "legendViews": "Views",
+        "legendOpens": "Tour opens",
+        "busiest": "Busiest day: {day}, with {n} views",
+        "tableSummary": "The numbers by day",
+        "day": "Day",
+        "empty": "No views in this period yet. Share the listing link or add the embed to your site, then check back.",
+        "privacy": "These are counts only. The listing records how many times it was seen and its tour opened, never who looked. Days run midnight to midnight UTC. Inquiries are counted here, not named."
+      },
       "inquiries": {
         "title": "Inquiries",
         "empty": "No inquiries yet. They also arrive by email.",
@@ -605,6 +655,27 @@
           "needsPlacementMany": "{n} doorways to place",
           "duplicate": "Duplicate doorway"
         }
+      },
+      "map": {
+        "title": "Room map",
+        "intro": "Every room and the doorways between them, laid out from the start room. Use it to check a tour at a glance, especially after a spreadsheet import.",
+        "howTo": "Pick a room, then pick the room it leads to: they're connected both ways. Pick a room to see and remove its doorways. Escape puts the room back.",
+        "narrow": "The room map needs a wider screen. On a phone, use Connections below: it does the same job.",
+        "legendBoth": "Doorways both ways",
+        "legendOneWay": "One way only (the arrow shows which)",
+        "legendUnplaced": "Arrow not placed yet: buyers can't see it",
+        "start": "Start room",
+        "doorways": "{n} doorways",
+        "oneDoorway": "1 doorway",
+        "picked": "{name} picked. Now pick the room it leads to, or press Escape.",
+        "connected": "{a} and {b} are connected both ways. Place each arrow in the room editor.",
+        "already": "{a} and {b} are already connected. To remove the doorway, use the list below the map.",
+        "removed": "Removed the doorways between {a} and {b}.",
+        "joinedTo": "Doorways to",
+        "none": "No doorways yet. Pick another room on the map to connect it.",
+        "remove": "Remove the doorway to {name}",
+        "edit": "Edit and place",
+        "done": "Done with this room"
       },
       "connections": {
         "title": "Connections",
@@ -744,7 +815,7 @@
       },
       "privacy": {
         "title": "Hide people and gear: {name}",
-        "intro": "Blur or pixelate faces, family photos, documents and plates, and cover the tripod on the floor. The edit is saved as a new copy of the photo; the original is kept, so you can change or undo it later. Do this before the room goes live: a photo buyers were already sent can't be called back. Nothing here is generated: it only blurs or pixelates what the camera took.",
+        "intro": "Blur or pixelate faces, family photos, documents and plates, and cover the tripod on the floor. The edit is saved as a new copy of the photo; the original is kept, so you can change or undo it later. Best before the room goes live: once you apply, the original's old address stops working, but a copy someone already saved can't be called back. Nothing here is generated: it only blurs or pixelates what the camera took.",
         "open": "Hide people and gear",
         "drawHint": "Drag on the photo to cover something. A click drops a person-sized box.",
         "keyboardHint": "Keyboard: Tab to a box, arrow keys move it, Shift with arrows resizes it, Alt for small steps, Delete removes it.",
@@ -763,14 +834,27 @@
         "off": "Off",
         "blur": "Blur",
         "pixelate": "Pixelate",
+        "patch": "Logo patch",
+        "patchHint": "A solid disc over the tripod, with your logo if you pick one. Buyers see it when they look straight down.",
+        "patchColor": "Patch color",
+        "patchLogo": "Logo on the patch",
+        "noLogo": "No logo",
+        "logoN": "Logo {n}",
+        "uploadLogo": "Upload a logo",
+        "logoHint": "A PNG with a transparent background works best. It sits in the middle of the patch, upright for someone facing the room's starting view.",
+        "logoFailed": "That logo didn't load, so the patch is plain for now. Pick it again, or reload.",
+        "patchNotReady": "The patch is still being painted. Try again in a moment.",
         "preview": "Preview the result",
         "apply": "Apply to this room",
         "applied": "Applied. Buyers now see the edited photo.",
+        "deleteOriginal": "Also delete the original for good",
+        "deleteOriginalHint": "Only the edited photo is kept. You can't undo the edit or start again from the clean photo. Use it when someone asked to be removed completely.",
+        "appliedDeleted": "Applied, and the original is deleted. This edited photo is the only copy now.",
         "restore": "Restore the original photo",
         "restored": "Restored. Buyers see the original photo again.",
         "working": "Working. Cloudinary is rendering the edit, which can take up to a minute.",
         "back": "Back to the room",
-        "keepsOriginal": "The original stays in the media library. Applying again always starts from it."
+        "keepsOriginal": "The original is kept where buyers can't reach it: the first edit moves it to a new address that's never shown on the listing. Applying again always starts from it, and an edited copy you replace is deleted."
       }
     }
   },

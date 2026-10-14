@@ -19,7 +19,7 @@ import {
 // 360 photo is about 72 MP and 20 to 40 MB. Anything still over 20 MB would go
 // up in 6 MB chunks, so one 3G hiccup costs a chunk, not the whole file.
 
-export type UploadKind = "photo" | "panorama" | "floor_plan";
+export type UploadKind = "photo" | "panorama" | "floor_plan" | "logo";
 
 export type UploadLabels = {
   choose: string;
@@ -383,6 +383,30 @@ export function MomentPhotoUploader({
             const result = await setMomentPhotoAction(sceneId, momentId, done[0].mediaId);
             if (!result.ok) upload.setNote(result.error);
           }
+          router.refresh();
+        }}
+      />
+      <p role="status" aria-live="polite" className="mt-2 text-sm text-slate-700">
+        {upload.note}
+      </p>
+      <UploadList rows={upload.rows} labels={labels} />
+    </div>
+  );
+}
+
+/** The agency's logo, for the floor patch. One file; the caller picks it once it's in. */
+export function LogoUploader({ labels, onUploaded }: { labels: UploadLabels; onUploaded: (mediaId: string) => void }) {
+  const router = useRouter();
+  const upload = useBatchUpload("logo", labels);
+  return (
+    <div>
+      <Picker
+        labels={labels}
+        multiple={false}
+        disabled={upload.busy}
+        onFiles={async (files) => {
+          const [done] = await upload.run(files.slice(0, 1));
+          if (done) onUploaded(done.mediaId);
           router.refresh();
         }}
       />

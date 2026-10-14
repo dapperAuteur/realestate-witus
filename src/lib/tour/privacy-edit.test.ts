@@ -1,5 +1,6 @@
 // Ported from wanderlearn-app src/lib/privacy-edit.test.ts @ c7f5616, 2026-10-14
-// (plans/08). The generative and patch cases stay behind with those features.
+// (plans/08). The generative cases stay behind with that feature; the patch
+// cases followed with the patch, from @ 63af5fe.
 import { describe, expect, it } from "vitest";
 import {
   PRIVACY_MAX_BOXES,
@@ -7,6 +8,7 @@ import {
   boxRects,
   emptyPrivacyRecipe,
   isPrivacyRecipeEmpty,
+  layerId,
   parsePrivacyRecipe,
   privacyTransformation,
   relativeValue,
@@ -133,5 +135,40 @@ describe("boxContains", () => {
     expect(boxContains(box, 0.98, 0.5)).toBe(true);
     expect(boxContains(box, 0.05, 0.5)).toBe(true);
     expect(boxContains(box, 0.5, 0.5)).toBe(false);
+  });
+});
+
+describe("the floor patch", () => {
+  const patched = (angleDeg: number) =>
+    recipe({ bottom: { mode: "patch", angleDeg, patch: { color: "#000000", logoMediaId: null } } });
+
+  it("lays the painted strip over the bottom, sized relative to the photo", () => {
+    expect(privacyTransformation(patched(27), { patchPublicId: "realestate-witus/t/privacy-patches/abc" })).toEqual([
+      "l_realestate-witus:t:privacy-patches:abc",
+      "c_scale,fl_relative,w_1.0,h_0.15",
+      "fl_layer_apply,g_south",
+    ]);
+  });
+
+  it("sizes the patch in pixels, rounded up rather than down", () => {
+    const tx = privacyTransformation(patched(25), { patchPublicId: "p", imageSize: { width: 5900, height: 2950 } });
+    expect(tx[1]).toBe("c_scale,w_5900,h_410");
+  });
+
+  it("skips a patch whose strip was never uploaded rather than emit a broken layer", () => {
+    expect(privacyTransformation(patched(27))).toEqual([]);
+  });
+
+  it("parses a patch's color and logo, and refuses a bad one", () => {
+    const logo = "0b8f0d5e-5d0a-4c55-9a43-1f2d3c4b5a69";
+    const parsed = parsePrivacyRecipe({ ...emptyPrivacyRecipe(), bottom: { mode: "patch", angleDeg: 25, patch: { color: "#1E293B", logoMediaId: logo } } });
+    expect(parsed).toMatchObject({ ok: true, data: { bottom: { mode: "patch", patch: { color: "#1e293b", logoMediaId: logo } } } });
+    for (const patch of [undefined, { color: "red", logoMediaId: null }, { color: "#000000", logoMediaId: "x" }]) {
+      expect(parsePrivacyRecipe({ ...emptyPrivacyRecipe(), bottom: { mode: "patch", angleDeg: 25, patch } }).ok).toBe(false);
+    }
+  });
+
+  it("writes layer folders with colons", () => {
+    expect(layerId("realestate-witus/t/x")).toBe("realestate-witus:t:x");
   });
 });

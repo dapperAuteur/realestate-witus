@@ -44,6 +44,7 @@ import {
   listingIdForLink,
   listingIdForScene,
   placeSceneOnPlan,
+  removeConnection,
   renameFloorPlan,
   setSceneStatuses,
   setStartScene,
@@ -347,6 +348,27 @@ export async function deleteLinkAction(formData: FormData): Promise<void> {
   backTo(back, "ok", "saved");
 }
 
+/** The room map's connect and disconnect: two rooms, both in THIS listing. */
+async function pairEditor(listingId: string, a: string, b: string) {
+  const gate = await editor(listingId);
+  if (!gate) return { gate: null, error: FORBIDDEN };
+  const [la, lb] = await Promise.all([listingIdForScene(gate.ctx.tenant.id, a), listingIdForScene(gate.ctx.tenant.id, b)]);
+  if (la !== listingId || lb !== listingId) return { gate: null, error: err("LINK_SCENES", "Both rooms must be in this listing.") };
+  return { gate, error: null };
+}
+
+export async function connectRoomsAction(listingId: string, a: string, b: string): Promise<Result<{ created: number }>> {
+  const { gate, error } = await pairEditor(listingId, a, b);
+  if (!gate) return error;
+  return addLink(gate.ctx.tenant.id, a, b, true);
+}
+
+export async function disconnectRoomsAction(listingId: string, a: string, b: string): Promise<Result<{ deleted: number }>> {
+  const { gate, error } = await pairEditor(listingId, a, b);
+  if (!gate) return error;
+  return removeConnection(gate.ctx.tenant.id, a, b);
+}
+
 export async function updateLinkAction(
   linkId: string,
   patch:
@@ -547,7 +569,11 @@ export async function applyPrivacyEditAction(
   currentMediaId: string,
   recipe: unknown,
   momentId: string | null = null,
+  options: unknown = {},
 ): Promise<Result<{ mediaId: string }>> {
+  const opts = (options && typeof options === "object" ? options : {}) as Record<string, unknown>;
+  const deleteOriginal = opts.deleteOriginal === true;
+  const patchDataUrl = typeof opts.patchDataUrl === "string" ? opts.patchDataUrl : null;
   const gate = momentId ? await momentPhotoEditor(sceneId, momentId) : (await sceneEditor(sceneId)).gate;
   if (!gate) return FORBIDDEN;
   const parsed = parsePrivacyRecipe(recipe);
@@ -559,14 +585,16 @@ export async function applyPrivacyEditAction(
     recipe: parsed.data,
     userId: gate.ctx.user.id,
     momentId,
+    deleteOriginal,
+    patchDataUrl,
   });
   if (result.ok) {
     await writeAudit({
       tenantId: gate.ctx.tenant.id,
       actorUserId: gate.ctx.user.id,
       kind: "tour.privacy",
-      summary: "Hide people and gear applied to a room",
-      data: { sceneId, momentId, mediaId: result.data.mediaId },
+      summary: deleteOriginal ? "Hide people and gear applied; original deleted" : "Hide people and gear applied to a room",
+      data: { sceneId, momentId, mediaId: result.data.mediaId, deleteOriginal },
     }).catch(() => undefined);
   }
   return result;

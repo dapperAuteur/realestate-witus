@@ -135,6 +135,12 @@ export default async function EditListingPage({
             </div>
           ))}
         </dl>
+        <div className="mt-4 flex flex-wrap items-center gap-3">
+          <Link href={`/${lang}/admin/listings/${listing.id}/report`} className={SECONDARY_BUTTON}>
+            {l.report.open}
+          </Link>
+          <p className={HINT}>{l.report.openHint}</p>
+        </div>
       </section>
 
       <section id="photos" aria-labelledby="photos-title" className={card}>

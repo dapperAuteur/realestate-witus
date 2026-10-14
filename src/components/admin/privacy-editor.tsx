@@ -1,9 +1,11 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useId, useRef, useState, type KeyboardEvent, type PointerEvent } from "react";
+import { useEffect, useId, useRef, useState, type KeyboardEvent, type PointerEvent } from "react";
 import { applyPrivacyEditAction } from "@/app/[lang]/admin/listings/actions";
+import { paintNadirPatch } from "@/lib/tour/nadir-patch";
 import {
+  DEFAULT_PATCH_COLOR,
   PRIVACY_BOTTOM_MAX_DEG,
   PRIVACY_BOTTOM_MIN_DEG,
   PRIVACY_DEFAULT_BOX,
@@ -16,12 +18,14 @@ import {
   type PrivacyBox,
   type PrivacyRecipe,
 } from "@/lib/tour/privacy-edit";
+import { LogoUploader, type UploadLabels } from "./uploaders";
 
 // "Hide people and gear" (plans/08 phase D), on a flat 2:1 view of the
 // original 360 photo: what Cloudinary's region effects measure. Drag to draw
 // a box; every box is a button the arrow keys move (Shift resizes), so the
 // keyboard path does everything the pointer does. The preview is Cloudinary
-// rendering the exact effects that will be baked.
+// rendering the exact effects that will be baked, with the floor patch (painted
+// here, in the browser) laid over it the way Cloudinary will lay it.
 
 type Labels = Record<string, string>;
 
@@ -29,6 +33,18 @@ const BUTTON =
   "inline-flex min-h-11 items-center justify-center rounded-lg border border-slate-300 px-3 text-sm font-semibold hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900 disabled:opacity-50 dark:border-slate-700 dark:hover:bg-slate-900";
 
 const clamp = (n: number, min: number, max: number) => Math.min(max, Math.max(min, n));
+
+function loadImage(url: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    // Without this the canvas is tainted and can't be read back. Cloudinary
+    // answers with Access-Control-Allow-Origin: *.
+    img.crossOrigin = "anonymous";
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error("logo"));
+    img.src = url;
+  });
+}
 let nextId = 0;
 const newId = () => `b${Date.now().toString(36)}${(nextId++).toString(36)}`;
 
@@ -69,6 +85,8 @@ export function PrivacyEditor({
   edited,
   backHref,
   labels,
+  logos = [],
+  uploadLabels,
 }: {
   sceneId: string;
   /** Editing the room's photo for this time (Before / After) instead of its current photo. */
@@ -83,16 +101,46 @@ export function PrivacyEditor({
   edited: boolean;
   backHref: string;
   labels: Labels;
+  /** The agency's uploaded logos, for the floor patch. */
+  logos?: { id: string; url: string }[];
+  uploadLabels: UploadLabels;
 }) {
   const router = useRouter();
   const [recipe, setRecipe] = useState<PrivacyRecipe>(initialRecipe ?? emptyPrivacyRecipe());
   const [selected, setSelected] = useState<string | null>(null);
   const [preview, setPreview] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [deleteOriginal, setDeleteOriginal] = useState(false);
   const [status, setStatus] = useState("");
   const [draft, setDraft] = useState<{ u0: number; v0: number; u1: number; v1: number } | null>(null);
+  const [patchUrl, setPatchUrl] = useState<string | null>(null);
   const areaRef = useRef<HTMLDivElement>(null);
   const boxRefs = useRef(new Map<string, HTMLButtonElement>());
+
+  const patch = recipe.bottom.patch ?? { color: DEFAULT_PATCH_COLOR, logoMediaId: null };
+  const logoUrl = patch.logoMediaId ? (logos.find((logo) => logo.id === patch.logoMediaId)?.url ?? null) : null;
+  const patching = recipe.bottom.mode === "patch";
+
+  // Repaint the patch whenever what it shows changes. Cheap: a 2048 px strip.
+  useEffect(() => {
+    if (!patching) {
+      setPatchUrl(null);
+      return;
+    }
+    let live = true;
+    void (async () => {
+      const logo = logoUrl ? await loadImage(logoUrl).catch(() => null) : null;
+      if (!live) return;
+      if (logoUrl && !logo) setStatus(labels.logoFailed);
+      setPatchUrl(paintNadirPatch({ color: patch.color, angleDeg: recipe.bottom.angleDeg, logo }));
+    })();
+    return () => {
+      live = false;
+    };
+  }, [patching, patch.color, logoUrl, recipe.bottom.angleDeg, labels.logoFailed]);
+
+  const setPatch = (change: Partial<typeof patch>) =>
+    setRecipe((r) => ({ ...r, bottom: { ...r.bottom, patch: { ...patch, ...change } } }));
 
   const size = source.width && source.height ? { width: source.width, height: source.height } : undefined;
   const plain = `${previewBase}c_limit,w_1600/f_auto,q_auto/${source.publicId}`;
@@ -146,13 +194,27 @@ export function PrivacyEditor({
     );
   }
 
-  async function save(next: PrivacyRecipe, done: string) {
+  async function save(next: PrivacyRecipe, done: string, removeOriginal = false) {
+    if (next.bottom.mode === "patch" && !patchUrl) {
+      setStatus(labels.patchNotReady);
+      return;
+    }
     setBusy(true);
     setStatus(labels.working);
-    const result = await applyPrivacyEditAction(sceneId, currentMediaId, next, momentId);
+    const result = await applyPrivacyEditAction(sceneId, currentMediaId, next, momentId, {
+      deleteOriginal: removeOriginal,
+      patchDataUrl: next.bottom.mode === "patch" ? patchUrl : null,
+    });
     setBusy(false);
-    setStatus(result.ok ? done : result.error);
-    if (result.ok) router.refresh();
+    setStatus(result.ok ? (removeOriginal ? labels.appliedDeleted : done) : result.error);
+    if (!result.ok) return;
+    if (removeOriginal) {
+      // The edited copy is the photo now, and its edits are baked in: start clean.
+      setRecipe(emptyPrivacyRecipe());
+      setDeleteOriginal(false);
+      setSelected(null);
+    }
+    router.refresh();
   }
 
   const coverTop = 1 - recipe.bottom.angleDeg / 180;
@@ -192,6 +254,15 @@ export function PrivacyEditor({
             draggable={false}
             className="pointer-events-none absolute inset-0 h-full w-full object-cover"
           />
+          {preview && patching && patchUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={patchUrl}
+              alt=""
+              className="pointer-events-none absolute inset-x-0 bottom-0 w-full"
+              style={{ top: `${coverTop * 100}%`, height: `${(1 - coverTop) * 100}%` }}
+            />
+          ) : null}
           {!preview ? (
             <>
               {recipe.bottom.mode !== "off" ? (
@@ -289,6 +360,7 @@ export function PrivacyEditor({
             { value: "off", label: labels.off },
             { value: "blur", label: labels.blur },
             { value: "pixelate", label: labels.pixelate },
+            { value: "patch", label: labels.patch },
           ]}
           onChange={(mode) => setRecipe((r) => ({ ...r, bottom: { ...r.bottom, mode } }))}
         />
@@ -305,17 +377,77 @@ export function PrivacyEditor({
             />
           </label>
         ) : null}
+        {patching ? (
+          <div className="flex flex-col gap-3 rounded-lg border border-slate-200 p-3 dark:border-slate-800">
+            <p className="text-xs text-slate-600 dark:text-slate-400">{labels.patchHint}</p>
+            <label className="flex min-h-11 items-center gap-3 text-sm font-medium">
+              <input
+                type="color"
+                value={patch.color}
+                onChange={(event) => setPatch({ color: event.target.value })}
+                className="h-11 w-16 cursor-pointer rounded border border-slate-300 dark:border-slate-700"
+              />
+              {labels.patchColor}
+            </label>
+            <fieldset>
+              <legend className="text-sm font-medium">{labels.patchLogo}</legend>
+              <div className="mt-1 flex flex-wrap gap-3">
+                <label className="flex min-h-11 items-center gap-2 text-sm">
+                  <input
+                    type="radio"
+                    name="patch-logo"
+                    checked={!patch.logoMediaId}
+                    onChange={() => setPatch({ logoMediaId: null })}
+                    className="h-5 w-5"
+                  />
+                  {labels.noLogo}
+                </label>
+                {logos.map((logo, i) => (
+                  <label key={logo.id} className="flex min-h-11 items-center gap-2 text-sm">
+                    <input
+                      type="radio"
+                      name="patch-logo"
+                      checked={patch.logoMediaId === logo.id}
+                      onChange={() => setPatch({ logoMediaId: logo.id })}
+                      className="h-5 w-5"
+                    />
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={logo.url} alt="" className="h-10 w-16 rounded bg-slate-200 object-contain p-1 dark:bg-slate-700" />
+                    <span className="sr-only">{labels.logoN.replace("{n}", String(i + 1))}</span>
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+            <LogoUploader labels={uploadLabels} onUploaded={(mediaId) => setPatch({ logoMediaId: mediaId })} />
+          </div>
+        ) : null}
 
         <label className="flex min-h-11 items-center gap-2 text-sm font-medium">
           <input type="checkbox" checked={preview} onChange={(event) => setPreview(event.target.checked)} className="h-5 w-5" />
           {labels.preview}
         </label>
 
+        <div>
+          <label className="flex min-h-11 items-center gap-2 text-sm font-medium">
+            <input
+              type="checkbox"
+              checked={deleteOriginal}
+              onChange={(event) => setDeleteOriginal(event.target.checked)}
+              aria-describedby="privacy-delete-hint"
+              className="h-5 w-5"
+            />
+            {labels.deleteOriginal}
+          </label>
+          <p id="privacy-delete-hint" className="text-xs text-slate-600 dark:text-slate-400">
+            {labels.deleteOriginalHint}
+          </p>
+        </div>
+
         <div className="flex flex-col gap-2">
           <button
             type="button"
             disabled={busy}
-            onClick={() => void save(recipe, labels.applied)}
+            onClick={() => void save(recipe, labels.applied, deleteOriginal)}
             className={`${BUTTON} border-0 text-white`}
             style={{ background: "var(--brand-accent)", color: "var(--brand-accent-fg)" }}
           >

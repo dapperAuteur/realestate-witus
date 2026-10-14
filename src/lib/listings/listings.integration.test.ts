@@ -30,6 +30,7 @@ import {
   setMomentPhoto,
   createScenes,
   placeSceneOnPlan,
+  removeConnection,
   setSceneStatuses,
   setStartScene,
   tourEditData,
@@ -44,8 +45,10 @@ import {
   listingEditData,
   listingsBoard,
   movePhoto,
+  sellerReportRows,
 } from "./admin";
 import { submitInquiry } from "./inquiries";
+import { reportDays, sellerReport } from "./seller-report";
 import type { ListingInput, PropertyInput } from "./listing-input";
 import { importTourCsv } from "@/lib/tour/import";
 import { applyPrivacyEdit } from "@/lib/tour/privacy";
@@ -91,6 +94,25 @@ const listingInput: ListingInput = {
   hideAddress: false,
   galleryMode: null,
 };
+
+type CloudinaryCall = { url: string; fields: Record<string, string> };
+
+/** Only Cloudinary is faked: renders are ready at once, uploads keep the name asked for, moves and deletes succeed. */
+function fakeCloudinary(calls: CloudinaryCall[] = []): typeof fetch {
+  return (async (url: string | URL | Request, init?: RequestInit) => {
+    const href = String(url);
+    const fields =
+      init?.body instanceof FormData ? Object.fromEntries([...init.body.entries()].map(([k, v]) => [k, String(v)])) : {};
+    calls.push({ url: href, fields });
+    if (href.startsWith("https://res.cloudinary.com/")) return new Response(null, { status: 200 });
+    const reply = href.endsWith("/rename")
+      ? { public_id: fields.to_public_id }
+      : href.endsWith("/destroy")
+        ? { result: "ok" }
+        : { public_id: fields.public_id, width: 6000, height: 3000, bytes: 1234 };
+    return new Response(JSON.stringify(reply), { status: 200, headers: { "content-type": "application/json" } });
+  }) as unknown as typeof fetch;
+}
 
 describe.skipIf(!ready)("listings and tours against the database", () => {
   const suffix = randomUUID().slice(0, 8);
@@ -299,12 +321,6 @@ describe.skipIf(!ready)("listings and tours against the database", () => {
     expect(kitchenScene.preview).toEqual(expect.stringContaining("w_1600"));
 
     // Hide people in the Before photo: the same bake, on the moment's row.
-    const fakeCloudinary = (async (url: string | URL | Request) =>
-      String(url).startsWith("https://res.cloudinary.com/")
-        ? new Response(null, { status: 200 })
-        : new Response(JSON.stringify({ public_id: "realestate-witus/x/before-private", width: 6000, height: 3000, bytes: 9 }), {
-            status: 200,
-          })) as unknown as typeof fetch;
     const privacyRecipe = { ...emptyPrivacyRecipe(), faces: "pixelate" as const };
     const edited = await applyPrivacyEdit({
       tenantId,
@@ -313,7 +329,7 @@ describe.skipIf(!ready)("listings and tours against the database", () => {
       currentMediaId: media.kitchenBefore,
       recipe: privacyRecipe,
       userId,
-      fetchImpl: fakeCloudinary,
+      fetchImpl: fakeCloudinary(),
     });
     expect(edited.ok).toBe(true);
     const [beforeRow] = await db()
@@ -338,41 +354,44 @@ describe.skipIf(!ready)("listings and tours against the database", () => {
     expect((await getListingPage(tenantId, slug))!.tour!.timeline).toBeUndefined();
   });
 
-  it("bakes a privacy edit into a new photo, keeps the original, and restores it", async () => {
+  it("moves the original out of reach, bakes edits into new copies, deletes replaced ones, and restores", async () => {
     const data = await tourEditData(tenantId, listingId);
     const hall = data!.scenes.find((s) => s.name === "Hall")!;
     const [before] = await db().select().from(tourScenes).where(eq(tourScenes.id, hall.id));
     const original = before.panoramaMediaId;
-    // Only Cloudinary is faked: the render is ready at once, and the upload echoes a new asset.
-    const calls: string[] = [];
-    const named: string[] = [];
-    const fakeCloudinary = (async (url: string | URL | Request, init?: RequestInit) => {
-      const href = String(url);
-      calls.push(`${init?.method ?? "GET"} ${href}`);
-      if (href.startsWith("https://res.cloudinary.com/")) return new Response(null, { status: 200 });
-      const publicId = init?.body instanceof FormData ? String(init.body.get("public_id")) : "";
-      named.push(publicId);
-      return new Response(
-        JSON.stringify({ public_id: publicId, width: 6000, height: 3000, bytes: 1234 }),
-        { status: 200, headers: { "content-type": "application/json" } },
-      );
-    }) as unknown as typeof fetch;
+    const publicIdOf = async (id: string) =>
+      (await db().select({ publicId: mediaAssets.cloudinaryPublicId }).from(mediaAssets).where(eq(mediaAssets.id, id)))[0]
+        ?.publicId;
+    const sceneRow = async () => (await db().select().from(tourScenes).where(eq(tourScenes.id, hall.id)))[0];
+    const calls: CloudinaryCall[] = [];
+    const fetchImpl = fakeCloudinary(calls);
+    const named = (kind: "rename" | "destroy" | "upload") => calls.filter((c) => c.url.endsWith(`/image/${kind}`));
     const recipe = { ...emptyPrivacyRecipe(), faces: "blur" as const, boxes: [{ id: "a", u: 0.5, v: 0.5, w: 0.1, h: 0.2 }] };
 
-    const stale = await applyPrivacyEdit({ tenantId, sceneId: hall.id, currentMediaId: media.kitchen, recipe, userId, fetchImpl: fakeCloudinary });
+    const stale = await applyPrivacyEdit({ tenantId, sceneId: hall.id, currentMediaId: media.kitchen, recipe, userId, fetchImpl });
     expect(stale).toMatchObject({ ok: false, code: "PRIVACY_STALE" });
+    expect(calls).toEqual([]);
 
-    const applied = await applyPrivacyEdit({ tenantId, sceneId: hall.id, currentMediaId: original, recipe, userId, fetchImpl: fakeCloudinary });
+    const applied = await applyPrivacyEdit({ tenantId, sceneId: hall.id, currentMediaId: original, recipe, userId, fetchImpl });
     expect(applied.ok).toBe(true);
     if (!applied.ok) return;
-    // The render was built from the original, in its pixels, faces first.
-    expect(calls[0]).toMatch(/^HEAD https:\/\/res\.cloudinary\.com\/.*\/e_blur_faces:1500\/e_pixelate_region:40,x_2700,y_1200,w_600,h_600\/q_90\/itest\//);
-    const [after] = await db().select().from(tourScenes).where(eq(tourScenes.id, hall.id));
-    expect(after).toMatchObject({ panoramaMediaId: applied.data.mediaId, originalPanoramaMediaId: original, privacyRecipe: recipe });
-    // Buyers see the copy's address. It must not lead back to the original's ("hall").
-    expect(named[0]).toMatch(new RegExp(`^realestate-witus/${tenantId}/private-[0-9a-f]{16}$`));
+    // First the original moves to an unlisted name, so the address buyers were sent stops working.
+    expect(calls[0]).toMatchObject({
+      url: expect.stringMatching(/\/image\/rename$/),
+      fields: { from_public_id: `itest/${suffix}/hall`, invalidate: "true" },
+    });
+    const hidden = calls[0].fields.to_public_id;
+    expect(hidden).toMatch(new RegExp(`^realestate-witus/${tenantId}/original-[0-9a-f]{24}$`));
+    expect(await publicIdOf(original)).toBe(hidden);
+    // The render was built from the moved original, in its pixels, faces first.
+    expect(calls[1].url).toMatch(/^https:\/\/res\.cloudinary\.com\/.*\/e_blur_faces:1500\/e_pixelate_region:40,x_2700,y_1200,w_600,h_600\/q_90\//);
+    expect(calls[1].url.endsWith(`/q_90/${hidden}`)).toBe(true);
+    // Buyers see the copy's address. It must not lead back to the original's.
+    const firstCopyName = named("upload")[0].fields.public_id;
+    expect(firstCopyName).toMatch(new RegExp(`^realestate-witus/${tenantId}/private-[0-9a-f]{16}$`));
+    expect(await sceneRow()).toMatchObject({ panoramaMediaId: applied.data.mediaId, originalPanoramaMediaId: original, privacyRecipe: recipe });
 
-    // A second edit starts again from the original, not from the edited copy.
+    // A second edit starts again from the original (no second move) and deletes the copy it replaces.
     calls.length = 0;
     const again = await applyPrivacyEdit({
       tenantId,
@@ -380,17 +399,72 @@ describe.skipIf(!ready)("listings and tours against the database", () => {
       currentMediaId: applied.data.mediaId,
       recipe: { ...recipe, faces: "off" },
       userId,
-      fetchImpl: fakeCloudinary,
+      fetchImpl,
     });
     expect(again.ok).toBe(true);
-    expect(calls[0]).toContain(`/q_90/itest/${suffix}/hall`);
-    expect((await db().select().from(tourScenes).where(eq(tourScenes.id, hall.id)))[0].originalPanoramaMediaId).toBe(original);
+    if (!again.ok) return;
+    expect(named("rename")).toEqual([]);
+    expect(calls[0].url.endsWith(`/q_90/${hidden}`)).toBe(true);
+    expect(named("destroy").map((c) => c.fields)).toEqual([expect.objectContaining({ public_id: firstCopyName, invalidate: "true" })]);
+    expect(await publicIdOf(applied.data.mediaId)).toBeUndefined();
+    expect((await sceneRow()).originalPanoramaMediaId).toBe(original);
 
-    // An empty recipe restores the original.
-    const current = (await db().select().from(tourScenes).where(eq(tourScenes.id, hall.id)))[0].panoramaMediaId;
-    expect((await applyPrivacyEdit({ tenantId, sceneId: hall.id, currentMediaId: current, recipe: emptyPrivacyRecipe(), userId })).ok).toBe(true);
-    const [restored] = await db().select().from(tourScenes).where(eq(tourScenes.id, hall.id));
-    expect(restored).toMatchObject({ panoramaMediaId: original, originalPanoramaMediaId: null, privacyRecipe: null });
+    // Restoring shows the original again, and deletes the copy.
+    calls.length = 0;
+    const secondCopyName = await publicIdOf(again.data.mediaId);
+    expect((await applyPrivacyEdit({ tenantId, sceneId: hall.id, currentMediaId: again.data.mediaId, recipe: emptyPrivacyRecipe(), userId, fetchImpl })).ok).toBe(true);
+    expect(await sceneRow()).toMatchObject({ panoramaMediaId: original, originalPanoramaMediaId: null, privacyRecipe: null });
+    expect(named("destroy").map((c) => c.fields.public_id)).toEqual([secondCopyName]);
+
+    // Delete the original for good. Buyers saw it again after the restore, so it moves again first;
+    // then the copy is the only photo, with nothing to edit back from.
+    calls.length = 0;
+    const final = await applyPrivacyEdit({ tenantId, sceneId: hall.id, currentMediaId: original, recipe, userId, deleteOriginal: true, fetchImpl });
+    expect(final.ok).toBe(true);
+    if (!final.ok) return;
+    const movedAgain = named("rename")[0].fields.to_public_id;
+    expect(movedAgain).not.toBe(hidden);
+    expect(named("destroy").map((c) => c.fields.public_id)).toEqual([movedAgain]);
+    expect(await publicIdOf(original)).toBeUndefined();
+    expect(await sceneRow()).toMatchObject({ panoramaMediaId: final.data.mediaId, originalPanoramaMediaId: null, privacyRecipe: null });
+  });
+
+  it("paints a logo patch over the floor, and deletes the helper file after the bake", async () => {
+    const bedroom = (await tourEditData(tenantId, listingId))!.scenes.find((s) => s.name === "Main bedroom")!;
+    const [logo] = await db()
+      .insert(mediaAssets)
+      .values({ tenantId, cloudinaryPublicId: `itest/${suffix}/logo`, kind: "logo", width: 400, height: 200, status: "ready" })
+      .returning({ id: mediaAssets.id });
+    const calls: CloudinaryCall[] = [];
+    const fetchImpl = fakeCloudinary(calls);
+    const patched = (logoMediaId: string | null) => ({
+      ...emptyPrivacyRecipe(),
+      bottom: { mode: "patch" as const, angleDeg: 30, patch: { color: "#1e293b", logoMediaId } },
+    });
+    const base = { tenantId, sceneId: bedroom.id, currentMediaId: media.bedroom, userId, fetchImpl };
+
+    // Refused before anything moves: no painting, or someone else's logo.
+    expect(await applyPrivacyEdit({ ...base, recipe: patched(null) })).toMatchObject({ ok: false, code: "PRIVACY_PATCH" });
+    expect(
+      await applyPrivacyEdit({ ...base, recipe: patched(media.foreign), patchDataUrl: "data:image/jpeg;base64,AAAA" }),
+    ).toMatchObject({ ok: false, code: "PRIVACY_PATCH" });
+    expect(calls).toEqual([]);
+
+    const done = await applyPrivacyEdit({ ...base, recipe: patched(logo.id), patchDataUrl: "data:image/jpeg;base64,AAAA" });
+    expect(done.ok).toBe(true);
+    const uploads = calls.filter((c) => c.url.endsWith("/image/upload"));
+    const patchName = uploads[0].fields.public_id;
+    expect(patchName).toMatch(new RegExp(`^realestate-witus/${tenantId}/privacy-patches/[0-9a-f]{16}$`));
+    expect(uploads[0].fields.file).toBe("data:image/jpeg;base64,AAAA");
+    // Laid over the bottom 30 degrees, full width, in the photo's pixels (6000 x 3000).
+    const render = calls.find((c) => c.url.startsWith("https://res.cloudinary.com/"))!.url;
+    expect(render).toContain(`/l_${patchName.replace(/\//g, ":")}/c_scale,w_6000,h_500/fl_layer_apply,g_south/q_90/`);
+    // The helper patch goes once the copy is baked; the copy itself stays.
+    const destroyed = calls.filter((c) => c.url.endsWith("/image/destroy")).map((c) => c.fields.public_id);
+    expect(destroyed).toEqual([patchName]);
+    expect((await db().select().from(tourScenes).where(eq(tourScenes.id, bedroom.id)))[0].privacyRecipe).toMatchObject({
+      bottom: { mode: "patch", patch: { logoMediaId: logo.id } },
+    });
   });
 
   it("counts views per day and surface", async () => {
@@ -427,6 +501,16 @@ describe.skipIf(!ready)("listings and tours against the database", () => {
     expect(rows).toHaveLength(1);
     expect(rows[0]).toMatchObject({ kind: "tour_request", source: "tour", email: "kofi@example.com", status: "new" });
     expect((await listingsBoard(tenantId))[0].newInquiries).toBe(1);
+
+    // The seller report adds up the same rows: today's views (the test above) and this inquiry.
+    const listing = (await findOwnedListing(tenantId, listingId))!;
+    const days = reportDays(7, new Date());
+    const rowsForReport = await sellerReportRows(tenantId, listing, days[0]);
+    expect(rowsForReport.property?.addressLine1).toBe("14 Ring Road");
+    expect(rowsForReport.inquiries).toEqual([{ day: days[6], kind: "tour_request" }]);
+    const report = sellerReport(days, rowsForReport.views, rowsForReport.inquiries);
+    expect(report.totals).toMatchObject({ views: 3, opens: 1, page: { views: 2, opens: 1 }, embed: { views: 1, opens: 0 }, inquiries: 1, tourRequests: 1 });
+    expect(report.days.slice(0, 6).every((d) => d.views === 0)).toBe(true);
   });
 
   it("offers only this agency's team as agents", async () => {
@@ -543,6 +627,13 @@ describe.skipIf(!ready)("listings and tours against the database", () => {
     expect(lab.panoramaMediaId).toBe(pano.lab2);
     expect((await roomsNow()).find((r) => r.name === "Office")!.isStart).toBe(true);
     expect(await run({ csv: "room,links_to\nTerrace,lab", photos: [] })).toMatchObject({ ok: false, code: "CSV_INVALID" });
+
+    // The room map's remove: both directions between a pair, nothing else.
+    const named = Object.fromEntries((await roomsNow()).map((r) => [r.name, r.id]));
+    expect(await removeConnection(tenantId, named.Lobby, named.Office)).toEqual({ ok: true, data: { deleted: 2 } });
+    expect(await removeConnection(tenantId, named.Lobby, named.Office)).toEqual({ ok: true, data: { deleted: 0 } });
+    expect(await removeConnection(otherTenantId, named.Lobby, named.Lab)).toEqual({ ok: true, data: { deleted: 0 } });
+    expect(await linkCount()).toBe(2);
     await db().delete(listings).where(eq(listings.id, id));
   });
 });

@@ -359,6 +359,22 @@ export async function addLink(
   return ok({ created: wanted.length });
 }
 
+/** Removes the doorways between two rooms, both ways, with their arrow placements. */
+export async function removeConnection(tenantId: string, a: string, b: string): Promise<Result<{ deleted: number }>> {
+  const removed = await db()
+    .delete(sceneLinks)
+    .where(
+      and(
+        eq(sceneLinks.tenantId, tenantId),
+        inArray(sceneLinks.fromSceneId, [a, b]),
+        inArray(sceneLinks.toSceneId, [a, b]),
+        sql`${sceneLinks.fromSceneId} <> ${sceneLinks.toSceneId}`,
+      ),
+    )
+    .returning({ id: sceneLinks.id });
+  return ok({ deleted: removed.length });
+}
+
 async function ownedLink(tenantId: string, linkId: string) {
   if (!/^[0-9a-f-]{36}$/i.test(linkId)) return null;
   const [row] = await db()

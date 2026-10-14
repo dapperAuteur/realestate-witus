@@ -65,7 +65,9 @@ export default async function LangLayout({
         </aside>
       ) : null}
       {tenant && !tenant.flags.platform ? (
-        <TenantHeader tenant={tenant} dict={dict} lang={lang} />
+        <div className="print:hidden">
+          <TenantHeader tenant={tenant} dict={dict} lang={lang} />
+        </div>
       ) : null}
       {children}
     </div>

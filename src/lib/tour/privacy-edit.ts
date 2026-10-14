@@ -3,8 +3,9 @@
 // face blur or pixelation, boxes the editor draws, and a cover over the floor
 // under the tripod. Left out on purpose:
 // - generative "remove people" (plans/08 non-goal: no AI-made pixels reach buyers)
-// - the painted logo patch (it needs a browser-painted upload; later)
 // The zod schemas became parsePrivacyRecipe: this repo validates by hand.
+// The painted logo patch (bottom mode "patch") followed on 2026-10-14, from
+// wanderlearn-app @ 63af5fe (src/lib/privacy-edit.ts, src/lib/nadir-patch.ts).
 //
 // Coordinates are normalized to the equirectangular image (u across from the
 // left edge, v down from the top), so a recipe survives any resize. Region
@@ -51,12 +52,23 @@ export interface PrivacyBox {
   h: number;
 }
 
+/** What the browser painted into a floor patch: kept so an edit from the original paints it again. */
+export interface PrivacyPatch {
+  /** #rrggbb */
+  color: string;
+  /** The agency's uploaded logo (media kind "logo"), or none. */
+  logoMediaId: string | null;
+}
+
 export interface PrivacyRecipe {
   faces: "off" | "blur" | "pixelate";
   boxes: PrivacyBox[];
   boxStyle: "blur" | "pixelate";
-  bottom: { mode: "off" | "blur" | "pixelate"; angleDeg: number };
+  bottom: { mode: "off" | "blur" | "pixelate" | "patch"; angleDeg: number; patch?: PrivacyPatch };
 }
+
+/** A dark slate disc: reads as deliberate on any floor, and a logo in white or color sits well on it. */
+export const DEFAULT_PATCH_COLOR = "#1e293b";
 
 export function emptyPrivacyRecipe(): PrivacyRecipe {
   return { faces: "off", boxes: [], boxStyle: "pixelate", bottom: { mode: "off", angleDeg: PRIVACY_BOTTOM_DEFAULT_DEG } };
@@ -79,8 +91,23 @@ export function parsePrivacyRecipe(input: unknown): Result<PrivacyRecipe> {
   const boxStyle = raw.boxStyle;
   if (boxStyle !== "blur" && boxStyle !== "pixelate") return bad;
   const bottom = raw.bottom as Record<string, unknown> | undefined;
-  if (!bottom || (bottom.mode !== "off" && bottom.mode !== "blur" && bottom.mode !== "pixelate")) return bad;
+  if (!bottom || (bottom.mode !== "off" && bottom.mode !== "blur" && bottom.mode !== "pixelate" && bottom.mode !== "patch")) {
+    return bad;
+  }
   if (!inRange(bottom.angleDeg, PRIVACY_BOTTOM_MIN_DEG, PRIVACY_BOTTOM_MAX_DEG)) return bad;
+  let patch: PrivacyPatch | undefined;
+  if (bottom.mode === "patch") {
+    const raw = bottom.patch as Record<string, unknown> | undefined;
+    const logo = raw?.logoMediaId;
+    if (
+      typeof raw?.color !== "string" ||
+      !/^#[0-9a-f]{6}$/i.test(raw.color) ||
+      (logo !== null && (typeof logo !== "string" || !/^[0-9a-f-]{36}$/i.test(logo)))
+    ) {
+      return bad;
+    }
+    patch = { color: raw.color.toLowerCase(), logoMediaId: logo };
+  }
   if (!Array.isArray(raw.boxes) || raw.boxes.length > PRIVACY_MAX_BOXES) {
     return err("PRIVACY_BOXES", `At most ${PRIVACY_MAX_BOXES} boxes on one photo.`);
   }
@@ -100,7 +127,7 @@ export function parsePrivacyRecipe(input: unknown): Result<PrivacyRecipe> {
     }
     boxes.push({ id: box.id, u: box.u, v: box.v, w: box.w, h: box.h });
   }
-  return ok({ faces, boxes, boxStyle, bottom: { mode: bottom.mode, angleDeg: bottom.angleDeg } });
+  return ok({ faces, boxes, boxStyle, bottom: { mode: bottom.mode, angleDeg: bottom.angleDeg, ...(patch ? { patch } : {}) } });
 }
 
 export type NormalizedRect = { x: number; y: number; w: number; h: number };
@@ -167,12 +194,26 @@ function regionParams(rect: NormalizedRect, size: PixelSize | undefined): string
   return `x_${relativeValue(x0)},y_${relativeValue(y0)},w_${relativeValue(x1 - x0)},h_${relativeValue(y1 - y0)}`;
 }
 
+/** Cloudinary layer id for an asset: folders are written with colons. */
+export function layerId(publicId: string): string {
+  return publicId.replace(/\//g, ":");
+}
+
+export interface PrivacyTransformOptions {
+  imageSize?: PixelSize;
+  /**
+   * Public id of the uploaded floor patch strip. Required for bottom mode
+   * "patch"; without it the patch is skipped rather than emitting a broken layer.
+   */
+  patchPublicId?: string;
+}
+
 /**
  * The recipe as ordered Cloudinary transformation components, one URL path
  * segment each. Faces first (detected on the untouched photo, before a box
  * blurs one the detector could have found), then boxes, then the floor cover.
  */
-export function privacyTransformation(recipe: PrivacyRecipe, options: { imageSize?: PixelSize } = {}): string[] {
+export function privacyTransformation(recipe: PrivacyRecipe, options: PrivacyTransformOptions = {}): string[] {
   const out: string[] = [];
   if (recipe.faces === "blur") out.push(`e_blur_faces:${PRIVACY_STRENGTH.faceBlur}`);
   if (recipe.faces === "pixelate") out.push(`e_pixelate_faces:${PRIVACY_STRENGTH.facePixelate}`);
@@ -192,6 +233,16 @@ export function privacyTransformation(recipe: PrivacyRecipe, options: { imageSiz
     : `y_${relativeValue(floorHundredth(1 - coverShare))}`;
   if (recipe.bottom.mode === "blur") out.push(`e_blur_region:${PRIVACY_STRENGTH.bottomBlur},${coverTop}`);
   if (recipe.bottom.mode === "pixelate") out.push(`e_pixelate_region:${PRIVACY_STRENGTH.bottomPixelate},${coverTop}`);
+  if (recipe.bottom.mode === "patch" && options.patchPublicId) {
+    out.push(`l_${layerId(options.patchPublicId)}`);
+    // Sized up, never down: a cut-short patch leaves the top of the tripod showing.
+    out.push(
+      size
+        ? `c_scale,w_${size.width},h_${Math.min(size.height, ceilPx(coverShare * size.height))}`
+        : `c_scale,fl_relative,w_1.0,h_${relativeValue(ceilHundredth(coverShare))}`,
+    );
+    out.push("fl_layer_apply,g_south");
+  }
   return out;
 }
 

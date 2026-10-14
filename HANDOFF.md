@@ -169,15 +169,44 @@ public listings; the admin overview is a door list with Listings first (see "Pla
   `private-<hash of our ids>`; the integration test asserts the name. Any copy made before the
   fix keeps its old name until the edit is saved again (no real tours existed yet).
 
+**Added 2026-10-14 (branch `bundle/tour-tools-2026-10-14`, built while task 11 is pending; no migration):**
+- Privacy, out of reach: the first edit renames the original to `original-<random>` with CDN
+  invalidation (Cloudinary rename), so every address buyers were sent stops working; a replaced
+  edited copy (new edit, restore) is destroyed; "Also delete the original for good" leaves the
+  copy as the only photo. `renameImage` / `destroyImage` in `src/lib/media/cloudinary.ts`,
+  parameters checked against Cloudinary's Upload API reference on 2026-10-14. After a restore,
+  the next edit moves the original again (buyers saw it in between).
+- The logo patch for the floor (ported from Wanderlust @ 63af5fe): `src/lib/tour/nadir-patch.ts`
+  paints the disc in the browser; the server uploads the strip, layers it (`l_`, `g_south`),
+  bakes, and deletes it. Logos are a new upload kind (PNG kept, 1024 px), uploaded from the
+  privacy editor and reused across rooms. `applyPrivacyEditAction`'s 5th argument is now an
+  options object `{ deleteOriginal, patchDataUrl }`.
+- Room map (plans/04 graph mode) on the tour workspace: `src/lib/tour/room-map.ts` (layout from
+  the BFS columns, pairs, edge trimming), `src/components/admin/room-map.tsx` (SVG + buttons, no
+  React Flow), `connectRoomsAction` / `disconnectRoomsAction`, `removeConnection`. Hidden below
+  md; Connections is the equivalent there.
+- Seller report: `/[lang]/admin/listings/[id]/report?days=7|30|90`, from the listing's numbers.
+  `src/lib/listings/seller-report.ts` (pure), `sellerReportRows`, `SellerReportView`. Prints
+  cleanly: admin and tenant chrome carry `print:hidden`.
+- Docs: README features and status; the public roadmap now has "Built, in final testing" (what
+  exists), "Building now" (brand and domain: no logo upload in the design page yet), and "Next"
+  (dollhouse, deeper analytics we don't collect yet). Roadmap section ids fixed (spaces broke
+  `aria-labelledby`).
+- Test note: with 0003 on the configured database, plain `pnpm test` now RUNS the 17 listing
+  integration tests (they make and delete their own tenant). Every Cloudinary call in them is
+  faked.
+
 **Not yet:**
-- The painted logo patch for the floor.
-- The demo seed and the landing's benefit cards, which wait for user task 11.
-- Originals are still public-but-unlinked Cloudinary assets. A room published BEFORE its privacy
-  edit has already sent its original's address to buyers; the editor now says to edit first.
-  Hardening: upload originals as `type: authenticated` and sign the editor's URLs.
-- The landing update (plans/08 6.5) and the demo seed. Both wait for user task 11's photos and
-  consent, and the demo seed must re-create the sample listing nightly: `wipeDemoContent`
-  deletes listings.
+- The demo seed and the landing's benefit cards, which wait for user task 11. The demo seed must
+  re-create the sample listing nightly: `wipeDemoContent` deletes listings.
+- Originals are public-but-unlisted Cloudinary assets: after an edit their name is random and
+  never sent to buyers, and old addresses are invalidated. A copy someone already saved can't be
+  recalled. Stronger still: upload originals as `type: authenticated` and sign editor URLs.
+- Replacing a room's photo, or a Before photo, leaves the old file and its edited copy in
+  Cloudinary (not reachable from the listing). A cleanup pass could retire them like the privacy
+  flow does.
+- The design page has no logo upload; `theme.logoUrl` is never set. The floor-patch logos live
+  in the media library (kind `logo`) and could seed it.
 
 **Decisions for BAM:**
 - Decided 2026-10-14: BAM's own service listings live on the platform tenant, and its admin is

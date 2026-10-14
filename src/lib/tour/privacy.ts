@@ -1,9 +1,9 @@
 import "server-only";
-import { createHash } from "node:crypto";
-import { and, eq } from "drizzle-orm";
+import { createHash, randomBytes } from "node:crypto";
+import { and, eq, or } from "drizzle-orm";
 import { db } from "@/db";
-import { mediaAssets, sceneMomentPanoramas, tourScenes } from "@/db/schema";
-import { transformedUrl, uploadFromUrl, waitForDerived } from "@/lib/media/cloudinary";
+import { listingPhotos, mediaAssets, sceneMomentPanoramas, tourFloorPlans, tourScenes } from "@/db/schema";
+import { destroyImage, renameImage, transformedUrl, uploadFromUrl, waitForDerived } from "@/lib/media/cloudinary";
 import { err, ok, type Result } from "@/lib/result";
 import { isPrivacyRecipeEmpty, privacyTransformation, type PrivacyRecipe } from "./privacy-edit";
 
@@ -18,6 +18,14 @@ import { isPrivacyRecipeEmpty, privacyTransformation, type PrivacyRecipe } from 
 //
 // A target is a room's current photo, or its photo for another time (Before /
 // After): same rules, different row.
+//
+// Out of reach, not only out of sight (2026-10-14). Until its first edit the
+// original IS the photo buyers were sent, at an address they may have kept.
+// So the first edit moves it to a fresh, unlisted name with the CDN's copies
+// invalidated, and that old address stops working. An edited copy that's
+// replaced (a new edit, or a restore) is deleted for the same reason: it may
+// show what the newer edit hides. "Delete the original" goes one further and
+// leaves the edited copy as the only photo.
 
 export interface PrivacyTarget {
   sceneId: string;
@@ -118,8 +126,75 @@ export interface PrivacyEditInput extends PrivacyTarget {
   currentMediaId: string;
   recipe: PrivacyRecipe;
   userId: string;
+  /** Delete the untouched original for good; the edited copy becomes the only photo. */
+  deleteOriginal?: boolean;
   /** Injected in tests; Cloudinary's own endpoints otherwise. */
   fetchImpl?: typeof fetch;
+}
+
+/** Whether any row still shows or keeps this file (a room, a time, a listing photo, a floor plan). */
+async function mediaInUse(tenantId: string, mediaId: string): Promise<boolean> {
+  const checks = await Promise.all([
+    db()
+      .select({ id: tourScenes.id })
+      .from(tourScenes)
+      .where(
+        and(
+          eq(tourScenes.tenantId, tenantId),
+          or(
+            eq(tourScenes.panoramaMediaId, mediaId),
+            eq(tourScenes.originalPanoramaMediaId, mediaId),
+            eq(tourScenes.posterMediaId, mediaId),
+          ),
+        ),
+      )
+      .limit(1),
+    db()
+      .select({ id: sceneMomentPanoramas.id })
+      .from(sceneMomentPanoramas)
+      .where(
+        and(
+          eq(sceneMomentPanoramas.tenantId, tenantId),
+          or(eq(sceneMomentPanoramas.mediaId, mediaId), eq(sceneMomentPanoramas.originalMediaId, mediaId)),
+        ),
+      )
+      .limit(1),
+    db()
+      .select({ id: listingPhotos.id })
+      .from(listingPhotos)
+      .where(and(eq(listingPhotos.tenantId, tenantId), eq(listingPhotos.mediaId, mediaId)))
+      .limit(1),
+    db()
+      .select({ id: tourFloorPlans.id })
+      .from(tourFloorPlans)
+      .where(and(eq(tourFloorPlans.tenantId, tenantId), eq(tourFloorPlans.mediaId, mediaId)))
+      .limit(1),
+  ]);
+  return checks.some((rows) => rows.length > 0);
+}
+
+/**
+ * Deletes a file nothing uses any more, from Cloudinary and from our records.
+ * `keepPublicId` is the file that replaced it: a retried edit can land on the
+ * same name, and that one must survive. Best effort: a failed delete leaves
+ * the record, so the file is never orphaned without a trace.
+ */
+async function retire(tenantId: string, mediaId: string, keepPublicId: string | null, fetchImpl?: typeof fetch) {
+  if (await mediaInUse(tenantId, mediaId)) return;
+  const [row] = await db()
+    .select({ publicId: mediaAssets.cloudinaryPublicId })
+    .from(mediaAssets)
+    .where(and(eq(mediaAssets.tenantId, tenantId), eq(mediaAssets.id, mediaId)))
+    .limit(1);
+  if (!row) return;
+  if (row.publicId !== keepPublicId) {
+    const gone = await destroyImage(row.publicId, fetchImpl);
+    if (!gone.ok) {
+      console.error(`[privacy] couldn't delete ${row.publicId}: ${gone.error}`);
+      return;
+    }
+  }
+  await db().delete(mediaAssets).where(and(eq(mediaAssets.tenantId, tenantId), eq(mediaAssets.id, mediaId)));
 }
 
 export async function applyPrivacyEdit(input: PrivacyEditInput): Promise<Result<{ mediaId: string }>> {
@@ -132,9 +207,12 @@ export async function applyPrivacyEdit(input: PrivacyEditInput): Promise<Result<
   }
 
   const sourceId = state.originalId ?? state.mediaId;
+  // The edited copy on show now, if there is one. Whatever happens next replaces it.
+  const previousCopy = state.originalId ? state.mediaId : null;
   if (isPrivacyRecipeEmpty(input.recipe)) {
     // Nothing to hide: show the original again.
     await writeTarget(tenantId, target, { mediaId: sourceId, originalId: null, recipe: null });
+    if (previousCopy) await retire(tenantId, previousCopy, null, input.fetchImpl);
     return ok({ mediaId: sourceId });
   }
 
@@ -145,10 +223,26 @@ export async function applyPrivacyEdit(input: PrivacyEditInput): Promise<Result<
     .limit(1);
   if (!source || source.status !== "ready") return err("PRIVACY_SOURCE", "The original photo isn't available.");
 
+  let sourcePublicId = source.cloudinaryPublicId;
+  if (!state.originalId) {
+    // First edit: move the original away from the address buyers were sent,
+    // before anything else, so a failure here changes nothing.
+    const hidden = `realestate-witus/${tenantId}/original-${randomBytes(12).toString("hex")}`;
+    const moved = await renameImage(sourcePublicId, hidden, input.fetchImpl);
+    if (!moved.ok) {
+      return err("PRIVACY_MOVE", `The original couldn't be moved out of reach, so nothing changed: ${moved.error}`);
+    }
+    await db()
+      .update(mediaAssets)
+      .set({ cloudinaryPublicId: hidden })
+      .where(and(eq(mediaAssets.tenantId, tenantId), eq(mediaAssets.id, source.id)));
+    sourcePublicId = hidden;
+  }
+
   const components = privacyTransformation(input.recipe, {
     imageSize: source.width && source.height ? { width: source.width, height: source.height } : undefined,
   });
-  const renderUrl = transformedUrl(source.cloudinaryPublicId, components, ["q_90"]);
+  const renderUrl = transformedUrl(sourcePublicId, components, ["q_90"]);
   if (!renderUrl) return err("MEDIA_NOT_CONFIGURED", "Media uploads are not configured yet.");
   const rendered = await waitForDerived(renderUrl, { deadlineMs: 60_000, fetchImpl: input.fetchImpl });
   if (!rendered.ok) return err("PRIVACY_RENDER", `Cloudinary couldn't apply the edit: ${rendered.error}`);
@@ -176,7 +270,14 @@ export async function applyPrivacyEdit(input: PrivacyEditInput): Promise<Result<
     })
     .returning({ id: mediaAssets.id });
 
-  await writeTarget(tenantId, target, { mediaId: asset.id, originalId: source.id, recipe: input.recipe });
+  if (input.deleteOriginal) {
+    // The copy is the photo now: nothing to edit it back from, so no recipe either.
+    await writeTarget(tenantId, target, { mediaId: asset.id, originalId: null, recipe: null });
+    await retire(tenantId, source.id, null, input.fetchImpl);
+  } else {
+    await writeTarget(tenantId, target, { mediaId: asset.id, originalId: source.id, recipe: input.recipe });
+  }
+  if (previousCopy) await retire(tenantId, previousCopy, uploaded.data.publicId, input.fetchImpl);
   return ok({ mediaId: asset.id });
 }
 

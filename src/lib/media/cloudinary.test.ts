@@ -55,3 +55,40 @@ describe("waitForDerived", () => {
     expect(await waitForDerived("https://x", { deadlineMs: 5000, intervalMs: 1, fetchImpl })).toEqual({ ok: false, error: "Invalid region" });
   });
 });
+
+describe("renameImage and destroyImage", () => {
+  const capture = (reply: Record<string, unknown>) => {
+    const calls: { url: string; fields: Record<string, string> }[] = [];
+    const fake = (async (url: string | URL | Request, init?: RequestInit) => {
+      const form = init?.body as FormData;
+      calls.push({ url: String(url), fields: Object.fromEntries([...form.entries()].map(([k, v]) => [k, String(v)])) });
+      return new Response(JSON.stringify(reply), { status: 200, headers: { "content-type": "application/json" } });
+    }) as unknown as typeof fetch;
+    return { calls, fake };
+  };
+
+  it("renames with invalidation, signing every field but api_key", async () => {
+    const { renameImage } = await import("./cloudinary");
+    const { calls, fake } = capture({ public_id: "t/new" });
+    expect(await renameImage("t/old", "t/new", fake)).toEqual({ ok: true });
+    expect(calls[0].url).toMatch(/\/image\/rename$/);
+    const { signature, api_key, ...signed } = calls[0].fields;
+    expect(signed).toMatchObject({ from_public_id: "t/old", to_public_id: "t/new", invalidate: "true" });
+    expect(api_key).toBe(process.env.CLOUDINARY_API_KEY);
+    expect(signature).toBe(signParams(signed, process.env.CLOUDINARY_API_SECRET as string));
+  });
+
+  it("treats an unconfirmed rename as a failure", async () => {
+    const { renameImage } = await import("./cloudinary");
+    expect((await renameImage("t/old", "t/new", capture({ public_id: "t/old" }).fake)).ok).toBe(false);
+  });
+
+  it("destroys with invalidation; an already missing image counts as gone", async () => {
+    const { destroyImage } = await import("./cloudinary");
+    const ok = capture({ result: "ok" });
+    expect(await destroyImage("t/x", ok.fake)).toEqual({ ok: true });
+    expect(ok.calls[0]).toMatchObject({ url: expect.stringMatching(/\/image\/destroy$/), fields: { public_id: "t/x", invalidate: "true" } });
+    expect((await destroyImage("t/x", capture({ result: "not found" }).fake)).ok).toBe(true);
+    expect((await destroyImage("t/x", capture({ result: "error" }).fake)).ok).toBe(false);
+  });
+});

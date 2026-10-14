@@ -744,7 +744,7 @@
       },
       "privacy": {
         "title": "Hide people and gear: {name}",
-        "intro": "Blur or pixelate faces, family photos, documents and plates, and cover the tripod on the floor. The edit is saved as a new copy of the photo; the original is kept, so you can change or undo it later. Do this before the room goes live: a photo buyers were already sent can't be called back. Nothing here is generated: it only blurs or pixelates what the camera took.",
+        "intro": "Blur or pixelate faces, family photos, documents and plates, and cover the tripod on the floor. The edit is saved as a new copy of the photo; the original is kept, so you can change or undo it later. Best before the room goes live: once you apply, the original's old address stops working, but a copy someone already saved can't be called back. Nothing here is generated: it only blurs or pixelates what the camera took.",
         "open": "Hide people and gear",
         "drawHint": "Drag on the photo to cover something. A click drops a person-sized box.",
         "keyboardHint": "Keyboard: Tab to a box, arrow keys move it, Shift with arrows resizes it, Alt for small steps, Delete removes it.",
@@ -766,11 +766,14 @@
         "preview": "Preview the result",
         "apply": "Apply to this room",
         "applied": "Applied. Buyers now see the edited photo.",
+        "deleteOriginal": "Also delete the original for good",
+        "deleteOriginalHint": "Only the edited photo is kept. You can't undo the edit or start again from the clean photo. Use it when someone asked to be removed completely.",
+        "appliedDeleted": "Applied, and the original is deleted. This edited photo is the only copy now.",
         "restore": "Restore the original photo",
         "restored": "Restored. Buyers see the original photo again.",
         "working": "Working. Cloudinary is rendering the edit, which can take up to a minute.",
         "back": "Back to the room",
-        "keepsOriginal": "The original stays in the media library. Applying again always starts from it."
+        "keepsOriginal": "The original is kept where buyers can't reach it: the first edit moves it to a new address that's never shown on the listing. Applying again always starts from it, and an edited copy you replace is deleted."
       }
     }
   },

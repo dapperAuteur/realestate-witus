@@ -89,6 +89,7 @@ export function PrivacyEditor({
   const [selected, setSelected] = useState<string | null>(null);
   const [preview, setPreview] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [deleteOriginal, setDeleteOriginal] = useState(false);
   const [status, setStatus] = useState("");
   const [draft, setDraft] = useState<{ u0: number; v0: number; u1: number; v1: number } | null>(null);
   const areaRef = useRef<HTMLDivElement>(null);
@@ -146,13 +147,20 @@ export function PrivacyEditor({
     );
   }
 
-  async function save(next: PrivacyRecipe, done: string) {
+  async function save(next: PrivacyRecipe, done: string, removeOriginal = false) {
     setBusy(true);
     setStatus(labels.working);
-    const result = await applyPrivacyEditAction(sceneId, currentMediaId, next, momentId);
+    const result = await applyPrivacyEditAction(sceneId, currentMediaId, next, momentId, removeOriginal);
     setBusy(false);
-    setStatus(result.ok ? done : result.error);
-    if (result.ok) router.refresh();
+    setStatus(result.ok ? (removeOriginal ? labels.appliedDeleted : done) : result.error);
+    if (!result.ok) return;
+    if (removeOriginal) {
+      // The edited copy is the photo now, and its edits are baked in: start clean.
+      setRecipe(emptyPrivacyRecipe());
+      setDeleteOriginal(false);
+      setSelected(null);
+    }
+    router.refresh();
   }
 
   const coverTop = 1 - recipe.bottom.angleDeg / 180;
@@ -311,11 +319,27 @@ export function PrivacyEditor({
           {labels.preview}
         </label>
 
+        <div>
+          <label className="flex min-h-11 items-center gap-2 text-sm font-medium">
+            <input
+              type="checkbox"
+              checked={deleteOriginal}
+              onChange={(event) => setDeleteOriginal(event.target.checked)}
+              aria-describedby="privacy-delete-hint"
+              className="h-5 w-5"
+            />
+            {labels.deleteOriginal}
+          </label>
+          <p id="privacy-delete-hint" className="text-xs text-slate-600 dark:text-slate-400">
+            {labels.deleteOriginalHint}
+          </p>
+        </div>
+
         <div className="flex flex-col gap-2">
           <button
             type="button"
             disabled={busy}
-            onClick={() => void save(recipe, labels.applied)}
+            onClick={() => void save(recipe, labels.applied, deleteOriginal)}
             className={`${BUTTON} border-0 text-white`}
             style={{ background: "var(--brand-accent)", color: "var(--brand-accent-fg)" }}
           >

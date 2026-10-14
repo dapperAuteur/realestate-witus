@@ -143,3 +143,64 @@ export async function uploadFromUrl(
   }
   return { ok: true, data: { publicId: json.public_id, width: json.width, height: json.height, bytes: json.bytes ?? 0 } };
 }
+
+type ApiResult = { ok: true; data: Record<string, unknown> } | { ok: false; error: string };
+
+/**
+ * A signed Upload API call other than an upload. Every field sent is signed
+ * except api_key (Cloudinary's authentication_signatures page: file,
+ * cloud_name, resource_type and api_key are never signed).
+ */
+async function signedImageCall(
+  action: "rename" | "destroy",
+  params: Record<string, string>,
+  fetchImpl: typeof fetch,
+): Promise<ApiResult> {
+  if (!hasCloudinary()) return { ok: false, error: "Media uploads are not configured yet." };
+  const signed = { ...params, timestamp: String(Math.floor(Date.now() / 1000)) };
+  const form = new FormData();
+  for (const [key, value] of Object.entries(signed)) form.set(key, value);
+  form.set("api_key", env.CLOUDINARY_API_KEY as string);
+  form.set("signature", signParams(signed, env.CLOUDINARY_API_SECRET as string));
+  const res = await fetchImpl(`https://api.cloudinary.com/v1_1/${env.CLOUDINARY_CLOUD_NAME}/image/${action}`, {
+    method: "POST",
+    body: form,
+  }).catch(() => null);
+  const json = (await res?.json().catch(() => null)) as (Record<string, unknown> & { error?: { message?: string } }) | null;
+  if (!res?.ok || !json) return { ok: false, error: json?.error?.message ?? `Cloudinary refused the ${action}.` };
+  return { ok: true, data: json };
+}
+
+/**
+ * Moves an image to a new public id. `invalidate` drops the CDN's copies of
+ * the old address "and all its transformed versions" (Upload API reference,
+ * rename, read 2026-10-14), so an address someone was sent stops working
+ * within minutes.
+ */
+export async function renameImage(
+  fromPublicId: string,
+  toPublicId: string,
+  fetchImpl: typeof fetch = fetch,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const result = await signedImageCall(
+    "rename",
+    { from_public_id: fromPublicId, to_public_id: toPublicId, invalidate: "true" },
+    fetchImpl,
+  );
+  if (!result.ok) return result;
+  return result.data.public_id === toPublicId ? { ok: true } : { ok: false, error: "Cloudinary didn't confirm the move." };
+}
+
+/** Deletes an image for good, and its CDN copies (Upload API reference, destroy, read 2026-10-14). */
+export async function destroyImage(
+  publicId: string,
+  fetchImpl: typeof fetch = fetch,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const result = await signedImageCall("destroy", { public_id: publicId, invalidate: "true" }, fetchImpl);
+  if (!result.ok) return result;
+  // "ok" is the documented success. "not found" is what the SDKs report for a
+  // missing asset (not on the reference page): already gone is what we wanted.
+  return result.data.result === "ok" || result.data.result === "not found"
+    ? { ok: true }
+    : { ok: false, error: `Cloudinary didn't delete it (${String(result.data.result)}).` };
+}

@@ -13,6 +13,7 @@ export function TourSection({
   title,
   posterUrl,
   startOpen,
+  pinColor,
   labels,
 }: {
   slug: string;
@@ -21,6 +22,8 @@ export function TourSection({
   posterUrl?: string;
   /** A shared room link (`?scene=`) opens the tour straight away. */
   startOpen: boolean;
+  /** The agency's accent, for hotspot pins. */
+  pinColor?: string;
   labels: ListingTourLabels;
 }) {
   const { openInquiry, tourRequest, setTourInView } = useListing();
@@ -46,6 +49,7 @@ export function TourSection({
         labels={labels}
         posterUrl={posterUrl}
         startOpen={startOpen}
+        pinColor={pinColor}
         sceneUrlSync="push"
         onInquiry={(intent) => openInquiry(intent, "tour")}
         onOpen={() => sendListingView(slug, "page", "tour")}

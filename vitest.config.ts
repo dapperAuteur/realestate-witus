@@ -3,7 +3,11 @@ import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   resolve: {
-    alias: { "@": path.resolve(__dirname, "src") },
+    alias: {
+      "@": path.resolve(__dirname, "src"),
+      // Server modules import the "server-only" marker; Next supplies it, Vitest needs a stub.
+      "server-only": path.resolve(__dirname, "vitest.server-only.ts"),
+    },
   },
   test: {
     setupFiles: ["./vitest.setup.ts"],

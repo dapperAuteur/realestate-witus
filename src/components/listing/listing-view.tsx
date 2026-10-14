@@ -1,4 +1,5 @@
 import type { FeatureGroupKey } from "@/db/schema/listings";
+import { presetByKey } from "@/lib/brand-presets";
 import type { Dictionary } from "@/lib/dictionaries";
 import {
   approximateCoordinates,
@@ -254,6 +255,7 @@ export function ListingView({
                   title={d.sections.tour}
                   posterUrl={posterUrl}
                   startOpen={startTourOpen}
+                  pinColor={presetByKey(tenant.theme.presetKey).accent}
                   labels={tourLabels(dict)}
                 />
               ) : null}

@@ -15,12 +15,14 @@ export function EmbedTour({
   tour,
   listingUrl,
   posterUrl,
+  pinColor,
   labels,
 }: {
   slug: string;
   tour: VirtualTour;
   listingUrl: string;
   posterUrl?: string;
+  pinColor?: string;
   labels: ListingTourLabels;
 }) {
   return (
@@ -31,6 +33,7 @@ export function EmbedTour({
         posterUrl={posterUrl}
         height="100%"
         roomStrip={false}
+        pinColor={pinColor}
         sceneUrlSync="replace"
         onInquiry={(intent) => {
           window.open(`${listingUrl}?inquiry=${intent}#contact`, "_blank", "noopener,noreferrer");

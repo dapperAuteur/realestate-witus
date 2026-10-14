@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { EmbedTour } from "@/components/listing/embed-tour";
 import { tourLabels } from "@/components/listing/listing-view";
-import { brandCssVars } from "@/lib/brand-presets";
+import { brandCssVars, presetByKey } from "@/lib/brand-presets";
 import { getDictionary } from "@/lib/dictionaries";
 import { listingPageUrl } from "@/lib/listings/embed";
 import { requestOrigin } from "@/lib/listings/origin";
@@ -51,7 +51,14 @@ export default async function ListingEmbed({
     >
       <div className="min-h-0 flex-1 p-0">
         {tour ? (
-          <EmbedTour slug={listing.slug} tour={tour} listingUrl={listingUrl} posterUrl={posterUrl} labels={tourLabels(dict)} />
+          <EmbedTour
+            slug={listing.slug}
+            tour={tour}
+            listingUrl={listingUrl}
+            posterUrl={posterUrl}
+            pinColor={presetByKey(tenant.theme.presetKey).accent}
+            labels={tourLabels(dict)}
+          />
         ) : (
           <div className="relative flex h-full items-center justify-center">
             {posterUrl ? (

@@ -19,6 +19,8 @@ export default function LangError({ reset }: { error: Error; reset: () => void }
         >
           Try again
         </button>
+        {/* A full page load on purpose: after an error the client router may be what broke. */}
+        {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
         <a
           href="/"
           className="inline-flex min-h-11 items-center rounded-full border border-slate-300 px-6 text-sm font-medium focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current dark:border-slate-700"

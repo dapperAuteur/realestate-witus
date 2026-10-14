@@ -118,7 +118,7 @@ export default async function PlatformBillingPage({
       {selected ? (
         <>
           <section aria-label={d.pricingTitle} className="mt-6 rounded-xl border border-slate-200 p-5 dark:border-slate-800">
-            <h2 className="text-lg font-semibold">{d.pricingTitle} — {selected.name}</h2>
+            <h2 className="text-lg font-semibold">{d.pricingTitle}: {selected.name}</h2>
             <form action={savePricingAction} className="mt-4 flex flex-wrap items-end gap-4">
               <input type="hidden" name="lang" value={lang} />
               <input type="hidden" name="back" value={self} />

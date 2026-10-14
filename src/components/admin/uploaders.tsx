@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useId, useState } from "react";
+import { MAX_UPLOAD_BYTES, nextAttempt, planResize, type ResizePlan } from "@/lib/media/resize-plan";
 import {
   addFloorPlanAction,
   attachPhotosAction,
@@ -11,8 +12,11 @@ import {
 // Signed Cloudinary uploads for the listing admin (plans/08 phase D). The
 // browser gets a short-lived signature, uploads straight to Cloudinary (the
 // API secret never leaves the server), then registers the file with its kind.
-// Files over 20 MB go up in 6 MB chunks: 360 photos from an X5 run 20 to 40
-// MB, and one 3G hiccup should cost a chunk, not the whole file.
+//
+// Big images are resized HERE, before upload (src/lib/media/resize-plan.ts):
+// BAM's Cloudinary plan takes images up to 10 MB and 25 megapixels, and an X5
+// 360 photo is about 72 MP and 20 to 40 MB. Anything still over 20 MB would go
+// up in 6 MB chunks, so one 3G hiccup costs a chunk, not the whole file.
 
 export type UploadKind = "photo" | "panorama" | "floor_plan";
 
@@ -23,6 +27,10 @@ export type UploadLabels = {
   failed: string;
   notConfigured: string;
   hint: string;
+  resizing: string;
+  badType: string;
+  tooBig: string;
+  summary: string;
 };
 
 const CHUNK_THRESHOLD = 20 * 1024 * 1024;
@@ -78,6 +86,50 @@ async function sendToCloudinary(file: File, signed: Signed) {
   return last;
 }
 
+function isIos(): boolean {
+  return /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+}
+
+async function encode(bitmap: ImageBitmap, plan: Extract<ResizePlan, { action: "resize" }>): Promise<Blob | null> {
+  const canvas = document.createElement("canvas");
+  canvas.width = plan.width;
+  canvas.height = plan.height;
+  const context = canvas.getContext("2d");
+  if (!context) return null;
+  context.imageSmoothingEnabled = true;
+  context.imageSmoothingQuality = "high";
+  context.drawImage(bitmap, 0, 0, plan.width, plan.height);
+  return new Promise((resolve) => canvas.toBlob(resolve, plan.type, plan.quality));
+}
+
+/**
+ * Shrinks an image that wouldn't fit the upload limits (resize-plan.ts), or
+ * returns it untouched. Quality steps down first, then size, until it fits.
+ */
+async function prepare(file: File, kind: UploadKind, labels: UploadLabels): Promise<Envelope<File>> {
+  const bitmap = await createImageBitmap(file).catch(() => null);
+  if (!bitmap) return { ok: false, code: "BAD_TYPE", error: labels.badType };
+  try {
+    let plan = planResize({ width: bitmap.width, height: bitmap.height, bytes: file.size, type: file.type }, kind, {
+      ios: isIos(),
+    });
+    if (plan.action === "keep") return { ok: true, data: file };
+    if (plan.action === "refuse") return { ok: false, code: "BAD_TYPE", error: labels.badType };
+    for (let current: typeof plan | null = plan; current; current = nextAttempt(current)) {
+      plan = current;
+      const blob = await encode(bitmap, current);
+      if (blob && blob.size > 0 && blob.size <= MAX_UPLOAD_BYTES) {
+        const ext = current.type === "image/png" ? "png" : "jpg";
+        const name = file.name.replace(/\.[^.]+$/, "") + `.${ext}`;
+        return { ok: true, data: new File([blob], name, { type: current.type }) };
+      }
+    }
+    return { ok: false, code: "TOO_BIG", error: labels.tooBig };
+  } finally {
+    bitmap.close();
+  }
+}
+
 /** Uploads one file and registers it; returns the media id or a readable reason. */
 async function uploadOne(file: File, kind: UploadKind): Promise<Envelope<{ mediaId: string }>> {
   const signed = await sign();
@@ -120,8 +172,11 @@ function useBatchUpload(kind: UploadKind, labels: UploadLabels) {
     const done: { mediaId: string; filename: string }[] = [];
     for (const [i, file] of files.entries()) {
       setRows((prev) => prev.map((row, j) => (j === i ? { ...row, state: "uploading" } : row)));
+      setNote(labels.resizing.replace("{name}", file.name));
+      const prepared = await prepare(file, kind, labels);
       setNote(labels.uploading.replace("{n}", String(i + 1)).replace("{total}", String(files.length)));
-      const result = await uploadOne(file, kind);
+      // The original filename names the room ("living-room.jpg"), not the resized copy's.
+      const result = prepared.ok ? await uploadOne(prepared.data, kind) : prepared;
       if (result.ok) done.push({ mediaId: result.data.mediaId, filename: file.name });
       setRows((prev) =>
         prev.map((row, j) =>
@@ -134,6 +189,7 @@ function useBatchUpload(kind: UploadKind, labels: UploadLabels) {
       );
     }
     setBusy(false);
+    setNote(labels.summary.replace("{done}", String(done.length)).replace("{total}", String(files.length)));
     return done;
   }
   return { rows, busy, note, setNote, run };

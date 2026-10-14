@@ -30,6 +30,7 @@ import {
   setMomentPhoto,
   createScenes,
   placeSceneOnPlan,
+  removeConnection,
   setSceneStatuses,
   setStartScene,
   tourEditData,
@@ -614,6 +615,13 @@ describe.skipIf(!ready)("listings and tours against the database", () => {
     expect(lab.panoramaMediaId).toBe(pano.lab2);
     expect((await roomsNow()).find((r) => r.name === "Office")!.isStart).toBe(true);
     expect(await run({ csv: "room,links_to\nTerrace,lab", photos: [] })).toMatchObject({ ok: false, code: "CSV_INVALID" });
+
+    // The room map's remove: both directions between a pair, nothing else.
+    const named = Object.fromEntries((await roomsNow()).map((r) => [r.name, r.id]));
+    expect(await removeConnection(tenantId, named.Lobby, named.Office)).toEqual({ ok: true, data: { deleted: 2 } });
+    expect(await removeConnection(tenantId, named.Lobby, named.Office)).toEqual({ ok: true, data: { deleted: 0 } });
+    expect(await removeConnection(otherTenantId, named.Lobby, named.Lab)).toEqual({ ok: true, data: { deleted: 0 } });
+    expect(await linkCount()).toBe(2);
     await db().delete(listings).where(eq(listings.id, id));
   });
 });

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ACCENT, FIELD, HINT, LABEL, PRIMARY_BUTTON, SECONDARY_BUTTON } from "@/components/admin/listing-form";
+import { RoomMap } from "@/components/admin/room-map";
 import { TourCsvImport } from "@/components/admin/tour-csv-import";
 import { FloorPlanUploader, PanoramaUploader } from "@/components/admin/uploaders";
 import { requireStaffPage } from "@/lib/admin/guard";
@@ -27,8 +28,8 @@ export const metadata: Metadata = { title: "360 tour" };
 // The tour workspace (plans/08 phase D): bulk room creation from uploaded 360
 // photos, graph checks (orphans, dead ends, unreachable rooms, unplaced
 // doorways), bulk publish, the list-based Connections editor (the accessible
-// path plans/04 asks for), floor plans, and building a tour from a
-// spreadsheet (plans/06).
+// path plans/04 asks for) beside its room map (plans/04's graph mode), floor
+// plans, and building a tour from a spreadsheet (plans/06).
 
 export default async function TourWorkspacePage({
   params,
@@ -57,6 +58,19 @@ export default async function TourWorkspacePage({
       ? t.scene.saved
       : undefined;
   const card = "rounded-xl border border-slate-200 p-5 dark:border-slate-800";
+  const badgesFor = (stats: (typeof data.scenes)[number]["stats"]) =>
+    [
+      stats.isOrphan ? t.rooms.badges.orphan : null,
+      stats.isDeadEnd ? t.rooms.badges.deadEnd : null,
+      stats.isUnreachable ? t.rooms.badges.unreachable : null,
+      stats.needsPlacement
+        ? (stats.needsPlacement === 1 ? t.rooms.badges.needsPlacement : t.rooms.badges.needsPlacementMany).replace(
+            "{n}",
+            String(stats.needsPlacement),
+          )
+        : null,
+      stats.duplicateTargets.length ? t.rooms.badges.duplicate : null,
+    ].filter((badge): badge is string => badge !== null);
   const base = `/${lang}/admin/listings/${listing.id}/tour`;
 
   return (
@@ -111,19 +125,7 @@ export default async function TourWorkspacePage({
             <input type="hidden" name="listingId" value={listing.id} />
             <ul className="flex flex-col gap-3">
               {data.scenes.map((scene) => {
-                const s = scene.stats;
-                const badges = [
-                  s.isOrphan ? t.rooms.badges.orphan : null,
-                  s.isDeadEnd ? t.rooms.badges.deadEnd : null,
-                  s.isUnreachable ? t.rooms.badges.unreachable : null,
-                  s.needsPlacement
-                    ? (s.needsPlacement === 1 ? t.rooms.badges.needsPlacement : t.rooms.badges.needsPlacementMany).replace(
-                        "{n}",
-                        String(s.needsPlacement),
-                      )
-                    : null,
-                  s.duplicateTargets.length ? t.rooms.badges.duplicate : null,
-                ].filter((badge): badge is string => badge !== null);
+                const badges = badgesFor(scene.stats);
                 return (
                   <li key={scene.id} className="flex flex-wrap items-start gap-3 rounded-xl border border-slate-200 p-3 dark:border-slate-800">
                     <label className="flex min-h-11 min-w-11 items-center justify-center">
@@ -181,6 +183,33 @@ export default async function TourWorkspacePage({
           </form>
         )}
       </section>
+
+      {data.scenes.length > 1 ? (
+        <section id="room-map" aria-labelledby="room-map-title" className={`${card} scroll-mt-24`}>
+          <h3 id="room-map-title" className="text-lg font-semibold">
+            {t.map.title}
+          </h3>
+          <p className={HINT}>{t.map.intro}</p>
+          <RoomMap
+            listingId={listing.id}
+            scenes={data.scenes.map((scene) => ({
+              id: scene.id,
+              name: scene.name,
+              thumbUrl: scene.thumbUrl,
+              isStart: scene.isStart,
+              flags: badgesFor(scene.stats),
+            }))}
+            links={data.links.map((link) => ({
+              fromSceneId: link.fromSceneId,
+              toSceneId: link.toSceneId,
+              placed: link.yaw !== null && link.pitch !== null,
+            }))}
+            startSceneId={data.scenes.find((scene) => scene.isStart)?.id ?? null}
+            editBase={base}
+            labels={t.map}
+          />
+        </section>
+      ) : null}
 
       {data.scenes.length > 1 ? (
         <section id="connections" aria-labelledby="connections-title" className={`${card} scroll-mt-24`}>

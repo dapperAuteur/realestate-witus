@@ -44,6 +44,7 @@ import {
   listingIdForLink,
   listingIdForScene,
   placeSceneOnPlan,
+  removeConnection,
   renameFloorPlan,
   setSceneStatuses,
   setStartScene,
@@ -345,6 +346,27 @@ export async function deleteLinkAction(formData: FormData): Promise<void> {
   if (!gate) backTo(back, "error", "FORBIDDEN");
   await deleteLink(gate.ctx.tenant.id, linkId);
   backTo(back, "ok", "saved");
+}
+
+/** The room map's connect and disconnect: two rooms, both in THIS listing. */
+async function pairEditor(listingId: string, a: string, b: string) {
+  const gate = await editor(listingId);
+  if (!gate) return { gate: null, error: FORBIDDEN };
+  const [la, lb] = await Promise.all([listingIdForScene(gate.ctx.tenant.id, a), listingIdForScene(gate.ctx.tenant.id, b)]);
+  if (la !== listingId || lb !== listingId) return { gate: null, error: err("LINK_SCENES", "Both rooms must be in this listing.") };
+  return { gate, error: null };
+}
+
+export async function connectRoomsAction(listingId: string, a: string, b: string): Promise<Result<{ created: number }>> {
+  const { gate, error } = await pairEditor(listingId, a, b);
+  if (!gate) return error;
+  return addLink(gate.ctx.tenant.id, a, b, true);
+}
+
+export async function disconnectRoomsAction(listingId: string, a: string, b: string): Promise<Result<{ deleted: number }>> {
+  const { gate, error } = await pairEditor(listingId, a, b);
+  if (!gate) return error;
+  return removeConnection(gate.ctx.tenant.id, a, b);
 }
 
 export async function updateLinkAction(

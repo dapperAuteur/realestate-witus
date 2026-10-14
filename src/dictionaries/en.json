@@ -606,6 +606,27 @@
           "duplicate": "Duplicate doorway"
         }
       },
+      "map": {
+        "title": "Room map",
+        "intro": "Every room and the doorways between them, laid out from the start room. Use it to check a tour at a glance, especially after a spreadsheet import.",
+        "howTo": "Pick a room, then pick the room it leads to: they're connected both ways. Pick a room to see and remove its doorways. Escape puts the room back.",
+        "narrow": "The room map needs a wider screen. On a phone, use Connections below: it does the same job.",
+        "legendBoth": "Doorways both ways",
+        "legendOneWay": "One way only (the arrow shows which)",
+        "legendUnplaced": "Arrow not placed yet: buyers can't see it",
+        "start": "Start room",
+        "doorways": "{n} doorways",
+        "oneDoorway": "1 doorway",
+        "picked": "{name} picked. Now pick the room it leads to, or press Escape.",
+        "connected": "{a} and {b} are connected both ways. Place each arrow in the room editor.",
+        "already": "{a} and {b} are already connected. To remove the doorway, use the list below the map.",
+        "removed": "Removed the doorways between {a} and {b}.",
+        "joinedTo": "Doorways to",
+        "none": "No doorways yet. Pick another room on the map to connect it.",
+        "remove": "Remove the doorway to {name}",
+        "edit": "Edit and place",
+        "done": "Done with this room"
+      },
       "connections": {
         "title": "Connections",
         "intro": "Which rooms lead to which. A new doorway stays invisible until you place its arrow in the room editor.",

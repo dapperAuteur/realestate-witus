@@ -1,5 +1,6 @@
 import { and, eq, inArray } from "drizzle-orm";
 import { db } from "@/db";
+import { cloneListingInto, demoSourceListingId } from "./clone";
 import {
   listings,
   mediaAssets,
@@ -14,12 +15,14 @@ import {
 // cron. Copy describes a FICTIONAL brokerage — no real agent, address, or
 // phone number appears, and nothing here routes anywhere.
 //
-// The demo currently exercises the platform spine: brand resolution (preset,
-// font pair, template), the admin surfaces, and RBAC across two roles. Sample
-// listings and a real 360 tour join seedDemoContent when the listings
-// workstream lands; the wipe/seed/reset shape is already built for them.
+// The demo exercises the platform spine (brand resolution, the admin
+// surfaces, RBAC across two roles) and, once BAM picks one, a real listing:
+// seedDemoContent copies his chosen live listing in fresh every night
+// (clone.ts). Until he picks one, the demo agency has no listings.
 
 export const DEMO_TENANT_SLUG = "demo-agency";
+/** The demo owner's stable user id (accounts.ts); the copied listing names them as its agent. */
+export const DEMO_OWNER_USER_ID = "demo-admin";
 export const DEMO_HOST = "demo.realestate.witus.online";
 
 const DEMO_NAME = "Meridian Property Group";
@@ -97,13 +100,16 @@ export async function wipeDemoContent(tenantId: string): Promise<void> {
 }
 
 /**
- * Restores the demo baseline. Listings, tour scenes, and their media land
- * here with the listings workstream; today the tenant row written by
- * ensureDemoTenant is the whole baseline, so this is deliberately a no-op
- * rather than a missing step.
+ * Restores the demo baseline: a fresh copy of the listing BAM chose for the
+ * demo (flags.demoSourceListingId on the platform tenant), shown by the demo
+ * owner. No choice, or a source that isn't live, leaves the demo without a
+ * listing rather than failing the reset.
  */
-export async function seedDemoContent(tenantId: string): Promise<void> {
-  void tenantId;
+export async function seedDemoContent(tenantId: string): Promise<{ copied: boolean; reason?: string }> {
+  const sourceId = await demoSourceListingId();
+  if (!sourceId) return { copied: false, reason: "No demo listing chosen yet." };
+  const result = await cloneListingInto(sourceId, tenantId, { agentUserId: DEMO_OWNER_USER_ID });
+  return result.ok ? { copied: true } : { copied: false, reason: result.error };
 }
 
 /** True once the demo tenant carries seeded content (not just the tenant row). */

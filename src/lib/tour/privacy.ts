@@ -3,6 +3,7 @@ import { createHash, randomBytes } from "node:crypto";
 import { and, desc, eq, or, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { listingPhotos, mediaAssets, sceneMomentPanoramas, tourFloorPlans, tourScenes } from "@/db/schema";
+import { fileSharedWithAnotherTenant } from "@/lib/demo/clone";
 import { DEMO_TENANT_SLUG } from "@/lib/demo/seed";
 import { ownedReadyMedia } from "@/lib/listings/admin";
 import { destroyImage, limitedUrl, renameImage, transformedUrl, uploadFromUrl, waitForDerived } from "@/lib/media/cloudinary";
@@ -134,6 +135,12 @@ export interface PrivacyEditInput extends PrivacyTarget {
   patchDataUrl?: string | null;
   /** The app's own logos (BUILTIN_LOGOS) are for BAM's listings and the demo agency only. */
   allowBuiltinLogo?: boolean;
+  /**
+   * The demo agency: its copy of BAM's sample listing borrows his Cloudinary
+   * files (demo/clone.ts), so a file another tenant also uses is never moved
+   * or deleted from here.
+   */
+  borrowsFiles?: boolean;
   /** Injected in tests; Cloudinary's own endpoints otherwise. */
   fetchImpl?: typeof fetch;
 }
@@ -185,7 +192,13 @@ async function mediaInUse(tenantId: string, mediaId: string): Promise<boolean> {
  * same name, and that one must survive. Best effort: a failed delete leaves
  * the record, so the file is never orphaned without a trace.
  */
-async function retire(tenantId: string, mediaId: string, keepPublicId: string | null, fetchImpl?: typeof fetch) {
+async function retire(
+  tenantId: string,
+  mediaId: string,
+  keepPublicId: string | null,
+  fetchImpl?: typeof fetch,
+  borrowsFiles = false,
+) {
   if (await mediaInUse(tenantId, mediaId)) return;
   const [row] = await db()
     .select({ publicId: mediaAssets.cloudinaryPublicId })
@@ -193,7 +206,8 @@ async function retire(tenantId: string, mediaId: string, keepPublicId: string | 
     .where(and(eq(mediaAssets.tenantId, tenantId), eq(mediaAssets.id, mediaId)))
     .limit(1);
   if (!row) return;
-  if (row.publicId !== keepPublicId) {
+  const borrowed = borrowsFiles && (await fileSharedWithAnotherTenant(tenantId, row.publicId));
+  if (row.publicId !== keepPublicId && !borrowed) {
     const gone = await destroyImage(row.publicId, fetchImpl);
     if (!gone.ok) {
       console.error(`[privacy] couldn't delete ${row.publicId}: ${gone.error}`);
@@ -235,7 +249,7 @@ async function bake(input: PrivacyEditInput, onPatch: (publicId: string) => void
   if (isPrivacyRecipeEmpty(input.recipe)) {
     // Nothing to hide: show the original again.
     await writeTarget(tenantId, target, { mediaId: sourceId, originalId: null, recipe: null });
-    if (previousCopy) await retire(tenantId, previousCopy, null, input.fetchImpl);
+    if (previousCopy) await retire(tenantId, previousCopy, null, input.fetchImpl, input.borrowsFiles);
     return ok({ mediaId: sourceId });
   }
 
@@ -261,7 +275,10 @@ async function bake(input: PrivacyEditInput, onPatch: (publicId: string) => void
   }
 
   let sourcePublicId = source.cloudinaryPublicId;
-  if (!state.originalId) {
+  // A borrowed file (the demo's copy of BAM's listing) stays where it is: it's
+  // already public, and moving it would break the listing it came from.
+  const borrowed = Boolean(input.borrowsFiles) && (await fileSharedWithAnotherTenant(tenantId, sourcePublicId));
+  if (!state.originalId && !borrowed) {
     // First edit: move the original away from the address buyers were sent,
     // before anything else, so a failure here changes nothing.
     const hidden = `realestate-witus/${tenantId}/original-${randomBytes(12).toString("hex")}`;
@@ -321,11 +338,11 @@ async function bake(input: PrivacyEditInput, onPatch: (publicId: string) => void
   if (input.deleteOriginal) {
     // The copy is the photo now: nothing to edit it back from, so no recipe either.
     await writeTarget(tenantId, target, { mediaId: asset.id, originalId: null, recipe: null });
-    await retire(tenantId, source.id, null, input.fetchImpl);
+    await retire(tenantId, source.id, null, input.fetchImpl, input.borrowsFiles);
   } else {
     await writeTarget(tenantId, target, { mediaId: asset.id, originalId: source.id, recipe: input.recipe });
   }
-  if (previousCopy) await retire(tenantId, previousCopy, uploaded.data.publicId, input.fetchImpl);
+  if (previousCopy) await retire(tenantId, previousCopy, uploaded.data.publicId, input.fetchImpl, input.borrowsFiles);
   return ok({ mediaId: asset.id });
 }
 
@@ -362,6 +379,11 @@ export async function patchLogos(tenantId: string): Promise<{ id: string; url: s
     const url = limitedUrl(row.publicId, 512);
     return url ? [{ id: row.id, url }] : [];
   });
+}
+
+/** The demo agency borrows BAM's files for its copy of his sample listing (demo/clone.ts). */
+export function borrowsFiles(tenant: { slug: string }): boolean {
+  return tenant.slug === DEMO_TENANT_SLUG;
 }
 
 /** BAM's own listings (the platform tenant) and the demo agency may use the app's logos. */

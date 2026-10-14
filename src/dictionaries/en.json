@@ -384,7 +384,10 @@
       "MOMENT_BASE": "The current photos can't be removed while other times exist.",
       "MOMENT_NOT_FOUND": "That time isn't in this listing.",
       "PRIVACY_STALE": "This photo changed since you opened the editor. Reload and try again.",
-      "PRIVACY_RECIPE": "That edit couldn't be read. Reload and try again."
+      "PRIVACY_RECIPE": "That edit couldn't be read. Reload and try again.",
+      "DEMO_SOURCE": "Only the listing the demo uses can be copied into it. Pick it with “Use this listing in the demo” first.",
+      "DEMO_SOURCE_DRAFT": "The demo copies a live listing only. Publish it first.",
+      "DEMO_COPY_FAILED": "The copy into the demo didn't finish. Nothing in your listing changed. Try again."
     },
     "listings": {
       "title": "Listings",
@@ -527,6 +530,20 @@
         "day": "Day",
         "empty": "No views in this period yet. Share the listing link or add the embed to your site, then check back.",
         "privacy": "These are counts only. The listing records how many times it was seen and its tour opened, never who looked. Days run midnight to midnight UTC. Inquiries are counted here, not named."
+      },
+      "demo": {
+        "title": "The demo agency",
+        "intro": "The demo at demo.realestate.witus.online shows a copy of one of your live listings, made fresh every night, so prospects can walk a real tour and try its admin. The copy hides the street address and never includes an original photo you hid people in.",
+        "isSource": "This listing is the demo's. It's copied in again every night at midnight UTC, so changes you make here reach the demo by morning, or now with the button.",
+        "otherSource": "The demo copies “{title}” now. Using this one instead replaces it.",
+        "none": "The demo has no listing yet.",
+        "use": "Use this listing in the demo",
+        "copyNow": "Copy it into the demo now",
+        "stop": "Stop using it in the demo",
+        "needsLive": "Publish it first: the demo copies a live listing only.",
+        "demoLink": "The demo copy",
+        "copied": "Copied into the demo agency. It's live at the demo address below.",
+        "stopped": "The demo has no listing now. It stays empty until you pick one."
       },
       "inquiries": {
         "title": "Inquiries",

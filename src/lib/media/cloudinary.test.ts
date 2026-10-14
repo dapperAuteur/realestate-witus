@@ -20,3 +20,13 @@ describe("signParams", () => {
     expect(a).not.toBe(b);
   });
 });
+
+describe("limitedUrl", () => {
+  it("caps width without ever upscaling", async () => {
+    // vitest.setup.ts sets CLOUDINARY_CLOUD_NAME=vitest-cloud when unset.
+    const { limitedUrl } = await import("./cloudinary");
+    expect(limitedUrl("realestate-witus/t1/pano", 6144)).toBe(
+      `https://res.cloudinary.com/${process.env.CLOUDINARY_CLOUD_NAME}/image/upload/f_auto,q_auto,c_limit,w_6144/realestate-witus/t1/pano`,
+    );
+  });
+});

@@ -14,3 +14,26 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ── Tour viewer (src/components/tour/tour-viewer.tsx) ─────────────────────
+   Hotspot pins are real buttons: a 44px target around the 32px pin, tip at the
+   bottom so the marker's "bottom center" anchor still lands on the spot. */
+.rw-hotspot {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.rw-hotspot:focus-visible,
+.psv-virtual-tour-arrow:focus-visible {
+  outline: 3px solid #ffffff;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 6px rgb(15 23 42 / 0.85);
+  border-radius: 9999px;
+}

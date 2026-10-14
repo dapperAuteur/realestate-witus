@@ -7,9 +7,8 @@ import { getDictionary, hasLocale } from "@/lib/dictionaries";
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Overview" };
 
-// The staff landing. The listings board replaces this shell when the listings
-// workstream lands; today it confirms who is signed in (the layout header) and
-// points at the surfaces that already work.
+// The staff landing: who is signed in (the layout header) and the doors into
+// each workspace, listings first.
 
 export default async function AdminOverviewPage({
   params,
@@ -23,6 +22,7 @@ export default async function AdminOverviewPage({
   const a = dict.admin.overview;
 
   const doors = [
+    { href: `/${lang}/admin/listings`, label: dict.admin.nav.listings },
     { href: `/${lang}/admin/design`, label: dict.admin.nav.design },
     { href: `/${lang}/admin/team`, label: dict.admin.nav.team },
     { href: `/${lang}/admin/support`, label: dict.admin.nav.support },

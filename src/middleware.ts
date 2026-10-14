@@ -14,8 +14,9 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  // Skip api, Next internals, the PostHog ingest proxy, and anything with a file
-  // extension.
+  // Skip api, Next internals, the PostHog ingest proxy, the listing embed (it lives
+  // outside [lang] so no site chrome lands inside an agent's iframe), and anything
+  // with a file extension.
   //
   // `ingest` is load-bearing, not a micro-optimization. next.config.ts rewrites
   // /ingest/:path* to PostHog, but middleware runs BEFORE rewrites — so without this
@@ -24,5 +25,5 @@ export const config = {
   // no rewrite and 404s inside [lang]. Every analytics event would be silently lost.
   // /ingest/static/array.js escapes via the file-extension rule, so the failure would
   // be the confusing kind: the PostHog snippet loads and then nothing is ever recorded.
-  matcher: ["/((?!api|_next|ingest|og$|.*\\..*).*)"],
+  matcher: ["/((?!api|_next|ingest|embed/|og$|.*\\..*).*)"],
 };

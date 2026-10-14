@@ -14,7 +14,9 @@
   "home": {
     "comingSoon": "Launching soon",
     "comingSoonBody": "This site is being prepared. Check back shortly.",
-    "listingsSoon": "Listings and virtual tours from this agency appear here shortly."
+    "listingsTitle": "Listings",
+    "noListings": "New listings with 360 tours appear here as they go live.",
+    "tourBadge": "360 tour"
   },
   "landing": {
     "eyebrow": "RealEstate.WitUS.Online",
@@ -203,6 +205,7 @@
     "roleLabel": "Signed in as",
     "nav": {
       "overview": "Overview",
+      "listings": "Listings",
       "design": "Design",
       "team": "Team",
       "support": "Support",
@@ -217,12 +220,12 @@
       "invalid": "This invite has expired or was already used. Ask for a new one."
     },
     "overview": {
-      "intro": "Your agency workspace. Listings and virtual tours arrive with the next release.",
+      "intro": "Your agency workspace: listings, their 360 tours, and the inquiries they bring in.",
       "nextTitle": "What lands next",
       "next": [
-        "Listings and 360 tours",
-        "Embed snippets for your own site",
-        "Buyer inquiries by email"
+        "Before / After for renovation listings",
+        "Hiding people and gear in 360 photos",
+        "Saved listings that follow a buyer across devices"
       ],
       "doorsTitle": "Available now"
     },
@@ -330,7 +333,288 @@
     "ok": "Done.",
     "errors": {
       "GENERIC": "That did not work. Please try again.",
-      "INVALID_CONTENT": "Fill in the required fields."
+      "INVALID_CONTENT": "Fill in the required fields.",
+      "FORBIDDEN": "You can't change that listing. Ask an owner or manager, or the agent it's assigned to.",
+      "LISTING_NOT_FOUND": "That listing isn't in this agency.",
+      "LISTING_CREATE_FAILED": "The listing couldn't be saved. Try again.",
+      "PROPERTY_KIND": "Choose the kind of property.",
+      "ADDRESS_LINE1": "Add the street address. You can hide it on the page.",
+      "ADDRESS_FIELD": "One of the address fields is too long.",
+      "COUNTRY_CODE": "Use a two-letter country code, like US or GH.",
+      "COORDINATES": "Give both latitude and longitude as numbers, or leave both blank.",
+      "LISTING_TITLE": "Add a title of up to 140 characters.",
+      "LISTING_PRICE": "Write the price as a number, like 1,250,000, or leave it blank.",
+      "LISTING_CURRENCY": "Use a three-letter currency code, like USD or GHS.",
+      "LISTING_HIGHLIGHTS": "Up to three highlights, one per line.",
+      "LISTING_DESCRIPTION": "The description is too long.",
+      "LISTING_FACT": "One of the facts isn't a valid number. Bedrooms are whole numbers; bathrooms can end in .5.",
+      "LISTING_FEATURES": "Up to 40 lines per group, each under 200 characters.",
+      "BAD_STATUS": "Choose a status.",
+      "SCENE_NOT_FOUND": "That room isn't in this listing.",
+      "SCENE_NAME": "Room names need 1 to 80 characters.",
+      "LINK_SELF": "A room can't link to itself.",
+      "LINK_SCENES": "Both rooms must be in this listing.",
+      "LINK_NOT_FOUND": "That doorway isn't in this listing.",
+      "FLOOR_LABEL": "Floor names need 1 to 40 characters.",
+      "FLOOR_NOT_FOUND": "That floor isn't in this listing.",
+      "CONFIRM": "Tick the box to confirm, then try again."
+    },
+    "listings": {
+      "title": "Listings",
+      "new": "New listing",
+      "intro": "Every listing your agency has, with this week's numbers.",
+      "empty": "No listings yet. Start with the address and a title. Photos and the 360 tour come next.",
+      "columns": {
+        "listing": "Listing",
+        "status": "Status",
+        "tour": "360 tour",
+        "week": "Last 7 days",
+        "inquiries": "New inquiries",
+        "actions": "Actions"
+      },
+      "tourRooms": "{published} of {total} rooms live",
+      "noTour": "No rooms yet",
+      "weekViews": "{views} views, {opens} tour opens",
+      "editListing": "Edit",
+      "editTour": "Tour",
+      "viewPage": "View page",
+      "created": "Listing created. Add photos and the tour below.",
+      "saved": "Saved.",
+      "form": {
+        "propertyTitle": "The property",
+        "listingTitle": "The listing",
+        "factsTitle": "Facts",
+        "featuresTitle": "Facts and features",
+        "featuresHint": "One per line. Leave a group empty to hide it.",
+        "kind": "Kind of property",
+        "name": "Property name (optional)",
+        "nameHint": "For an estate or a building with a name.",
+        "addressLine1": "Street address",
+        "addressLine2": "Unit, suite or floor (optional)",
+        "neighborhood": "Neighborhood (optional)",
+        "locality": "City or town",
+        "region": "State, region or province",
+        "postalCode": "Postal code (optional)",
+        "countryCode": "Country code",
+        "countryHint": "Two letters, like US or GH.",
+        "latitude": "Latitude (optional)",
+        "longitude": "Longitude (optional)",
+        "coordsHint": "For the map. In OpenStreetMap, right-click the spot and choose Show address to copy them.",
+        "hideAddress": "Hide the street address on the page. Buyers see the neighborhood and an approximate map instead.",
+        "title": "Title",
+        "titleHint": "What buyers read under the price and address. Up to 140 characters.",
+        "price": "Price (optional)",
+        "priceHint": "Whole amount, like 1,250,000. Leave it blank to show Price on request.",
+        "currency": "Currency",
+        "highlights": "Highlights",
+        "highlightsHint": "Up to three short lines, one per line.",
+        "description": "Description",
+        "descriptionHint": "Leave a blank line to start a new paragraph.",
+        "bedrooms": "Bedrooms",
+        "bathrooms": "Bathrooms",
+        "bathroomsHint": "Halves allowed, like 2.5.",
+        "interiorArea": "Interior area",
+        "areaUnit": "Area unit",
+        "lotArea": "Lot size",
+        "lotAreaUnit": "Lot unit",
+        "yearBuilt": "Year built",
+        "floors": "Floors",
+        "units": "Units",
+        "zoning": "Zoning",
+        "parkingSpaces": "Parking spaces",
+        "galleryMode": "Photo gallery",
+        "galleryDefault": "Agency default",
+        "galleryLightbox": "One photo at a time",
+        "galleryStrip": "All photos in one scrolling column",
+        "agent": "Agent buyers contact",
+        "agentNone": "The agency's owner",
+        "create": "Create listing",
+        "save": "Save changes"
+      },
+      "status": {
+        "title": "Status",
+        "intro": "Draft and Withdrawn are private. For sale, Under offer and Sold are public; sold listings keep their tour live.",
+        "current": "Now: {status}",
+        "set": "Set status"
+      },
+      "photos": {
+        "title": "Photos",
+        "intro": "The first photo is the hero. Describe each one for people who can't see it, or mark it decorative.",
+        "empty": "No photos yet.",
+        "alt": "Description",
+        "altMissing": "Needs a description",
+        "saveAlt": "Save description",
+        "up": "Move earlier",
+        "down": "Move later",
+        "remove": "Remove",
+        "photoN": "Photo {n}",
+        "decorative": "Decorative (no description needed)"
+      },
+      "embed": {
+        "title": "Embed on your own site",
+        "intro": "The tour, with a slim bar linking back to this page. It fits any width.",
+        "steps": [
+          "Copy the snippet below. It is one line of HTML.",
+          "Open the page on your site where the tour should sit, in its HTML or code view.",
+          "Paste the snippet there and publish. Buyers can walk the tour without leaving your site."
+        ],
+        "snippetLabel": "embed snippet",
+        "pageLink": "Listing page link",
+        "draftNote": "The embed shows nothing to buyers until the listing is public."
+      },
+      "numbers": {
+        "title": "Last 30 days",
+        "page": "On this listing page",
+        "embed": "Through your embed",
+        "views": "{n} views",
+        "opens": "{n} tour opens"
+      },
+      "inquiries": {
+        "title": "Inquiries",
+        "empty": "No inquiries yet. They also arrive by email.",
+        "tour": "Tour request",
+        "question": "Question",
+        "when": "Good times: {times}",
+        "via": "From the {surface}",
+        "surfacePage": "listing page",
+        "surfaceEmbed": "embed on your site",
+        "status": {
+          "new": "New",
+          "replied": "Replied",
+          "closed": "Closed"
+        },
+        "mark": "Mark as",
+        "reply": "Reply by email"
+      },
+      "upload": {
+        "choose": "Choose files",
+        "uploading": "Uploading {n} of {total}",
+        "done": "Uploaded",
+        "failed": "Failed: {reason}",
+        "notConfigured": "Uploads aren't set up yet (Cloudinary keys, user task 05).",
+        "panoramaHint": "360 photos exported as JPG, twice as wide as they are tall.",
+        "photoHint": "JPG, PNG or WebP. Big photos are fine; they are resized for phones.",
+        "floorPlanHint": "A plan image drawn by a person or supplied by the agent. Never AI-generated."
+      }
+    },
+    "tour": {
+      "title": "360 tour",
+      "back": "Back to the listing",
+      "intro": "Upload the 360 photos, connect the rooms, place each doorway, then publish. Buyers only see published rooms.",
+      "previewPage": "Preview the listing page",
+      "upload": {
+        "title": "Add rooms",
+        "hint": "Each 360 photo becomes a draft room. Rename them after."
+      },
+      "rooms": {
+        "title": "Rooms",
+        "empty": "No rooms yet. Upload the 360 photos above.",
+        "select": "Select {name}",
+        "start": "Start",
+        "makeStart": "Make start room",
+        "edit": "Edit and place",
+        "delete": "Delete",
+        "publishSelected": "Publish selected",
+        "unpublishSelected": "Unpublish selected",
+        "bulkResult": "{changed} changed, {unchanged} already that way.",
+        "status": {
+          "draft": "Draft",
+          "published": "Live",
+          "unpublished": "Hidden"
+        },
+        "badges": {
+          "orphan": "Nothing leads here",
+          "deadEnd": "No way out",
+          "unreachable": "Unreachable from the start",
+          "needsPlacement": "{n} doorway to place",
+          "needsPlacementMany": "{n} doorways to place",
+          "duplicate": "Duplicate doorway"
+        }
+      },
+      "connections": {
+        "title": "Connections",
+        "intro": "Which rooms lead to which. A new doorway stays invisible until you place its arrow in the room editor.",
+        "from": "From",
+        "to": "To",
+        "bothWays": "Both ways",
+        "add": "Connect",
+        "none": "No doorways yet.",
+        "unplaced": "Not placed",
+        "placed": "Placed",
+        "remove": "Remove"
+      },
+      "floors": {
+        "title": "Floor plans",
+        "intro": "One plan per floor. Rooms pinned on a plan open from the listing page and follow the buyer in the tour.",
+        "label": "Floor name",
+        "labelDefault": "Ground floor",
+        "add": "Add floor plan",
+        "rename": "Rename",
+        "delete": "Delete floor",
+        "pins": "Place rooms",
+        "none": "No floor plans yet.",
+        "confirmDelete": "Yes, delete this floor and its pins"
+      },
+      "scene": {
+        "title": "Room: {name}",
+        "backToTour": "Back to the tour",
+        "name": "Room name",
+        "caption": "Caption (optional)",
+        "save": "Save",
+        "modeLabel": "What a click on the photo does",
+        "modeNone": "Look around",
+        "modeArrow": "Place the arrow to {room}",
+        "modeHotspot": "Add a hotspot",
+        "startView": "Use this view as the start view",
+        "startViewSet": "Start view saved.",
+        "arrival": "Use this view as the arrival from {room}",
+        "arrivalClear": "Clear arrival view",
+        "doorways": "Doorways from this room",
+        "noDoorways": "No doorways from this room yet. Add them under Connections.",
+        "rotateLeft": "Turn arrow left 15 degrees",
+        "rotateRight": "Turn arrow right 15 degrees",
+        "rotation": "Arrow turned {deg} degrees",
+        "doorwayName": "Doorway label (optional)",
+        "doorwayNameHint": "Read aloud by screen readers: \"Into the kitchen\".",
+        "roll": "Straighten the horizon",
+        "rollHint": "Degrees, from -15 to 15. The preview updates as you move it.",
+        "viewLimit": "Lowest view",
+        "viewLimitHint": "Keeps the tripod out of sight. -85 is almost straight down; 0 is the horizon.",
+        "viewLimitOff": "No limit",
+        "viewLimitOn": "Limit the view",
+        "saveView": "Save view settings",
+        "hotspots": "Hotspots",
+        "noHotspots": "No hotspots. Choose Add a hotspot, then click the photo.",
+        "hotspotTitle": "Title",
+        "hotspotContent": "Text (optional)",
+        "hotspotUrl": "Link (optional)",
+        "hotspotMoment": "Show in",
+        "hotspotEveryMoment": "Every view",
+        "saveHotspot": "Save hotspot",
+        "deleteHotspot": "Delete hotspot",
+        "placedHere": "Placed. Click Save to keep it.",
+        "saved": "Saved.",
+        "clickToPlace": "Click the spot in the photo.",
+        "deleteTitle": "Delete this room",
+        "deleteHint": "Its doorways and hotspots go with it. The 360 photo stays in the media library.",
+        "confirmDelete": "Yes, delete this room",
+        "editHotspot": "Edit",
+        "cancel": "Cancel",
+        "placed": "placed",
+        "unplaced": "not placed yet"
+      },
+      "floor": {
+        "title": "Place rooms: {floor}",
+        "intro": "Choose a room, then click where it is on the plan. Keyboard: move the selected pin with the arrow keys.",
+        "room": "Room",
+        "onFloor": "On this floor",
+        "notOnFloor": "Not on this floor",
+        "addToFloor": "Put on this floor",
+        "removeFromFloor": "Take off this floor",
+        "autoArrange": "Arrange unpinned rooms",
+        "pinFor": "Pin for {room}",
+        "selected": "Selected: {room}"
+      }
     }
   },
   "platform": {
@@ -451,5 +735,192 @@
     "billing": "Billing",
     "support": "Support inbox",
     "logs": "Logs"
+  },
+  "listing": {
+    "status": {
+      "for_sale": "For sale",
+      "under_offer": "Under offer",
+      "sold": "Sold",
+      "draft": "Draft",
+      "withdrawn": "Withdrawn"
+    },
+    "previewNotice": "Preview. Buyers can't see this listing until it is published.",
+    "priceOnRequest": "Price on request",
+    "kinds": {
+      "single_family": "House",
+      "multi_family": "Multi-family",
+      "commercial": "Commercial",
+      "campus": "Campus",
+      "mixed": "Mixed use"
+    },
+    "units": {
+      "sqft": "sq ft",
+      "sqm": "m²",
+      "acres": "acres",
+      "hectares": "ha"
+    },
+    "facts": {
+      "bedrooms": "beds",
+      "bathrooms": "baths",
+      "area": "{unit}",
+      "pricePerArea": "per {unit}",
+      "units": "units",
+      "zoning": "zoning"
+    },
+    "header": {
+      "back": "All listings",
+      "save": "Save",
+      "saved": "Saved",
+      "share": "Share",
+      "copied": "Link copied",
+      "sections": "On this page",
+      "toolbar": "Listing tools"
+    },
+    "sections": {
+      "overview": "Overview",
+      "tour": "360 tour",
+      "floorPlan": "Floor plan",
+      "facts": "Facts",
+      "location": "Location",
+      "agent": "Agent"
+    },
+    "media": {
+      "viewAll": "View all {n} photos",
+      "photoOf": "Photo {n} of {total}",
+      "gallery": "Photos of {title}",
+      "close": "Close",
+      "previous": "Previous photo",
+      "next": "Next photo",
+      "openPhoto": "Open photo {n}",
+      "jumpTo": "Jump to",
+      "chips": {
+        "tour": "360 tour",
+        "floorPlan": "Floor plan",
+        "beforeAfter": "Before / After",
+        "map": "Map"
+      },
+      "badge360": "360"
+    },
+    "actions": {
+      "requestTour": "Request a tour",
+      "contactAgent": "Contact agent",
+      "region": "Quick contact"
+    },
+    "highlights": "Highlights",
+    "overview": {
+      "title": "Overview",
+      "readMore": "Read more",
+      "readLess": "Show less",
+      "listedBy": "Listed by {agent}, {brokerage}",
+      "listedOn": "Listed {date}",
+      "keyFacts": "Key facts",
+      "type": "Type",
+      "yearBuilt": "Year built",
+      "lot": "Lot",
+      "pricePerArea": "Price per {unit}",
+      "parking": "Parking spaces",
+      "floors": "Floors"
+    },
+    "features": {
+      "title": "Facts and features",
+      "showMore": "Show all {n}",
+      "showLess": "Show fewer",
+      "groups": {
+        "interior": "Interior",
+        "exterior": "Exterior",
+        "construction": "Construction",
+        "utilities": "Utilities",
+        "parking": "Parking",
+        "fees": "HOA or service charge",
+        "lot": "Lot"
+      }
+    },
+    "location": {
+      "title": "Location",
+      "approximate": "Approximate area. Ask the agent for the exact address.",
+      "mapLabel": "Map of {place}",
+      "attribution": "Map data © OpenStreetMap contributors",
+      "loading": "Loading map"
+    },
+    "floorPlan": {
+      "title": "Floor plan",
+      "intro": "Tap a room to walk into it in 360.",
+      "floors": "Floor",
+      "openRoom": "Open {room} in the 360 tour",
+      "planAlt": "Floor plan, {floor}"
+    },
+    "agent": {
+      "title": "Your agent",
+      "fallbackName": "The listing agent",
+      "contact": "Contact {name}"
+    },
+    "inquiry": {
+      "title": "Contact the agent",
+      "intentLabel": "What would you like?",
+      "intentTour": "Request a tour",
+      "intentQuestion": "Ask a question",
+      "name": "Your name",
+      "email": "Email",
+      "phone": "Phone (optional)",
+      "message": "Message",
+      "messageTour": "I'd like to see {place}.",
+      "messageQuestion": "I have a question about {place}.",
+      "preferredTimes": "When could you visit? (optional)",
+      "preferredTimesHint": "For example: weekday evenings, or Saturday morning",
+      "submit": "Send",
+      "sending": "Sending",
+      "sent": "Sent. {agent} will reply to {email}.",
+      "sendAnother": "Send another message",
+      "error": "That didn't send. Check the highlighted field and try again.",
+      "networkError": "That didn't send. Check your connection and try again.",
+      "privacy": "{agency} uses these details only to reply to you.",
+      "honeypot": "Leave this field empty"
+    },
+    "footer": {
+      "updated": "Updated {date}",
+      "fairHousing": "Equal Housing Opportunity. This property is offered without regard to race, color, religion, sex, disability, familial status or national origin.",
+      "accessibility": "Trouble using this page? Tell the agent.",
+      "accessibilityMessage": "I had trouble using the listing page for {place}: ",
+      "breadcrumb": "Where this listing is"
+    },
+    "embed": {
+      "viewFull": "View full listing",
+      "title": "360 tour: {title}",
+      "noTour": "The 360 tour for this listing is on its way."
+    }
+  },
+  "tour": {
+    "application": "360 tour of {title}",
+    "sceneLink": "Go to {name}",
+    "sceneLinkFallback": "Go to the next room",
+    "loadErrorTitle": "This room didn't load.",
+    "loadErrorBody": "Check your connection, then try another room.",
+    "floorChanged": "Floor plan: {floor}",
+    "links": {
+      "group": "Listing actions",
+      "more": "More",
+      "links": "Actions",
+      "opensInNewTab": "opens in a new tab"
+    },
+    "moments": {
+      "group": "Time",
+      "fallback": "No {moment} photo of this room. Showing {base}.",
+      "unavailable": "That view didn't load. Showing the current photos."
+    },
+    "rooms": {
+      "region": "Rooms",
+      "position": "Room {n} of {total}",
+      "remaining": "{n} left to see",
+      "nowIn": "Now in {name}",
+      "visited": "seen",
+      "current": "you are here",
+      "allSeen": "You've seen every room"
+    },
+    "open": "Explore in 360",
+    "roomCount": "{n} rooms",
+    "defaultLinks": {
+      "requestTour": "Request a tour",
+      "contactAgent": "Contact agent"
+    }
   }
 }

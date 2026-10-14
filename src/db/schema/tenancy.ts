@@ -38,6 +38,8 @@ export interface TenantTheme {
   templateKey?: string;
   /** Curated pairing key (src/lib/font-pairs.ts) — never free font names. */
   fontPairKey?: string;
+  /** Listing gallery default (plans/03): a listing may override it. Unset = lightbox. */
+  galleryMode?: "lightbox" | "strip";
 }
 
 export interface TenantFlags {

@@ -5,10 +5,13 @@ export function Flash({
   ok,
   error,
   dict,
+  okText,
 }: {
   ok?: string;
   error?: string;
   dict: Dictionary;
+  /** A page-specific confirmation; defaults to the generic one. */
+  okText?: string;
 }) {
   const a = dict.admin;
   if (error) {
@@ -30,7 +33,7 @@ export function Flash({
         aria-live="polite"
         className="mb-4 rounded-lg border border-slate-200 p-3 text-sm dark:border-slate-800"
       >
-        {ok === "saved" ? a.design.saved : a.ok}
+        {okText ?? (ok === "saved" ? a.design.saved : a.ok)}
       </p>
     );
   }

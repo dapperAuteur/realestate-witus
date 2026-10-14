@@ -1167,6 +1167,9 @@
       "privacy": "{agency} uses these details only to reply to you.",
       "honeypot": "Leave this field empty"
     },
+    "more": {
+      "title": "More from {agency}"
+    },
     "footer": {
       "updated": "Updated {date}",
       "fairHousing": "Equal Housing Opportunity. This property is offered without regard to race, color, religion, sex, disability, familial status or national origin.",

@@ -103,6 +103,8 @@ export interface TourUrlBuilders {
   thumbnail(publicId: string): string | null;
   /** A floor plan and the width it is delivered at (pins convert against delivered pixels). */
   floorPlan(publicId: string, intrinsicWidth: number): { url: string; width: number } | null;
+  /** A mid-size 2:1 still, for the Before / After section. Optional. */
+  preview?(publicId: string): string | null;
 }
 
 export interface BuildTourInput {
@@ -175,7 +177,12 @@ export function buildTour(input: BuildTourInput): BuildTourResult {
     const panorama = media ? input.urls.panorama(media.publicId) : null;
     if (!panorama) continue;
     const list = photosBySceneId.get(row.sceneId) ?? [];
-    list.push({ momentId: row.momentId, panorama, headingOffsetDeg: row.headingOffsetDeg });
+    list.push({
+      momentId: row.momentId,
+      panorama,
+      headingOffsetDeg: row.headingOffsetDeg,
+      preview: input.urls.preview?.(media!.publicId) ?? undefined,
+    });
     photosBySceneId.set(row.sceneId, list);
   }
 
@@ -208,6 +215,7 @@ export function buildTour(input: BuildTourInput): BuildTourResult {
       caption: row.caption ?? undefined,
       panorama,
       thumbnail,
+      preview: input.urls.preview?.(media.publicId) ?? undefined,
       startPosition:
         row.startYaw !== null && row.startPitch !== null ? { yaw: row.startYaw, pitch: row.startPitch } : undefined,
       rollOffsetDeg: row.rollOffsetDeg ?? undefined,

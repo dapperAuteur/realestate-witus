@@ -22,7 +22,11 @@ import {
   addFloorPlan,
   addHotspot,
   addLink,
+  addMoment,
   autoArrangeFloor,
+  deleteMoment,
+  setMomentHeading,
+  setMomentPhoto,
   createScenes,
   placeSceneOnPlan,
   setSceneStatuses,
@@ -31,6 +35,7 @@ import {
   updateLink,
 } from "@/lib/tour/admin";
 import {
+  assignableAgents,
   attachPhotos,
   changeListingStatus,
   createListing,
@@ -41,15 +46,19 @@ import {
 } from "./admin";
 import { submitInquiry } from "./inquiries";
 import type { ListingInput, PropertyInput } from "./listing-input";
-import { getListingPage, listPublicListings, recordListingView } from "./queries";
+import { applyPrivacyEdit } from "@/lib/tour/privacy";
+import { emptyPrivacyRecipe } from "@/lib/tour/privacy-edit";
+import { getListingPage, listPublicListings, loadAgent, recordListingView } from "./queries";
 
 const hasDb = Boolean(process.env.STORAGE_DATABASE_URL ?? process.env.DATABASE_URL);
 
+// Ready once the newest migration this suite needs has run: 0002 adds
+// tour_scenes.privacy_recipe. Before that every room query fails, so skip.
 async function tablesExist(): Promise<boolean> {
-  const result = (await db().execute(sql`select to_regclass('public.listings') as t`)) as unknown as {
-    rows: { t: string | null }[];
-  };
-  return Boolean(result.rows[0]?.t);
+  const result = (await db().execute(
+    sql`select 1 as ok from information_schema.columns where table_name = 'tour_scenes' and column_name = 'privacy_recipe'`,
+  )) as unknown as { rows: { ok: number }[] };
+  return result.rows.length > 0;
 }
 
 const ready = hasDb && (await tablesExist().catch(() => false));
@@ -119,6 +128,7 @@ describe.skipIf(!ready)("listings and tours against the database", () => {
     await add("photo1", "photo", 1600, 1067);
     await add("photo2", "photo", 1600, 1067);
     await add("plan", "floor_plan", 2000, 1400);
+    await add("kitchenBefore", "panorama", 6000, 3000);
     await add("foreign", "panorama", 6000, 3000, otherTenantId);
   });
 
@@ -259,6 +269,88 @@ describe.skipIf(!ready)("listings and tours against the database", () => {
     expect(cards[0]).toMatchObject({ slug, hasTour: true });
   });
 
+  it("adds Before / After and shows the Before photo to buyers", async () => {
+    const data = await tourEditData(tenantId, listingId);
+    const kitchen = data!.scenes.find((s) => s.name === "Room 2")!;
+    const added = await addMoment(tenantId, listingId, { label: "Before", baseLabel: "After", placement: "earlier" });
+    expect(added.ok).toBe(true);
+    if (!added.ok) return;
+    const timeline = (await tourEditData(tenantId, listingId))!.moments;
+    expect(timeline.map((m) => [m.label, m.isBase])).toEqual([
+      ["Before", false],
+      ["After", true],
+    ]);
+    const base = timeline.find((m) => m.isBase)!;
+
+    expect(await setMomentPhoto(tenantId, kitchen.id, base.id, media.kitchenBefore)).toMatchObject({ ok: false, code: "MOMENT_BASE" });
+    expect(await setMomentPhoto(tenantId, kitchen.id, added.data.id, media.photo1)).toMatchObject({ ok: false, code: "NO_PANORAMAS" });
+    expect((await setMomentPhoto(tenantId, kitchen.id, added.data.id, media.kitchenBefore)).ok).toBe(true);
+    await setMomentHeading(tenantId, kitchen.id, added.data.id, 200);
+
+    const tour = (await getListingPage(tenantId, slug))!.tour!;
+    expect(tour.timeline?.map((m) => m.label)).toEqual(["Before", "After"]);
+    const kitchenScene = tour.scenes.find((s) => s.id === kitchen.id)!;
+    expect(kitchenScene.moments).toEqual([
+      expect.objectContaining({ momentId: added.data.id, headingOffsetDeg: -160, preview: expect.stringContaining("w_1600") }),
+    ]);
+    expect(kitchenScene.preview).toEqual(expect.stringContaining("w_1600"));
+
+    expect(await deleteMoment(tenantId, base.id)).toMatchObject({ ok: false, code: "MOMENT_BASE" });
+    expect((await deleteMoment(tenantId, added.data.id)).ok).toBe(true);
+    expect((await tourEditData(tenantId, listingId))!.moments).toEqual([]);
+    expect((await getListingPage(tenantId, slug))!.tour!.timeline).toBeUndefined();
+  });
+
+  it("bakes a privacy edit into a new photo, keeps the original, and restores it", async () => {
+    const data = await tourEditData(tenantId, listingId);
+    const hall = data!.scenes.find((s) => s.name === "Hall")!;
+    const [before] = await db().select().from(tourScenes).where(eq(tourScenes.id, hall.id));
+    const original = before.panoramaMediaId;
+    // Only Cloudinary is faked: the render is ready at once, and the upload echoes a new asset.
+    const calls: string[] = [];
+    const fakeCloudinary = (async (url: string | URL | Request, init?: RequestInit) => {
+      const href = String(url);
+      calls.push(`${init?.method ?? "GET"} ${href}`);
+      if (href.startsWith("https://res.cloudinary.com/")) return new Response(null, { status: 200 });
+      return new Response(
+        JSON.stringify({ public_id: `realestate-witus/${tenantId}/hall-private`, width: 6000, height: 3000, bytes: 1234 }),
+        { status: 200, headers: { "content-type": "application/json" } },
+      );
+    }) as unknown as typeof fetch;
+    const recipe = { ...emptyPrivacyRecipe(), faces: "blur" as const, boxes: [{ id: "a", u: 0.5, v: 0.5, w: 0.1, h: 0.2 }] };
+
+    const stale = await applyPrivacyEdit({ tenantId, sceneId: hall.id, currentMediaId: media.kitchen, recipe, userId, fetchImpl: fakeCloudinary });
+    expect(stale).toMatchObject({ ok: false, code: "PRIVACY_STALE" });
+
+    const applied = await applyPrivacyEdit({ tenantId, sceneId: hall.id, currentMediaId: original, recipe, userId, fetchImpl: fakeCloudinary });
+    expect(applied.ok).toBe(true);
+    if (!applied.ok) return;
+    // The render was built from the original, in its pixels, faces first.
+    expect(calls[0]).toMatch(/^HEAD https:\/\/res\.cloudinary\.com\/.*\/e_blur_faces:1500\/e_pixelate_region:40,x_2700,y_1200,w_600,h_600\/q_90\/itest\//);
+    const [after] = await db().select().from(tourScenes).where(eq(tourScenes.id, hall.id));
+    expect(after).toMatchObject({ panoramaMediaId: applied.data.mediaId, originalPanoramaMediaId: original, privacyRecipe: recipe });
+
+    // A second edit starts again from the original, not from the edited copy.
+    calls.length = 0;
+    const again = await applyPrivacyEdit({
+      tenantId,
+      sceneId: hall.id,
+      currentMediaId: applied.data.mediaId,
+      recipe: { ...recipe, faces: "off" },
+      userId,
+      fetchImpl: fakeCloudinary,
+    });
+    expect(again.ok).toBe(true);
+    expect(calls[0]).toContain(`/q_90/itest/${suffix}/hall`);
+    expect((await db().select().from(tourScenes).where(eq(tourScenes.id, hall.id)))[0].originalPanoramaMediaId).toBe(original);
+
+    // An empty recipe restores the original.
+    const current = (await db().select().from(tourScenes).where(eq(tourScenes.id, hall.id)))[0].panoramaMediaId;
+    expect((await applyPrivacyEdit({ tenantId, sceneId: hall.id, currentMediaId: current, recipe: emptyPrivacyRecipe(), userId })).ok).toBe(true);
+    const [restored] = await db().select().from(tourScenes).where(eq(tourScenes.id, hall.id));
+    expect(restored).toMatchObject({ panoramaMediaId: original, originalPanoramaMediaId: null, privacyRecipe: null });
+  });
+
   it("counts views per day and surface", async () => {
     const day = new Date().toISOString().slice(0, 10);
     await recordListingView({ tenantId, listingId, surface: "page", event: "page", day });
@@ -293,6 +385,27 @@ describe.skipIf(!ready)("listings and tours against the database", () => {
     expect(rows).toHaveLength(1);
     expect(rows[0]).toMatchObject({ kind: "tour_request", source: "tour", email: "kofi@example.com", status: "new" });
     expect((await listingsBoard(tenantId))[0].newInquiries).toBe(1);
+  });
+
+  it("offers only this agency's team as agents", async () => {
+    expect((await assignableAgents(tenant)).map((agent) => agent.id)).toEqual([userId]);
+    expect(await assignableAgents({ id: otherTenantId, flags: {} })).toEqual([]);
+  });
+
+  it("routes a platform-tenant listing's inquiries to a platform owner, and only there", async () => {
+    // Compared with whoever is platform owner in this database; never creates one.
+    const owners = await db()
+      .select({ email: users.email })
+      .from(users)
+      .where(eq(users.isPlatformOwner, true))
+      .orderBy(users.createdAt)
+      .limit(1);
+    const fallback = await loadAgent(otherTenantId, null, { platformTenant: true });
+    expect(fallback?.email ?? null).toBe(owners[0]?.email ?? null);
+    // An agency with no owner never falls back to the platform owner.
+    expect(await loadAgent(otherTenantId, null)).toBeNull();
+    // An agency's assigned agent who isn't on its team is ignored.
+    expect((await loadAgent(otherTenantId, userId))?.email ?? null).toBeNull();
   });
 
   it("refuses a slug from another tenant's host", async () => {

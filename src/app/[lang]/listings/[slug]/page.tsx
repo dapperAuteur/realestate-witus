@@ -26,7 +26,11 @@ const load = cache(async (slug: string, scene: string | null) => {
   if (!tenant || !isListingSlug(slug)) return null;
   const gate = await getStaffContext("agent").catch(() => null);
   const staffPreview = Boolean(gate?.ok && gate.ctx.tenant.id === tenant.id);
-  const data = await getListingPage(tenant.id, slug, { staffPreview, requestedSceneId: scene });
+  const data = await getListingPage(tenant.id, slug, {
+    staffPreview,
+    requestedSceneId: scene,
+    platformTenant: Boolean(tenant.flags.platform),
+  });
   return data ? { tenant, data } : null;
 });
 

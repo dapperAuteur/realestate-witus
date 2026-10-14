@@ -43,6 +43,8 @@ export interface SceneMomentPhoto {
   panorama: string;
   /** Degrees the photo is turned to line up with the base view. */
   headingOffsetDeg: number;
+  /** A flat 2:1 preview for the listing page's Before / After section. */
+  preview?: string;
 }
 
 export interface TourScene {
@@ -51,6 +53,8 @@ export interface TourScene {
   caption?: string;
   panorama: string;
   thumbnail?: string;
+  /** A flat 2:1 preview for the listing page's Before / After section. */
+  preview?: string;
   startPosition?: ScenePosition;
   links?: SceneLink[];
   hotspots?: SceneHotspot[];

@@ -6,9 +6,8 @@ import { FIELD, HINT, LABEL, ListingForm, SECONDARY_BUTTON } from "@/components/
 import { PhotoUploader } from "@/components/admin/uploaders";
 import { StatusChip } from "@/components/listing/status-chip";
 import { requireStaffPage } from "@/lib/admin/guard";
-import { listTeam } from "@/lib/admin/invites";
 import { getDictionary, hasLocale } from "@/lib/dictionaries";
-import { canEditListing, listingEditData } from "@/lib/listings/admin";
+import { assignableAgents, canEditListing, listingEditData } from "@/lib/listings/admin";
 import { embedSnippet, listingEmbedUrl, listingPageUrl } from "@/lib/listings/embed";
 import { isPublicStatus, type ListingStatus } from "@/lib/listings/format";
 import { requestOrigin } from "@/lib/listings/origin";
@@ -46,7 +45,7 @@ export default async function EditListingPage({
   const { listing, property, photos, inquiries, views30d } = data;
   const status = listing.status as ListingStatus;
   const canAssign = roleSatisfies(ctx.role, "manager");
-  const team = canAssign ? await listTeam(ctx.tenant.id) : null;
+  const agents = canAssign ? await assignableAgents(ctx.tenant) : undefined;
   const origin = await requestOrigin();
   const pageUrl = listingPageUrl(origin, listing.slug, lang);
   const snippet = embedSnippet({
@@ -274,7 +273,7 @@ export default async function EditListingPage({
           submitLabel={l.form.save}
           listing={listing}
           property={property}
-          agents={team?.members.map((member) => ({ id: member.userId, label: member.name ? `${member.name} (${member.email})` : member.email }))}
+          agents={agents}
         />
       </section>
     </div>

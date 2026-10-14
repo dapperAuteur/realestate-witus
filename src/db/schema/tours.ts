@@ -5,6 +5,7 @@ import {
   date,
   index,
   integer,
+  jsonb,
   pgEnum,
   pgTable,
   real,
@@ -13,6 +14,7 @@ import {
   uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
+import type { PrivacyRecipe } from "@/lib/tour/privacy-edit";
 import { mediaAssets } from "./content";
 import { listings } from "./listings";
 import { tenants } from "./tenancy";
@@ -80,6 +82,17 @@ export const tourScenes = pgTable(
     posterMediaId: uuid("poster_media_id").references(() => mediaAssets.id, {
       onDelete: "set null",
     }),
+    /**
+     * "Hide people and gear": the untouched photo, kept while panoramaMediaId
+     * points at the edited copy, so an edit can be redone from the original or
+     * undone. The edit is baked into its own file (a blur in the URL leaves the
+     * original one address away, which protects nobody). Null = never edited.
+     */
+    originalPanoramaMediaId: uuid("original_panorama_media_id").references(() => mediaAssets.id, {
+      onDelete: "set null",
+    }),
+    /** The recipe the current edited copy was baked from, for editing it again. */
+    privacyRecipe: jsonb("privacy_recipe").$type<PrivacyRecipe>(),
     startYaw: real("start_yaw"),
     startPitch: real("start_pitch"),
     /** Clockwise horizon correction for tripod tilt, degrees. Null = none. */

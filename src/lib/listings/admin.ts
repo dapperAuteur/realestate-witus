@@ -8,7 +8,9 @@ import {
   listingViews,
   mediaAssets,
   properties,
+  tenantMemberships,
   tourScenes,
+  users,
   type TenantRole,
 } from "@/db/schema";
 import { deliveryUrl } from "@/lib/media/cloudinary";
@@ -410,4 +412,27 @@ export async function listingIdForInquiry(tenantId: string, inquiryId: string): 
     .where(and(eq(listingInquiries.tenantId, tenantId), eq(listingInquiries.id, inquiryId)))
     .limit(1);
   return row?.listingId ?? null;
+}
+
+/**
+ * Who may be named as a listing's agent: this agency's team, or on the
+ * platform tenant the platform owner. Inquiries are emailed to the agent, so
+ * an arbitrary user id here would send buyers' details to a stranger.
+ */
+export async function assignableAgents(tenant: { id: string; flags: { platform?: boolean } }): Promise<
+  { id: string; label: string }[]
+> {
+  const rows = tenant.flags.platform
+    ? await db()
+        .select({ id: users.id, name: users.name, email: users.email })
+        .from(users)
+        .where(eq(users.isPlatformOwner, true))
+        .orderBy(asc(users.email))
+    : await db()
+        .select({ id: users.id, name: users.name, email: users.email })
+        .from(tenantMemberships)
+        .innerJoin(users, eq(users.id, tenantMemberships.userId))
+        .where(eq(tenantMemberships.tenantId, tenant.id))
+        .orderBy(asc(users.email));
+  return rows.map((row) => ({ id: row.id, label: row.name ? `${row.name} (${row.email})` : row.email }));
 }

@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { CopyButton } from "@/components/copy-button";
+import { ListingCard } from "@/components/listing/listing-card";
 import { SiteFooter } from "@/components/site-footer";
 import { EmbedMock, TourMock } from "@/components/tour-mock";
 import { DEMO_HOST } from "@/lib/demo/seed";
 import type { Dictionary } from "@/lib/dictionaries";
+import type { ListingCard as ListingCardData } from "@/lib/listings/queries";
 import type { Locale } from "@/lib/locales";
 
 // The RealEstate.WitUS product landing, shown on platform hosts
@@ -41,10 +43,17 @@ export function PlatformLanding({
   dict,
   lang,
   promoBanner,
+  showcase = [],
 }: {
   dict: Dictionary;
   lang: Locale;
   promoBanner?: string | null;
+  /**
+   * Real, published listings with a live tour (BAM's own service listings).
+   * plans/08 6.5: proof only from real tours, so the row simply isn't there
+   * until one exists.
+   */
+  showcase?: ListingCardData[];
 }) {
   const d = dict.landing;
 
@@ -126,6 +135,25 @@ export function PlatformLanding({
             </ol>
           </div>
         </section>
+
+        {/* ── Real tours (only once one is live) ───────────────────────── */}
+        {showcase.length ? (
+          <section aria-labelledby="showcase-heading" className="border-b border-slate-200 dark:border-slate-800">
+            <div className="mx-auto max-w-6xl px-6 py-16 lg:py-20">
+              <h2 id="showcase-heading" className="text-3xl font-bold tracking-tight sm:text-4xl">
+                {d.showcaseTitle}
+              </h2>
+              <p className="mt-4 max-w-xl leading-relaxed text-slate-600 dark:text-slate-400">{d.showcaseIntro}</p>
+              <ul className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                {showcase.map((listing) => (
+                  <li key={listing.slug}>
+                    <ListingCard listing={listing} dict={dict} lang={lang} />
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </section>
+        ) : null}
 
         {/* ── The embed ────────────────────────────────────────────────── */}
         <section

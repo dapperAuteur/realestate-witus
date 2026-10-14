@@ -19,6 +19,8 @@ export interface InquiryRequest {
 
 export interface TourRequest {
   sceneId: string | null;
+  /** Open in this time (Before / After). */
+  momentId?: string | null;
   nonce: number;
 }
 
@@ -26,7 +28,7 @@ interface ListingContextValue {
   inquiry: InquiryRequest | null;
   openInquiry: (intent: InquiryIntent, source: InquirySource, prefill?: string) => void;
   tourRequest: TourRequest | null;
-  openTourAt: (sceneId: string | null) => void;
+  openTourAt: (sceneId: string | null, momentId?: string | null) => void;
   /** While the tour is on screen, the mobile action bar steps aside (plans/08 risk: it covered the viewer's controls). */
   tourInView: boolean;
   setTourInView: (inView: boolean) => void;
@@ -54,8 +56,8 @@ export function ListingProvider({ children }: { children: ReactNode }) {
     scrollToId("contact");
   }, []);
 
-  const openTourAt = useCallback((sceneId: string | null) => {
-    setTourRequest((prev) => ({ sceneId, nonce: (prev?.nonce ?? 0) + 1 }));
+  const openTourAt = useCallback((sceneId: string | null, momentId?: string | null) => {
+    setTourRequest((prev) => ({ sceneId, momentId, nonce: (prev?.nonce ?? 0) + 1 }));
     scrollToId("tour");
   }, []);
 

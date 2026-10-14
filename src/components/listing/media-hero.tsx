@@ -44,7 +44,7 @@ export function MediaHero({
   const chips = [
     sections.tour ? { href: "#tour", label: labels.chips.tour, badge: true } : null,
     sections.floorPlan ? { href: "#floor-plan", label: labels.chips.floorPlan } : null,
-    sections.beforeAfter ? { href: "#tour", label: labels.chips.beforeAfter } : null,
+    sections.beforeAfter ? { href: "#before-after", label: labels.chips.beforeAfter } : null,
     sections.map ? { href: "#location", label: labels.chips.map } : null,
   ].filter((chip): chip is { href: string; label: string; badge?: boolean } => chip !== null);
 

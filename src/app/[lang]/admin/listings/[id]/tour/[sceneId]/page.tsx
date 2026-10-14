@@ -68,9 +68,14 @@ export default async function SceneEditorPage({
       <Flash ok={sp.ok} error={sp.error} dict={dict} />
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-xl font-semibold">{t.title.replace("{name}", scene.name)}</h2>
-        <Link href={base} className={SECONDARY_BUTTON}>
-          {t.backToTour}
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          <Link href={`${base}/${sceneId}/privacy`} className={SECONDARY_BUTTON}>
+            {dict.admin.tour.privacy.open}
+          </Link>
+          <Link href={base} className={SECONDARY_BUTTON}>
+            {t.backToTour}
+          </Link>
+        </div>
       </div>
       <SceneEditor
         key={sceneId}
@@ -81,6 +86,17 @@ export default async function SceneEditorPage({
         incoming={incoming}
         hotspots={hotspots}
         moments={data.moments.map((m) => ({ id: m.id, label: m.label }))}
+        otherTimes={data.moments
+          .filter((m) => !m.isBase)
+          .map((m) => {
+            const photo = data.momentPhotos.find((p) => p.sceneId === sceneId && p.momentId === m.id);
+            return {
+              momentId: m.id,
+              label: m.label,
+              photo: photo ? { headingOffsetDeg: photo.headingOffsetDeg, thumbUrl: photo.thumbUrl } : null,
+            };
+          })}
+        uploadLabels={{ ...dict.admin.listings.upload, hint: dict.admin.listings.upload.panoramaHint }}
         editorBase={base}
         labels={{ ...t, ...dict.admin.tour.connections, placed: t.placed, unplaced: t.unplaced }}
         viewerLabels={tourLabels(dict).viewer}

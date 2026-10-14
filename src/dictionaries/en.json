@@ -7,6 +7,7 @@
     "backHome": "Back to home",
     "signedInAs": "Signed in as",
     "adminLink": "Agency admin",
+    "serviceAdminLink": "Service listings",
     "platformLink": "Platform admin",
     "signOut": "Sign out",
     "signOutWitus": "Sign out of WitUS"
@@ -50,6 +51,8 @@
         "body": "The listing goes live on its own page and gives you a snippet. Paste it into your own site once; it keeps working for the life of the listing."
       }
     ],
+    "showcaseTitle": "Walk a real listing",
+    "showcaseIntro": "Tours we shot and published. Open one and look around, the way a buyer would.",
     "embedTitle": "The embed is the point",
     "embedIntro": "Most tour vendors host your tour on their domain and put their brand around it. Yours lives on your listing page and inside your own website, sized to whatever space you give it.",
     "embedSteps": [
@@ -357,7 +360,13 @@
       "LINK_NOT_FOUND": "That doorway isn't in this listing.",
       "FLOOR_LABEL": "Floor names need 1 to 40 characters.",
       "FLOOR_NOT_FOUND": "That floor isn't in this listing.",
-      "CONFIRM": "Tick the box to confirm, then try again."
+      "CONFIRM": "Tick the box to confirm, then try again.",
+      "BAD_AGENT": "Pick an agent from this agency's team.",
+      "MOMENT_LABEL": "Names for a time need 1 to 40 characters.",
+      "MOMENT_BASE": "The current photos can't be removed while other times exist.",
+      "MOMENT_NOT_FOUND": "That time isn't in this listing.",
+      "PRIVACY_STALE": "This room's photo changed since you opened the editor. Reload and try again.",
+      "PRIVACY_RECIPE": "That edit couldn't be read. Reload and try again."
     },
     "listings": {
       "title": "Listings",
@@ -492,9 +501,13 @@
         "done": "Uploaded",
         "failed": "Failed: {reason}",
         "notConfigured": "Uploads aren't set up yet (Cloudinary keys, user task 05).",
-        "panoramaHint": "360 photos exported as JPG, twice as wide as they are tall.",
-        "photoHint": "JPG, PNG or WebP. Big photos are fine; they are resized for phones.",
-        "floorPlanHint": "A plan image drawn by a person or supplied by the agent. Never AI-generated."
+        "panoramaHint": "360 photos exported as JPG, twice as wide as they are tall. Big ones are resized here to 6144 x 3072 before upload.",
+        "photoHint": "JPG, PNG or WebP. Big photos are resized here before upload (longest side 3200 px).",
+        "floorPlanHint": "A plan image drawn by a person or supplied by the agent. Never AI-generated. Resized here to 2400 px if larger.",
+        "resizing": "Preparing {name}",
+        "badType": "Use a JPG, PNG or WebP image.",
+        "tooBig": "This image is still over 10 MB after resizing. Export it smaller and try again.",
+        "summary": "{done} of {total} uploaded."
       }
     },
     "tour": {
@@ -601,7 +614,16 @@
         "editHotspot": "Edit",
         "cancel": "Cancel",
         "placed": "placed",
-        "unplaced": "not placed yet"
+        "unplaced": "not placed yet",
+        "momentsTitle": "Other times",
+        "momentsNone": "This tour has one time. Add Before / After on the tour page.",
+        "momentAdd": "Add the {moment} photo of this room",
+        "momentPhoto": "{moment} photo",
+        "momentShow": "Show {moment} in the viewer",
+        "heading": "Turn to line it up: {deg} degrees",
+        "headingHint": "Show it in the viewer, then turn until the walls match the current photo. The preview moves as you do.",
+        "saveHeading": "Save the alignment",
+        "removeMomentPhoto": "Remove the {moment} photo"
       },
       "floor": {
         "title": "Place rooms: {floor}",
@@ -614,6 +636,78 @@
         "autoArrange": "Arrange unpinned rooms",
         "pinFor": "Pin for {room}",
         "selected": "Selected: {room}"
+      },
+      "moments": {
+        "title": "Before / After",
+        "intro": "Show one place at different times: a renovation, an empty room and a staged one, day and night, or a build in progress. The rooms' current 360 photos are one time. For each other time, add a second photo per room.",
+        "presetsLabel": "Quick start",
+        "presets": [
+          {
+            "name": "Before / After",
+            "base": "After",
+            "other": "Before",
+            "placement": "earlier"
+          },
+          {
+            "name": "Vacant / Staged",
+            "base": "Staged",
+            "other": "Vacant",
+            "placement": "earlier"
+          },
+          {
+            "name": "Day / Night",
+            "base": "Day",
+            "other": "Night",
+            "placement": "later"
+          }
+        ],
+        "presetHint": "The current photos become the second name; you add photos for the first.",
+        "customTitle": "Or name it yourself",
+        "baseLabel": "Your current photos show",
+        "baseHint": "For a renovation: After.",
+        "label": "The other photos show",
+        "labelHint": "For a renovation: Before. For a build: the month, like March 2026.",
+        "placement": "On the timeline, the other photos come",
+        "earlier": "Before the current ones",
+        "later": "After the current ones",
+        "add": "Add this time",
+        "current": "Current photos",
+        "coverage": "{n} of {total} rooms have a photo",
+        "rename": "Rename",
+        "nameField": "Name",
+        "delete": "Delete this time",
+        "confirmDelete": "Yes, delete it and its photos",
+        "next": "Next: open each room and add its photo for this time."
+      },
+      "privacy": {
+        "title": "Hide people and gear: {name}",
+        "intro": "Blur or pixelate faces, family photos, documents and plates, and cover the tripod on the floor. The edit is saved as a new copy of the photo; the original is kept, so you can change or undo it later. Nothing here is generated: it only blurs or pixelates what the camera took.",
+        "open": "Hide people and gear",
+        "drawHint": "Drag on the photo to cover something. A click drops a person-sized box.",
+        "keyboardHint": "Keyboard: Tab to a box, arrow keys move it, Shift with arrows resizes it, Alt for small steps, Delete removes it.",
+        "originalAlt": "The original 360 photo, unrolled flat",
+        "previewAlt": "Preview of the photo with the edits applied",
+        "faces": "Faces Cloudinary finds",
+        "facesHint": "Automatic, and it can miss a face in profile or far away. Check the preview, and box anything it missed.",
+        "boxes": "Your boxes",
+        "addBox": "Add a box",
+        "removeBox": "Remove the selected box",
+        "boxN": "Box {n}",
+        "boxCount": "{n} boxes",
+        "tooMany": "That's the most boxes one photo can carry.",
+        "floor": "Cover the floor under the camera",
+        "floorHeight": "How high: {deg} degrees up from straight down",
+        "off": "Off",
+        "blur": "Blur",
+        "pixelate": "Pixelate",
+        "preview": "Preview the result",
+        "apply": "Apply to this room",
+        "applied": "Applied. Buyers now see the edited photo.",
+        "restore": "Restore the original photo",
+        "restored": "Restored. Buyers see the original photo again.",
+        "working": "Working. Cloudinary is rendering the edit, which can take up to a minute.",
+        "back": "Back to the room",
+        "keepsOriginal": "The original stays in the media library. Applying again always starts from it."
       }
     }
   },
@@ -780,6 +874,7 @@
       "overview": "Overview",
       "tour": "360 tour",
       "floorPlan": "Floor plan",
+      "beforeAfter": "Before / After",
       "facts": "Facts",
       "location": "Location",
       "agent": "Agent"
@@ -848,6 +943,12 @@
       "floors": "Floor",
       "openRoom": "Open {room} in the 360 tour",
       "planAlt": "Floor plan, {floor}"
+    },
+    "beforeAfter": {
+      "title": "Before / After",
+      "intro": "See the change room by room, then walk it in 360.",
+      "show": "Show",
+      "walk": "Walk the {moment} in 360"
     },
     "agent": {
       "title": "Your agent",

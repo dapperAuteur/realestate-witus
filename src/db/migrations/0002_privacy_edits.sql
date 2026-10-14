@@ -1,0 +1,3 @@
+ALTER TABLE "tour_scenes" ADD COLUMN "original_panorama_media_id" uuid;--> statement-breakpoint
+ALTER TABLE "tour_scenes" ADD COLUMN "privacy_recipe" jsonb;--> statement-breakpoint
+ALTER TABLE "tour_scenes" ADD CONSTRAINT "tour_scenes_original_panorama_media_id_media_assets_id_fk" FOREIGN KEY ("original_panorama_media_id") REFERENCES "public"."media_assets"("id") ON DELETE set null ON UPDATE no action;

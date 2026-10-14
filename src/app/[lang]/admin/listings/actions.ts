@@ -6,6 +6,7 @@ import { getStaffContext, type StaffContext } from "@/lib/admin/guard";
 import { writeAudit } from "@/lib/audit";
 import { getDictionary, hasLocale, type Locale } from "@/lib/dictionaries";
 import {
+  assignableAgents,
   attachPhotos,
   canEditListing,
   changeListingStatus,
@@ -25,6 +26,13 @@ import {
   addFloorPlan,
   addHotspot,
   addLink,
+  addMoment,
+  deleteMoment,
+  listingIdForMoment,
+  removeMomentPhoto,
+  renameMoment,
+  setMomentHeading,
+  setMomentPhoto,
   autoArrangeFloor,
   createScenes,
   deleteFloorPlan,
@@ -44,6 +52,8 @@ import {
   updateScene,
   type HotspotInput,
 } from "@/lib/tour/admin";
+import { applyPrivacyEdit } from "@/lib/tour/privacy";
+import { parsePrivacyRecipe } from "@/lib/tour/privacy-edit";
 import { parsePlanPoint, parsePosition, parseRoll, parseViewLimit } from "@/lib/tour/tour-input";
 
 // Listing and tour actions (plans/08 phase D). Every action re-guards on its
@@ -126,6 +136,10 @@ export async function saveListingAction(formData: FormData): Promise<void> {
   const agentRaw = formData.get("agentUserId");
   const canAssign = gate.ctx.role === "owner" || gate.ctx.role === "manager";
   const agentUserId = canAssign && typeof agentRaw === "string" ? agentRaw || null : undefined;
+  if (agentUserId) {
+    const allowed = await assignableAgents(gate.ctx.tenant);
+    if (!allowed.some((agent) => agent.id === agentUserId)) backTo(back, "error", "BAD_AGENT");
+  }
   const saved = await updateListing({
     tenantId: gate.ctx.tenant.id,
     listingId,
@@ -454,4 +468,102 @@ export async function placeOnPlanAction(
   const clean = point ? parsePlanPoint(point.x, point.y) : null;
   if (point && !clean) return err("BAD_POSITION", "That spot couldn't be read.");
   return placeSceneOnPlan(gate.ctx.tenant.id, sceneId, floorPlanId, clean);
+}
+
+// ── Tour: moments (Before / After) ───────────────────────────────────────────
+
+export async function addMomentAction(formData: FormData): Promise<void> {
+  const lang = langOf(formData);
+  const listingId = str(formData, "listingId");
+  const back = tourPath(lang, listingId, "#moments");
+  const gate = await editor(listingId);
+  if (!gate) backTo(back, "error", "FORBIDDEN");
+  const result = await addMoment(gate.ctx.tenant.id, listingId, {
+    label: str(formData, "label"),
+    baseLabel: formData.get("baseLabel") === null ? undefined : str(formData, "baseLabel"),
+    placement: formData.get("placement") === "later" ? "later" : "earlier",
+  });
+  if (!result.ok) backTo(back, "error", result.code);
+  backTo(back, "ok", "saved");
+}
+
+async function momentForm(formData: FormData) {
+  const lang = langOf(formData);
+  const momentId = str(formData, "momentId");
+  const ctx = await staff("agent");
+  const listingId = ctx ? await listingIdForMoment(ctx.tenant.id, momentId) : null;
+  return { lang, momentId, back: tourPath(lang, listingId, "#moments"), gate: await editor(listingId) };
+}
+
+export async function renameMomentAction(formData: FormData): Promise<void> {
+  const { momentId, back, gate } = await momentForm(formData);
+  if (!gate) backTo(back, "error", "FORBIDDEN");
+  const result = await renameMoment(gate.ctx.tenant.id, momentId, str(formData, "label"));
+  if (!result.ok) backTo(back, "error", result.code);
+  backTo(back, "ok", "saved");
+}
+
+export async function deleteMomentAction(formData: FormData): Promise<void> {
+  const { momentId, back, gate } = await momentForm(formData);
+  if (!gate) backTo(back, "error", "FORBIDDEN");
+  if (formData.get("confirm") !== "on") backTo(back, "error", "CONFIRM");
+  const result = await deleteMoment(gate.ctx.tenant.id, momentId);
+  if (!result.ok) backTo(back, "error", result.code);
+  backTo(back, "ok", "saved");
+}
+
+/** Rights on the scene's listing AND the moment in that same listing. */
+async function momentPhotoEditor(sceneId: string, momentId: string) {
+  const { gate } = await sceneEditor(sceneId);
+  if (!gate) return null;
+  const momentListing = await listingIdForMoment(gate.ctx.tenant.id, momentId);
+  return momentListing === gate.listingId ? gate : null;
+}
+
+export async function setMomentPhotoAction(sceneId: string, momentId: string, mediaId: string): Promise<Result<{ saved: true }>> {
+  const gate = await momentPhotoEditor(sceneId, momentId);
+  if (!gate) return FORBIDDEN;
+  return setMomentPhoto(gate.ctx.tenant.id, sceneId, momentId, mediaId);
+}
+
+export async function setMomentHeadingAction(sceneId: string, momentId: string, degrees: number): Promise<Result<{ saved: true }>> {
+  const gate = await momentPhotoEditor(sceneId, momentId);
+  if (!gate) return FORBIDDEN;
+  return setMomentHeading(gate.ctx.tenant.id, sceneId, momentId, Number(degrees));
+}
+
+export async function removeMomentPhotoAction(sceneId: string, momentId: string): Promise<Result<{ deleted: true }>> {
+  const gate = await momentPhotoEditor(sceneId, momentId);
+  if (!gate) return FORBIDDEN;
+  return removeMomentPhoto(gate.ctx.tenant.id, sceneId, momentId);
+}
+
+// ── Tour: hide people and gear ───────────────────────────────────────────────
+
+export async function applyPrivacyEditAction(
+  sceneId: string,
+  currentMediaId: string,
+  recipe: unknown,
+): Promise<Result<{ mediaId: string }>> {
+  const { gate } = await sceneEditor(sceneId);
+  if (!gate) return FORBIDDEN;
+  const parsed = parsePrivacyRecipe(recipe);
+  if (!parsed.ok) return parsed;
+  const result = await applyPrivacyEdit({
+    tenantId: gate.ctx.tenant.id,
+    sceneId,
+    currentMediaId,
+    recipe: parsed.data,
+    userId: gate.ctx.user.id,
+  });
+  if (result.ok) {
+    await writeAudit({
+      tenantId: gate.ctx.tenant.id,
+      actorUserId: gate.ctx.user.id,
+      kind: "tour.privacy",
+      summary: "Hide people and gear applied to a room",
+      data: { sceneId, mediaId: result.data.mediaId },
+    }).catch(() => undefined);
+  }
+  return result;
 }

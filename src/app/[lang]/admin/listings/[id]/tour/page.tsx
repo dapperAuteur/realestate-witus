@@ -9,7 +9,10 @@ import { canEditListing, findOwnedListing } from "@/lib/listings/admin";
 import { tourEditData } from "@/lib/tour/admin";
 import {
   addLinkAction,
+  addMomentAction,
   bulkSceneStatusAction,
+  deleteMomentAction,
+  renameMomentAction,
   deleteFloorPlanAction,
   deleteLinkAction,
   renameFloorPlanAction,
@@ -42,6 +45,7 @@ export default async function TourWorkspacePage({
   if (!data) notFound();
   const sp = await searchParams;
   const t = dict.admin.tour;
+  const m = t.moments;
   const l = dict.admin.listings;
   const nameOf = new Map(data.scenes.map((scene) => [scene.id, scene.name]));
   const bulk = sp.ok?.startsWith("bulk:") ? sp.ok.split(":") : null;
@@ -237,6 +241,120 @@ export default async function TourWorkspacePage({
               })}
             </ul>
           )}
+        </section>
+      ) : null}
+
+      {data.scenes.length > 0 ? (
+        <section id="moments" aria-labelledby="moments-title" className={`${card} scroll-mt-24`}>
+          <h3 id="moments-title" className="text-lg font-semibold">
+            {m.title}
+          </h3>
+          <p className={HINT}>{m.intro}</p>
+          {data.moments.length ? (
+            <ol className="mt-4 flex flex-col gap-3">
+              {data.moments.map((moment) => {
+                const covered = moment.isBase
+                  ? data.scenes.length
+                  : new Set(data.momentPhotos.filter((p) => p.momentId === moment.id).map((p) => p.sceneId)).size;
+                return (
+                  <li key={moment.id} className="flex flex-wrap items-end gap-3 rounded-lg border border-slate-200 p-3 dark:border-slate-800">
+                    <form action={renameMomentAction} className="flex flex-wrap items-end gap-2">
+                      <input type="hidden" name="lang" value={lang} />
+                      <input type="hidden" name="momentId" value={moment.id} />
+                      <label className={LABEL}>
+                        {m.nameField}
+                        {moment.isBase ? <span className="ml-1 font-normal text-slate-600 dark:text-slate-400">({m.current})</span> : null}
+                        <input name="label" defaultValue={moment.label} maxLength={40} className={FIELD} />
+                      </label>
+                      <button type="submit" className={SECONDARY_BUTTON}>
+                        {m.rename}
+                        <span className="sr-only">: {moment.label}</span>
+                      </button>
+                    </form>
+                    <p className="min-h-11 content-center text-sm text-slate-600 dark:text-slate-400">
+                      {m.coverage.replace("{n}", String(covered)).replace("{total}", String(data.scenes.length))}
+                    </p>
+                    {moment.isBase ? null : (
+                      <form action={deleteMomentAction} className="flex flex-wrap items-center gap-2">
+                        <input type="hidden" name="lang" value={lang} />
+                        <input type="hidden" name="momentId" value={moment.id} />
+                        <label className="flex min-h-11 items-center gap-2 text-sm">
+                          <input type="checkbox" name="confirm" required className="h-5 w-5" />
+                          {m.confirmDelete}
+                        </label>
+                        <button type="submit" className={SECONDARY_BUTTON}>
+                          {m.delete}
+                          <span className="sr-only">: {moment.label}</span>
+                        </button>
+                      </form>
+                    )}
+                  </li>
+                );
+              })}
+            </ol>
+          ) : null}
+          {data.moments.length ? <p className="mt-3 text-sm">{m.next}</p> : null}
+
+          {data.moments.length === 0 ? (
+            <div className="mt-4">
+              <p className="text-sm font-medium">{m.presetsLabel}</p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {m.presets.map((preset) => (
+                  <form key={preset.name} action={addMomentAction}>
+                    <input type="hidden" name="lang" value={lang} />
+                    <input type="hidden" name="listingId" value={listing.id} />
+                    <input type="hidden" name="label" value={preset.other} />
+                    <input type="hidden" name="baseLabel" value={preset.base} />
+                    <input type="hidden" name="placement" value={preset.placement} />
+                    <button type="submit" className={SECONDARY_BUTTON}>
+                      {preset.name}
+                    </button>
+                  </form>
+                ))}
+              </div>
+              <p className={HINT}>{m.presetHint}</p>
+            </div>
+          ) : null}
+
+          <form action={addMomentAction} className="mt-5 grid gap-3 sm:grid-cols-2">
+            <input type="hidden" name="lang" value={lang} />
+            <input type="hidden" name="listingId" value={listing.id} />
+            <p className="text-sm font-semibold sm:col-span-2">{m.customTitle}</p>
+            {data.moments.length === 0 ? (
+              <label className={LABEL}>
+                {m.baseLabel}
+                <input name="baseLabel" required maxLength={40} aria-describedby="moment-base-hint" className={FIELD} />
+                <span id="moment-base-hint" className={HINT}>
+                  {m.baseHint}
+                </span>
+              </label>
+            ) : null}
+            <label className={LABEL}>
+              {m.label}
+              <input name="label" required maxLength={40} aria-describedby="moment-label-hint" className={FIELD} />
+              <span id="moment-label-hint" className={HINT}>
+                {m.labelHint}
+              </span>
+            </label>
+            <fieldset className="sm:col-span-2">
+              <legend className={LABEL}>{m.placement}</legend>
+              <div className="mt-1 flex flex-wrap gap-4">
+                <label className="flex min-h-11 items-center gap-2 text-sm">
+                  <input type="radio" name="placement" value="earlier" defaultChecked className="h-5 w-5" />
+                  {m.earlier}
+                </label>
+                <label className="flex min-h-11 items-center gap-2 text-sm">
+                  <input type="radio" name="placement" value="later" className="h-5 w-5" />
+                  {m.later}
+                </label>
+              </div>
+            </fieldset>
+            <div>
+              <button type="submit" className={SECONDARY_BUTTON}>
+                {m.add}
+              </button>
+            </div>
+          </form>
         </section>
       ) : null}
 

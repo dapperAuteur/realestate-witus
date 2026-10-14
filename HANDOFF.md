@@ -139,20 +139,29 @@ public listings; the admin overview is a door list with Listings first (see "Pla
   (click to place arrows and hotspots, start and arrival views, roll, view limit), floor pins.
   Owners and managers edit everything; agents edit listings assigned to them.
 
+**Added 2026-10-14 (branch `bundle/platform-admin-and-moments`):**
+- BAM's admin on the platform host (platform owner only; Team, Support and Billing hidden there),
+  with inquiries falling back to the platform owner. Agent assignment is now validated.
+- Uploads are resized in the browser to fit Cloudinary's 10 MB / 25 MP image limits (BAM's plan).
+- Before / After (phase E): timeline admin, per-room photos with heading alignment, and the
+  listing page's still comparison.
+- Hide people and gear (manual): face blur, boxes, and a floor cover, baked into a new file with
+  the original kept. Migration 0002 adds the columns (user task 14). Until it runs, every room
+  query fails.
+- The landing shows up to three of BAM's published, toured listings ("Walk a real listing").
+
 **Not yet:**
-- Moments admin (phase E): creating Before/After and uploading the second photo per room. The
-  data model and the viewer already support it.
-- Hiding people and gear (manual blur boxes).
-- The still Before/After comparison on the page.
+- The painted logo patch for the floor.
+- Privacy edits on Before/After photos (base photos only for now).
+- The demo seed and the landing's benefit cards, which wait for user task 11.
 - The landing update (plans/08 6.5) and the demo seed. Both wait for user task 11's photos and
   consent, and the demo seed must re-create the sample listing nightly: `wipeDemoContent`
   deletes listings.
 
 **Decisions for BAM:**
-- **Where BAM's own service listings live.** `/admin` refuses the platform host
-  (`getStaffContext` returns `no_tenant` for `flags.platform`). Either allow listing admin on
-  the platform tenant for the platform owner, or give BAM's service work its own tenant.
-- **Cloudinary limits for 360 photos** (user task 13).
+- Decided 2026-10-14: BAM's own service listings live on the platform tenant, and its admin is
+  his (platform owner only).
+- Cloudinary is on 10 MB images and 100 MB video (user task 13); uploads resize to fit.
 
 **How it was verified without touching Neon:** a throwaway Postgres cluster in the session
 scratchpad (`initdb` + `pg_ctl` on TCP 127.0.0.1:54329; the socket path is too long on macOS)

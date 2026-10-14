@@ -55,7 +55,7 @@ import {
 } from "@/lib/tour/admin";
 import { CSV_MAX_CHARS, CSV_MAX_ROOMS } from "@/lib/tour/csv-import";
 import { importTourCsv, type TourImportResult } from "@/lib/tour/import";
-import { applyPrivacyEdit } from "@/lib/tour/privacy";
+import { applyPrivacyEdit, builtinLogosAllowed } from "@/lib/tour/privacy";
 import { parsePrivacyRecipe } from "@/lib/tour/privacy-edit";
 import { parsePlanPoint, parsePosition, parseRoll, parseViewLimit } from "@/lib/tour/tour-input";
 
@@ -587,6 +587,7 @@ export async function applyPrivacyEditAction(
     momentId,
     deleteOriginal,
     patchDataUrl,
+    allowBuiltinLogo: builtinLogosAllowed(gate.ctx.tenant),
   });
   if (result.ok) {
     await writeAudit({

@@ -839,6 +839,7 @@
         "patchColor": "Patch color",
         "patchLogo": "Logo on the patch",
         "noLogo": "No logo",
+        "witusLogo": "WitUS logo",
         "logoN": "Logo {n}",
         "uploadLogo": "Upload a logo",
         "logoHint": "A PNG with a transparent background works best. It sits in the middle of the patch, upright for someone facing the room's starting view.",

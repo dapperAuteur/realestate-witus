@@ -3,6 +3,7 @@ import { createHash, randomBytes } from "node:crypto";
 import { and, desc, eq, or, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { listingPhotos, mediaAssets, sceneMomentPanoramas, tourFloorPlans, tourScenes } from "@/db/schema";
+import { DEMO_TENANT_SLUG } from "@/lib/demo/seed";
 import { ownedReadyMedia } from "@/lib/listings/admin";
 import { destroyImage, limitedUrl, renameImage, transformedUrl, uploadFromUrl, waitForDerived } from "@/lib/media/cloudinary";
 import { err, ok, type Result } from "@/lib/result";
@@ -131,6 +132,8 @@ export interface PrivacyEditInput extends PrivacyTarget {
   deleteOriginal?: boolean;
   /** The floor patch the browser painted (bottom mode "patch"): a JPEG data URL. */
   patchDataUrl?: string | null;
+  /** The app's own logos (BUILTIN_LOGOS) are for BAM's listings and the demo agency only. */
+  allowBuiltinLogo?: boolean;
   /** Injected in tests; Cloudinary's own endpoints otherwise. */
   fetchImpl?: typeof fetch;
 }
@@ -252,6 +255,9 @@ async function bake(input: PrivacyEditInput, onPatch: (publicId: string) => void
     if (patch.logoMediaId && !(await ownedReadyMedia(tenantId, [patch.logoMediaId], "logo")).has(patch.logoMediaId)) {
       return err("PRIVACY_PATCH", "That logo isn't in this agency's library.");
     }
+    if (patch.builtinLogo && !input.allowBuiltinLogo) {
+      return err("PRIVACY_PATCH", "That logo is only for RealEstate.WitUS's own listings. Upload your agency's logo instead.");
+    }
   }
 
   let sourcePublicId = source.cloudinaryPublicId;
@@ -356,4 +362,9 @@ export async function patchLogos(tenantId: string): Promise<{ id: string; url: s
     const url = limitedUrl(row.publicId, 512);
     return url ? [{ id: row.id, url }] : [];
   });
+}
+
+/** BAM's own listings (the platform tenant) and the demo agency may use the app's logos. */
+export function builtinLogosAllowed(tenant: { slug: string; flags: { platform?: boolean } }): boolean {
+  return Boolean(tenant.flags.platform) || tenant.slug === DEMO_TENANT_SLUG;
 }

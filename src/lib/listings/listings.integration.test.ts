@@ -448,6 +448,12 @@ describe.skipIf(!ready)("listings and tours against the database", () => {
     expect(
       await applyPrivacyEdit({ ...base, recipe: patched(media.foreign), patchDataUrl: "data:image/jpeg;base64,AAAA" }),
     ).toMatchObject({ ok: false, code: "PRIVACY_PATCH" });
+    // The app's own WitUS logo: BAM's listings and the demo agency only.
+    const witus = { ...emptyPrivacyRecipe(), bottom: { mode: "patch" as const, angleDeg: 30, patch: { color: "#1e293b", logoMediaId: null, builtinLogo: "witus" as const } } };
+    expect(await applyPrivacyEdit({ ...base, recipe: witus, patchDataUrl: "data:image/jpeg;base64,AAAA" })).toMatchObject({
+      ok: false,
+      code: "PRIVACY_PATCH",
+    });
     expect(calls).toEqual([]);
 
     const done = await applyPrivacyEdit({ ...base, recipe: patched(logo.id), patchDataUrl: "data:image/jpeg;base64,AAAA" });

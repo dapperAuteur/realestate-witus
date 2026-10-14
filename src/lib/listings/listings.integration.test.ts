@@ -46,15 +46,19 @@ import {
 } from "./admin";
 import { submitInquiry } from "./inquiries";
 import type { ListingInput, PropertyInput } from "./listing-input";
+import { applyPrivacyEdit } from "@/lib/tour/privacy";
+import { emptyPrivacyRecipe } from "@/lib/tour/privacy-edit";
 import { getListingPage, listPublicListings, loadAgent, recordListingView } from "./queries";
 
 const hasDb = Boolean(process.env.STORAGE_DATABASE_URL ?? process.env.DATABASE_URL);
 
+// Ready once the newest migration this suite needs has run: 0002 adds
+// tour_scenes.privacy_recipe. Before that every room query fails, so skip.
 async function tablesExist(): Promise<boolean> {
-  const result = (await db().execute(sql`select to_regclass('public.listings') as t`)) as unknown as {
-    rows: { t: string | null }[];
-  };
-  return Boolean(result.rows[0]?.t);
+  const result = (await db().execute(
+    sql`select 1 as ok from information_schema.columns where table_name = 'tour_scenes' and column_name = 'privacy_recipe'`,
+  )) as unknown as { rows: { ok: number }[] };
+  return result.rows.length > 0;
 }
 
 const ready = hasDb && (await tablesExist().catch(() => false));
@@ -295,6 +299,56 @@ describe.skipIf(!ready)("listings and tours against the database", () => {
     expect((await deleteMoment(tenantId, added.data.id)).ok).toBe(true);
     expect((await tourEditData(tenantId, listingId))!.moments).toEqual([]);
     expect((await getListingPage(tenantId, slug))!.tour!.timeline).toBeUndefined();
+  });
+
+  it("bakes a privacy edit into a new photo, keeps the original, and restores it", async () => {
+    const data = await tourEditData(tenantId, listingId);
+    const hall = data!.scenes.find((s) => s.name === "Hall")!;
+    const [before] = await db().select().from(tourScenes).where(eq(tourScenes.id, hall.id));
+    const original = before.panoramaMediaId;
+    // Only Cloudinary is faked: the render is ready at once, and the upload echoes a new asset.
+    const calls: string[] = [];
+    const fakeCloudinary = (async (url: string | URL | Request, init?: RequestInit) => {
+      const href = String(url);
+      calls.push(`${init?.method ?? "GET"} ${href}`);
+      if (href.startsWith("https://res.cloudinary.com/")) return new Response(null, { status: 200 });
+      return new Response(
+        JSON.stringify({ public_id: `realestate-witus/${tenantId}/hall-private`, width: 6000, height: 3000, bytes: 1234 }),
+        { status: 200, headers: { "content-type": "application/json" } },
+      );
+    }) as unknown as typeof fetch;
+    const recipe = { ...emptyPrivacyRecipe(), faces: "blur" as const, boxes: [{ id: "a", u: 0.5, v: 0.5, w: 0.1, h: 0.2 }] };
+
+    const stale = await applyPrivacyEdit({ tenantId, sceneId: hall.id, currentMediaId: media.kitchen, recipe, userId, fetchImpl: fakeCloudinary });
+    expect(stale).toMatchObject({ ok: false, code: "PRIVACY_STALE" });
+
+    const applied = await applyPrivacyEdit({ tenantId, sceneId: hall.id, currentMediaId: original, recipe, userId, fetchImpl: fakeCloudinary });
+    expect(applied.ok).toBe(true);
+    if (!applied.ok) return;
+    // The render was built from the original, in its pixels, faces first.
+    expect(calls[0]).toMatch(/^HEAD https:\/\/res\.cloudinary\.com\/.*\/e_blur_faces:1500\/e_pixelate_region:40,x_2700,y_1200,w_600,h_600\/q_90\/itest\//);
+    const [after] = await db().select().from(tourScenes).where(eq(tourScenes.id, hall.id));
+    expect(after).toMatchObject({ panoramaMediaId: applied.data.mediaId, originalPanoramaMediaId: original, privacyRecipe: recipe });
+
+    // A second edit starts again from the original, not from the edited copy.
+    calls.length = 0;
+    const again = await applyPrivacyEdit({
+      tenantId,
+      sceneId: hall.id,
+      currentMediaId: applied.data.mediaId,
+      recipe: { ...recipe, faces: "off" },
+      userId,
+      fetchImpl: fakeCloudinary,
+    });
+    expect(again.ok).toBe(true);
+    expect(calls[0]).toContain(`/q_90/itest/${suffix}/hall`);
+    expect((await db().select().from(tourScenes).where(eq(tourScenes.id, hall.id)))[0].originalPanoramaMediaId).toBe(original);
+
+    // An empty recipe restores the original.
+    const current = (await db().select().from(tourScenes).where(eq(tourScenes.id, hall.id)))[0].panoramaMediaId;
+    expect((await applyPrivacyEdit({ tenantId, sceneId: hall.id, currentMediaId: current, recipe: emptyPrivacyRecipe(), userId })).ok).toBe(true);
+    const [restored] = await db().select().from(tourScenes).where(eq(tourScenes.id, hall.id));
+    expect(restored).toMatchObject({ panoramaMediaId: original, originalPanoramaMediaId: null, privacyRecipe: null });
   });
 
   it("counts views per day and surface", async () => {

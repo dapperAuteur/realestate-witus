@@ -364,7 +364,9 @@
       "BAD_AGENT": "Pick an agent from this agency's team.",
       "MOMENT_LABEL": "Names for a time need 1 to 40 characters.",
       "MOMENT_BASE": "The current photos can't be removed while other times exist.",
-      "MOMENT_NOT_FOUND": "That time isn't in this listing."
+      "MOMENT_NOT_FOUND": "That time isn't in this listing.",
+      "PRIVACY_STALE": "This room's photo changed since you opened the editor. Reload and try again.",
+      "PRIVACY_RECIPE": "That edit couldn't be read. Reload and try again."
     },
     "listings": {
       "title": "Listings",
@@ -676,6 +678,36 @@
         "delete": "Delete this time",
         "confirmDelete": "Yes, delete it and its photos",
         "next": "Next: open each room and add its photo for this time."
+      },
+      "privacy": {
+        "title": "Hide people and gear: {name}",
+        "intro": "Blur or pixelate faces, family photos, documents and plates, and cover the tripod on the floor. The edit is saved as a new copy of the photo; the original is kept, so you can change or undo it later. Nothing here is generated: it only blurs or pixelates what the camera took.",
+        "open": "Hide people and gear",
+        "drawHint": "Drag on the photo to cover something. A click drops a person-sized box.",
+        "keyboardHint": "Keyboard: Tab to a box, arrow keys move it, Shift with arrows resizes it, Alt for small steps, Delete removes it.",
+        "originalAlt": "The original 360 photo, unrolled flat",
+        "previewAlt": "Preview of the photo with the edits applied",
+        "faces": "Faces Cloudinary finds",
+        "facesHint": "Automatic, and it can miss a face in profile or far away. Check the preview, and box anything it missed.",
+        "boxes": "Your boxes",
+        "addBox": "Add a box",
+        "removeBox": "Remove the selected box",
+        "boxN": "Box {n}",
+        "boxCount": "{n} boxes",
+        "tooMany": "That's the most boxes one photo can carry.",
+        "floor": "Cover the floor under the camera",
+        "floorHeight": "How high: {deg} degrees up from straight down",
+        "off": "Off",
+        "blur": "Blur",
+        "pixelate": "Pixelate",
+        "preview": "Preview the result",
+        "apply": "Apply to this room",
+        "applied": "Applied. Buyers now see the edited photo.",
+        "restore": "Restore the original photo",
+        "restored": "Restored. Buyers see the original photo again.",
+        "working": "Working. Cloudinary is rendering the edit, which can take up to a minute.",
+        "back": "Back to the room",
+        "keepsOriginal": "The original stays in the media library. Applying again always starts from it."
       }
     }
   },

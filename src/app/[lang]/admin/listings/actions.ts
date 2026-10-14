@@ -52,6 +52,8 @@ import {
   updateScene,
   type HotspotInput,
 } from "@/lib/tour/admin";
+import { applyPrivacyEdit } from "@/lib/tour/privacy";
+import { parsePrivacyRecipe } from "@/lib/tour/privacy-edit";
 import { parsePlanPoint, parsePosition, parseRoll, parseViewLimit } from "@/lib/tour/tour-input";
 
 // Listing and tour actions (plans/08 phase D). Every action re-guards on its
@@ -534,4 +536,34 @@ export async function removeMomentPhotoAction(sceneId: string, momentId: string)
   const gate = await momentPhotoEditor(sceneId, momentId);
   if (!gate) return FORBIDDEN;
   return removeMomentPhoto(gate.ctx.tenant.id, sceneId, momentId);
+}
+
+// ── Tour: hide people and gear ───────────────────────────────────────────────
+
+export async function applyPrivacyEditAction(
+  sceneId: string,
+  currentMediaId: string,
+  recipe: unknown,
+): Promise<Result<{ mediaId: string }>> {
+  const { gate } = await sceneEditor(sceneId);
+  if (!gate) return FORBIDDEN;
+  const parsed = parsePrivacyRecipe(recipe);
+  if (!parsed.ok) return parsed;
+  const result = await applyPrivacyEdit({
+    tenantId: gate.ctx.tenant.id,
+    sceneId,
+    currentMediaId,
+    recipe: parsed.data,
+    userId: gate.ctx.user.id,
+  });
+  if (result.ok) {
+    await writeAudit({
+      tenantId: gate.ctx.tenant.id,
+      actorUserId: gate.ctx.user.id,
+      kind: "tour.privacy",
+      summary: "Hide people and gear applied to a room",
+      data: { sceneId, mediaId: result.data.mediaId },
+    }).catch(() => undefined);
+  }
+  return result;
 }

@@ -68,9 +68,14 @@ export default async function SceneEditorPage({
       <Flash ok={sp.ok} error={sp.error} dict={dict} />
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-xl font-semibold">{t.title.replace("{name}", scene.name)}</h2>
-        <Link href={base} className={SECONDARY_BUTTON}>
-          {t.backToTour}
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          <Link href={`${base}/${sceneId}/privacy`} className={SECONDARY_BUTTON}>
+            {dict.admin.tour.privacy.open}
+          </Link>
+          <Link href={base} className={SECONDARY_BUTTON}>
+            {t.backToTour}
+          </Link>
+        </div>
       </div>
       <SceneEditor
         key={sceneId}

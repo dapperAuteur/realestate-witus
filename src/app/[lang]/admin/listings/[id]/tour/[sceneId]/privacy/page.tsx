@@ -1,0 +1,46 @@
+import type { Metadata } from "next";
+import { notFound } from "next/navigation";
+import { HINT } from "@/components/admin/listing-form";
+import { PrivacyEditor } from "@/components/admin/privacy-editor";
+import { requireStaffPage } from "@/lib/admin/guard";
+import { getDictionary, hasLocale } from "@/lib/dictionaries";
+import { env } from "@/lib/env";
+import { canEditListing, findOwnedListing } from "@/lib/listings/admin";
+import { privacyEditData } from "@/lib/tour/privacy";
+
+export const dynamic = "force-dynamic";
+export const metadata: Metadata = { title: "Hide people and gear" };
+
+export default async function PrivacyPage({ params }: { params: Promise<{ lang: string; id: string; sceneId: string }> }) {
+  const { lang, id, sceneId } = await params;
+  if (!hasLocale(lang)) notFound();
+  const dict = await getDictionary(lang);
+  const ctx = await requireStaffPage("agent", lang);
+  const listing = await findOwnedListing(ctx.tenant.id, id);
+  if (!listing || !canEditListing({ role: ctx.role, userId: ctx.user.id }, listing)) notFound();
+  const data = await privacyEditData(ctx.tenant.id, sceneId);
+  if (!data || data.scene.listingId !== listing.id) notFound();
+  const p = dict.admin.tour.privacy;
+  const back = `/${lang}/admin/listings/${listing.id}/tour/${sceneId}`;
+
+  return (
+    <div className="flex flex-col gap-4">
+      <h2 className="text-xl font-semibold">{p.title.replace("{name}", data.scene.name)}</h2>
+      <p className={`${HINT} max-w-2xl`}>{p.intro}</p>
+      {env.CLOUDINARY_CLOUD_NAME ? (
+        <PrivacyEditor
+          sceneId={sceneId}
+          currentMediaId={data.scene.panoramaMediaId}
+          source={data.source}
+          previewBase={`https://res.cloudinary.com/${env.CLOUDINARY_CLOUD_NAME}/image/upload/`}
+          initialRecipe={data.recipe}
+          edited={Boolean(data.scene.originalPanoramaMediaId)}
+          backHref={back}
+          labels={p}
+        />
+      ) : (
+        <p role="alert">{dict.admin.listings.upload.notConfigured}</p>
+      )}
+    </div>
+  );
+}

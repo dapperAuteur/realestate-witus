@@ -23,6 +23,9 @@ export function localeRedirectTarget(pathname: string): string | null {
     // excludes it; this is the second line of defence, and the testable one — a locale
     // redirect here would send ingest to /en/ingest/e/ and drop every analytics event.
     pathname.startsWith("/ingest/") ||
+    // The listing embed lives outside [lang] (no site chrome inside an agent's
+    // iframe). A redirect here would wrap it in the agency header.
+    pathname.startsWith("/embed/") ||
     pathname === "/og" // generated OG card, not a page
   ) {
     return null;

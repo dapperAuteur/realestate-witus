@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { InquiryIntent } from "@/lib/tour/tour-links";
 import type { SceneUrlSyncMode } from "@/lib/tour/scene-url-sync";
 import { RoomStrip, type RoomStripLabels } from "./room-strip";
@@ -35,6 +35,8 @@ export function ListingTour({
   pinColor,
   onInquiry,
   onOpen,
+  request,
+  roomStrip = true,
 }: {
   tour: VirtualTour;
   labels: ListingTourLabels;
@@ -46,8 +48,20 @@ export function ListingTour({
   onInquiry?: (intent: InquiryIntent) => void;
   /** Fires once, when the buyer opens the tour (for the view counter). */
   onOpen?: () => void;
+  /**
+   * Open at a room from elsewhere on the page (the floor plan). Opens the tour
+   * there if it is still a poster, or walks to it if it is already open. A new
+   * `nonce` makes the same room twice still count.
+   */
+  request?: { sceneId: string | null; nonce: number } | null;
+  /** The embed leaves it out: a fixed-height iframe has no room under the viewer. */
+  roomStrip?: boolean;
 }) {
   const [open, setOpen] = useState(startOpen);
+  // Set only BEFORE the viewer mounts: changing the tour after would rebuild it.
+  const [startOverride, setStartOverride] = useState<string | null>(null);
+  const openRef = useRef(open);
+  openRef.current = open;
   const [currentSceneId, setCurrentSceneId] = useState<string | null>(tour.startSceneId);
   const [visited, setVisited] = useState<ReadonlySet<string>>(() => new Set([tour.startSceneId]));
   const apiRef = useRef<TourViewerApi | null>(null);
@@ -61,6 +75,29 @@ export function ListingTour({
     setOpen(true);
     onOpen?.();
   };
+
+  useEffect(() => {
+    if (!request) return;
+    const known = request.sceneId && tour.scenes.some((scene) => scene.id === request.sceneId);
+    if (!openRef.current) {
+      if (known && request.sceneId) {
+        setStartOverride(request.sceneId);
+        setCurrentSceneId(request.sceneId);
+        setVisited(new Set([request.sceneId]));
+      }
+      setOpen(true);
+      onOpen?.();
+    } else if (known && request.sceneId) {
+      apiRef.current?.goToScene(request.sceneId);
+    }
+    // Only a new request should act, not a re-render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [request?.nonce]);
+
+  const viewerTour = useMemo(
+    () => (startOverride ? { ...tour, startSceneId: startOverride } : tour),
+    [tour, startOverride],
+  );
 
   if (!open) {
     return (
@@ -90,10 +127,10 @@ export function ListingTour({
   }
 
   return (
-    <div>
+    <div className={roomStrip ? undefined : "h-full"}>
       <div className="overflow-hidden rounded-xl bg-slate-900" style={{ height }}>
         <Tour
-          tour={tour}
+          tour={viewerTour}
           labels={labels.viewer}
           height="100%"
           apiRef={apiRef}
@@ -103,6 +140,7 @@ export function ListingTour({
           onInquiry={onInquiry}
         />
       </div>
+      {roomStrip ? (
       <RoomStrip
         scenes={tour.scenes}
         floorPlans={tour.floorPlans}
@@ -111,6 +149,7 @@ export function ListingTour({
         onSelect={(sceneId) => apiRef.current?.goToScene(sceneId)}
         labels={labels.rooms}
       />
+      ) : null}
     </div>
   );
 }

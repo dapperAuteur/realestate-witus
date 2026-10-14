@@ -63,3 +63,13 @@ export function deliveryUrl(
     .join(",");
   return `https://res.cloudinary.com/${env.CLOUDINARY_CLOUD_NAME}/image/upload/${transform}/${publicId}`;
 }
+
+/**
+ * A width CAP, not a resize: c_limit never upscales, so a small image keeps
+ * its own pixels. Used where delivered dimensions matter (floor-plan pins are
+ * normalized against them) and for 360 panoramas, capped for phones.
+ */
+export function limitedUrl(publicId: string, width: number): string | null {
+  if (!env.CLOUDINARY_CLOUD_NAME) return null;
+  return `https://res.cloudinary.com/${env.CLOUDINARY_CLOUD_NAME}/image/upload/f_auto,q_auto,c_limit,w_${width}/${publicId}`;
+}

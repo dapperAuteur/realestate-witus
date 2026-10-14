@@ -14,7 +14,9 @@
   "home": {
     "comingSoon": "Launching soon",
     "comingSoonBody": "This site is being prepared. Check back shortly.",
-    "listingsSoon": "Listings and virtual tours from this agency appear here shortly."
+    "listingsTitle": "Listings",
+    "noListings": "New listings with 360 tours appear here as they go live.",
+    "tourBadge": "360 tour"
   },
   "landing": {
     "eyebrow": "RealEstate.WitUS.Online",
@@ -451,5 +453,192 @@
     "billing": "Billing",
     "support": "Support inbox",
     "logs": "Logs"
+  },
+  "listing": {
+    "status": {
+      "for_sale": "For sale",
+      "under_offer": "Under offer",
+      "sold": "Sold",
+      "draft": "Draft",
+      "withdrawn": "Withdrawn"
+    },
+    "previewNotice": "Preview. Buyers can't see this listing until it is published.",
+    "priceOnRequest": "Price on request",
+    "kinds": {
+      "single_family": "House",
+      "multi_family": "Multi-family",
+      "commercial": "Commercial",
+      "campus": "Campus",
+      "mixed": "Mixed use"
+    },
+    "units": {
+      "sqft": "sq ft",
+      "sqm": "m²",
+      "acres": "acres",
+      "hectares": "ha"
+    },
+    "facts": {
+      "bedrooms": "beds",
+      "bathrooms": "baths",
+      "area": "{unit}",
+      "pricePerArea": "per {unit}",
+      "units": "units",
+      "zoning": "zoning"
+    },
+    "header": {
+      "back": "All listings",
+      "save": "Save",
+      "saved": "Saved",
+      "share": "Share",
+      "copied": "Link copied",
+      "sections": "On this page",
+      "toolbar": "Listing tools"
+    },
+    "sections": {
+      "overview": "Overview",
+      "tour": "360 tour",
+      "floorPlan": "Floor plan",
+      "facts": "Facts",
+      "location": "Location",
+      "agent": "Agent"
+    },
+    "media": {
+      "viewAll": "View all {n} photos",
+      "photoOf": "Photo {n} of {total}",
+      "gallery": "Photos of {title}",
+      "close": "Close",
+      "previous": "Previous photo",
+      "next": "Next photo",
+      "openPhoto": "Open photo {n}",
+      "jumpTo": "Jump to",
+      "chips": {
+        "tour": "360 tour",
+        "floorPlan": "Floor plan",
+        "beforeAfter": "Before / After",
+        "map": "Map"
+      },
+      "badge360": "360"
+    },
+    "actions": {
+      "requestTour": "Request a tour",
+      "contactAgent": "Contact agent",
+      "region": "Quick contact"
+    },
+    "highlights": "Highlights",
+    "overview": {
+      "title": "Overview",
+      "readMore": "Read more",
+      "readLess": "Show less",
+      "listedBy": "Listed by {agent}, {brokerage}",
+      "listedOn": "Listed {date}",
+      "keyFacts": "Key facts",
+      "type": "Type",
+      "yearBuilt": "Year built",
+      "lot": "Lot",
+      "pricePerArea": "Price per {unit}",
+      "parking": "Parking spaces",
+      "floors": "Floors"
+    },
+    "features": {
+      "title": "Facts and features",
+      "showMore": "Show all {n}",
+      "showLess": "Show fewer",
+      "groups": {
+        "interior": "Interior",
+        "exterior": "Exterior",
+        "construction": "Construction",
+        "utilities": "Utilities",
+        "parking": "Parking",
+        "fees": "HOA or service charge",
+        "lot": "Lot"
+      }
+    },
+    "location": {
+      "title": "Location",
+      "approximate": "Approximate area. Ask the agent for the exact address.",
+      "mapLabel": "Map of {place}",
+      "attribution": "Map data © OpenStreetMap contributors",
+      "loading": "Loading map"
+    },
+    "floorPlan": {
+      "title": "Floor plan",
+      "intro": "Tap a room to walk into it in 360.",
+      "floors": "Floor",
+      "openRoom": "Open {room} in the 360 tour",
+      "planAlt": "Floor plan, {floor}"
+    },
+    "agent": {
+      "title": "Your agent",
+      "fallbackName": "The listing agent",
+      "contact": "Contact {name}"
+    },
+    "inquiry": {
+      "title": "Contact the agent",
+      "intentLabel": "What would you like?",
+      "intentTour": "Request a tour",
+      "intentQuestion": "Ask a question",
+      "name": "Your name",
+      "email": "Email",
+      "phone": "Phone (optional)",
+      "message": "Message",
+      "messageTour": "I'd like to see {place}.",
+      "messageQuestion": "I have a question about {place}.",
+      "preferredTimes": "When could you visit? (optional)",
+      "preferredTimesHint": "For example: weekday evenings, or Saturday morning",
+      "submit": "Send",
+      "sending": "Sending",
+      "sent": "Sent. {agent} will reply to {email}.",
+      "sendAnother": "Send another message",
+      "error": "That didn't send. Check the highlighted field and try again.",
+      "networkError": "That didn't send. Check your connection and try again.",
+      "privacy": "{agency} uses these details only to reply to you.",
+      "honeypot": "Leave this field empty"
+    },
+    "footer": {
+      "updated": "Updated {date}",
+      "fairHousing": "Equal Housing Opportunity. This property is offered without regard to race, color, religion, sex, disability, familial status or national origin.",
+      "accessibility": "Trouble using this page? Tell the agent.",
+      "accessibilityMessage": "I had trouble using the listing page for {place}: ",
+      "breadcrumb": "Where this listing is"
+    },
+    "embed": {
+      "viewFull": "View full listing",
+      "title": "360 tour: {title}",
+      "noTour": "The 360 tour for this listing is on its way."
+    }
+  },
+  "tour": {
+    "application": "360 tour of {title}",
+    "sceneLink": "Go to {name}",
+    "sceneLinkFallback": "Go to the next room",
+    "loadErrorTitle": "This room didn't load.",
+    "loadErrorBody": "Check your connection, then try another room.",
+    "floorChanged": "Floor plan: {floor}",
+    "links": {
+      "group": "Listing actions",
+      "more": "More",
+      "links": "Actions",
+      "opensInNewTab": "opens in a new tab"
+    },
+    "moments": {
+      "group": "Time",
+      "fallback": "No {moment} photo of this room. Showing {base}.",
+      "unavailable": "That view didn't load. Showing the current photos."
+    },
+    "rooms": {
+      "region": "Rooms",
+      "position": "Room {n} of {total}",
+      "remaining": "{n} left to see",
+      "nowIn": "Now in {name}",
+      "visited": "seen",
+      "current": "you are here",
+      "allSeen": "You've seen every room"
+    },
+    "open": "Explore in 360",
+    "roomCount": "{n} rooms",
+    "defaultLinks": {
+      "requestTour": "Request a tour",
+      "contactAgent": "Contact agent"
+    }
   }
 }

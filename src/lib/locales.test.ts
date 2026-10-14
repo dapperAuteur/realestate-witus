@@ -28,4 +28,8 @@ describe("localeRedirectTarget", () => {
     expect(localeRedirectTarget("/ingest/flags/")).toBeNull();
     expect(localeRedirectTarget("/ingest/static/array.js")).toBeNull();
   });
+
+  it("passes through the listing embed, which must render without site chrome", () => {
+    expect(localeRedirectTarget("/embed/listings/osu-heights-k3x9ab")).toBeNull();
+  });
 });

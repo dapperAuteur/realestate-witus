@@ -23,14 +23,22 @@ export default async function AdminLayout({
   const { tenant, user, role } = await requireStaffPage("agent", lang);
   const a = dict.admin;
 
+  // On the platform tenant (BAM's own service listings) the agency-only
+  // surfaces make no sense: no team to invite, no support desk to write to
+  // himself, no platform invoice to pay himself.
+  const isPlatform = Boolean(tenant.flags.platform);
   const tabs = [
     { href: `/${lang}/admin`, label: a.nav.overview },
     { href: `/${lang}/admin/listings`, label: a.nav.listings },
     { href: `/${lang}/admin/design`, label: a.nav.design },
-    { href: `/${lang}/admin/team`, label: a.nav.team },
-    { href: `/${lang}/admin/support`, label: a.nav.support },
+    ...(isPlatform
+      ? []
+      : [
+          { href: `/${lang}/admin/team`, label: a.nav.team },
+          { href: `/${lang}/admin/support`, label: a.nav.support },
+        ]),
     // Platform invoices are the owner's business only.
-    ...(role === "owner"
+    ...(role === "owner" && !isPlatform
       ? [{ href: `/${lang}/admin/billing`, label: a.nav.billing }]
       : []),
   ];

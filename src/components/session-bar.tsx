@@ -29,9 +29,9 @@ export async function SessionBar({
         ? "owner"
         : await getMembership(tenant.id, user.id).catch(() => null)
       : null;
-  const showAdmin = Boolean(
-    staffRole && roleSatisfies(staffRole, "agent"),
-  );
+  // The platform host's admin holds BAM's own service listings: his alone.
+  const isPlatformAdmin = Boolean(tenant?.flags.platform && user.isPlatformOwner);
+  const showAdmin = isPlatformAdmin || Boolean(staffRole && roleSatisfies(staffRole, "agent"));
   const showPlatform = user.isPlatformOwner && !isTenantSite;
   // Say what the button actually does. On the WitUS-branded platform host sign-out is
   // global (it ends the shared session at the IdP too, see sign-out-action.ts); on an
@@ -51,7 +51,7 @@ export async function SessionBar({
               href={`/${lang}/admin`}
               className="inline-flex min-h-11 items-center font-semibold underline-offset-4 hover:underline focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current"
             >
-              {c.adminLink}
+              {isPlatformAdmin ? c.serviceAdminLink : c.adminLink}
             </Link>
           ) : null}
           {showPlatform ? (

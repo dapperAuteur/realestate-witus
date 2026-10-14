@@ -31,6 +31,7 @@ import {
   updateLink,
 } from "@/lib/tour/admin";
 import {
+  assignableAgents,
   attachPhotos,
   changeListingStatus,
   createListing,
@@ -41,7 +42,7 @@ import {
 } from "./admin";
 import { submitInquiry } from "./inquiries";
 import type { ListingInput, PropertyInput } from "./listing-input";
-import { getListingPage, listPublicListings, recordListingView } from "./queries";
+import { getListingPage, listPublicListings, loadAgent, recordListingView } from "./queries";
 
 const hasDb = Boolean(process.env.STORAGE_DATABASE_URL ?? process.env.DATABASE_URL);
 
@@ -293,6 +294,27 @@ describe.skipIf(!ready)("listings and tours against the database", () => {
     expect(rows).toHaveLength(1);
     expect(rows[0]).toMatchObject({ kind: "tour_request", source: "tour", email: "kofi@example.com", status: "new" });
     expect((await listingsBoard(tenantId))[0].newInquiries).toBe(1);
+  });
+
+  it("offers only this agency's team as agents", async () => {
+    expect((await assignableAgents(tenant)).map((agent) => agent.id)).toEqual([userId]);
+    expect(await assignableAgents({ id: otherTenantId, flags: {} })).toEqual([]);
+  });
+
+  it("routes a platform-tenant listing's inquiries to a platform owner, and only there", async () => {
+    // Compared with whoever is platform owner in this database; never creates one.
+    const owners = await db()
+      .select({ email: users.email })
+      .from(users)
+      .where(eq(users.isPlatformOwner, true))
+      .orderBy(users.createdAt)
+      .limit(1);
+    const fallback = await loadAgent(otherTenantId, null, { platformTenant: true });
+    expect(fallback?.email ?? null).toBe(owners[0]?.email ?? null);
+    // An agency with no owner never falls back to the platform owner.
+    expect(await loadAgent(otherTenantId, null)).toBeNull();
+    // An agency's assigned agent who isn't on its team is ignored.
+    expect((await loadAgent(otherTenantId, userId))?.email ?? null).toBeNull();
   });
 
   it("refuses a slug from another tenant's host", async () => {

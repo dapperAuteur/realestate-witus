@@ -83,7 +83,7 @@ export async function findListing(
 export async function getListingPage(
   tenantId: string,
   slug: string,
-  opts: { staffPreview?: boolean; requestedSceneId?: string | null } = {},
+  opts: { staffPreview?: boolean; requestedSceneId?: string | null; platformTenant?: boolean } = {},
 ): Promise<ListingPageData | null> {
   const listing = await findListing(tenantId, slug, opts);
   if (!listing) return null;
@@ -95,7 +95,7 @@ export async function getListingPage(
       .where(and(eq(properties.tenantId, tenantId), eq(properties.id, listing.propertyId)))
       .limit(1),
     loadPhotos(tenantId, listing.id),
-    loadAgent(tenantId, listing.agentUserId),
+    loadAgent(tenantId, listing.agentUserId, { platformTenant: opts.platformTenant }),
     loadListingTour(listing, {
       includeUnpublished: Boolean(opts.staffPreview),
       requestedSceneId: opts.requestedSceneId,
@@ -130,8 +130,30 @@ async function loadPhotos(tenantId: string, listingId: string): Promise<ListingP
   return photos;
 }
 
-/** The listing's agent, or the agency's first owner when none is set or the agent left. */
-export async function loadAgent(tenantId: string, agentUserId: string | null): Promise<ListingAgent | null> {
+/**
+ * Who buyers see and who inquiries go to: the listing's agent, else the
+ * agency's first owner. On the platform tenant (BAM's own service listings)
+ * BAM is the platform owner, not a member, so the platform owner is both the
+ * assignable agent and the last fallback there, and only there.
+ */
+export async function loadAgent(
+  tenantId: string,
+  agentUserId: string | null,
+  opts: { platformTenant?: boolean } = {},
+): Promise<ListingAgent | null> {
+  const platformOwner = async (userId?: string) => {
+    const [row] = await db()
+      .select({ name: users.name, image: users.image, email: users.email })
+      .from(users)
+      .where(userId ? and(eq(users.isPlatformOwner, true), eq(users.id, userId)) : eq(users.isPlatformOwner, true))
+      .orderBy(asc(users.createdAt))
+      .limit(1);
+    return row ?? null;
+  };
+  if (agentUserId && opts.platformTenant) {
+    const owner = await platformOwner(agentUserId);
+    if (owner) return owner;
+  }
   if (agentUserId) {
     const [agent] = await db()
       .select({ name: users.name, image: users.image, email: users.email })
@@ -148,7 +170,8 @@ export async function loadAgent(tenantId: string, agentUserId: string | null): P
     .where(and(eq(tenantMemberships.tenantId, tenantId), eq(tenantMemberships.role, "owner")))
     .orderBy(asc(tenantMemberships.createdAt))
     .limit(1);
-  return owner ?? null;
+  if (owner) return owner;
+  return opts.platformTenant ? platformOwner() : null;
 }
 
 /** The listing's tour for the viewer, or null when it has no showable rooms yet. */

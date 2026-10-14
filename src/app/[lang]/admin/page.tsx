@@ -18,15 +18,20 @@ export default async function AdminOverviewPage({
   const { lang } = await params;
   if (!hasLocale(lang)) notFound();
   const dict = await getDictionary(lang);
-  const { role } = await requireStaffPage("agent", lang);
+  const { role, tenant } = await requireStaffPage("agent", lang);
+  const isPlatform = Boolean(tenant.flags.platform);
   const a = dict.admin.overview;
 
   const doors = [
     { href: `/${lang}/admin/listings`, label: dict.admin.nav.listings },
     { href: `/${lang}/admin/design`, label: dict.admin.nav.design },
-    { href: `/${lang}/admin/team`, label: dict.admin.nav.team },
-    { href: `/${lang}/admin/support`, label: dict.admin.nav.support },
-    ...(role === "owner"
+    ...(isPlatform
+      ? []
+      : [
+          { href: `/${lang}/admin/team`, label: dict.admin.nav.team },
+          { href: `/${lang}/admin/support`, label: dict.admin.nav.support },
+        ]),
+    ...(role === "owner" && !isPlatform
       ? [{ href: `/${lang}/admin/billing`, label: dict.admin.nav.billing }]
       : []),
   ];

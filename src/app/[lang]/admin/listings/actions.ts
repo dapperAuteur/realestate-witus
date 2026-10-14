@@ -6,6 +6,7 @@ import { getStaffContext, type StaffContext } from "@/lib/admin/guard";
 import { writeAudit } from "@/lib/audit";
 import { getDictionary, hasLocale, type Locale } from "@/lib/dictionaries";
 import {
+  assignableAgents,
   attachPhotos,
   canEditListing,
   changeListingStatus,
@@ -126,6 +127,10 @@ export async function saveListingAction(formData: FormData): Promise<void> {
   const agentRaw = formData.get("agentUserId");
   const canAssign = gate.ctx.role === "owner" || gate.ctx.role === "manager";
   const agentUserId = canAssign && typeof agentRaw === "string" ? agentRaw || null : undefined;
+  if (agentUserId) {
+    const allowed = await assignableAgents(gate.ctx.tenant);
+    if (!allowed.some((agent) => agent.id === agentUserId)) backTo(back, "error", "BAD_AGENT");
+  }
   const saved = await updateListing({
     tenantId: gate.ctx.tenant.id,
     listingId,

@@ -44,7 +44,9 @@ export async function submitInquiry(input: {
     preferredTimes: inquiry.preferredTimes,
   });
 
-  const agent = await loadAgent(input.tenant.id, listing.agentUserId).catch(() => null);
+  const agent = await loadAgent(input.tenant.id, listing.agentUserId, {
+    platformTenant: Boolean(input.tenant.flags.platform),
+  }).catch(() => null);
   if (agent) {
     const email = inquiryEmail({
       inquiry,

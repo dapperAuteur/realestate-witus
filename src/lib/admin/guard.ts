@@ -23,7 +23,16 @@ export const getStaffContext = cache(async (
   | { ok: false; reason: "no_tenant" | "no_session" | "forbidden" }
 > => {
   const tenant = await resolveTenant().catch(() => null);
-  if (!tenant || tenant.flags.platform) return { ok: false, reason: "no_tenant" };
+  if (!tenant) return { ok: false, reason: "no_tenant" };
+  if (tenant.flags.platform) {
+    // BAM's own service listings live on the platform tenant (CLAUDE.md). Its
+    // admin is the platform owner's alone: no membership opens it.
+    const { getSessionUser } = await import("@/lib/rbac");
+    const user = await getSessionUser().catch(() => null);
+    if (!user) return { ok: false, reason: "no_session" };
+    if (!user.isPlatformOwner) return { ok: false, reason: "forbidden" };
+    return { ok: true, ctx: { tenant, user, role: "owner" } };
+  }
   const auth = await requireRole(tenant.id, min).catch(() => null);
   if (!auth) {
     const { getSessionUser } = await import("@/lib/rbac");

@@ -2,6 +2,7 @@ import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { TenantHome } from "@/components/tenant-home";
 import { PlatformLanding } from "@/components/platform-landing";
+import { listPublicListings } from "@/lib/listings/queries";
 import { getDictionary, hasLocale } from "@/lib/dictionaries";
 import { getGlobalSetting, PROMO_BANNER_KEY } from "@/lib/platform/settings";
 import { isPlatformHost } from "@/lib/platform-host";
@@ -31,7 +32,12 @@ export default async function HomePage({
 
   if (tenant?.flags.platform || (!tenant && isPlatformHost((await headers()).get("host")))) {
     const promoBanner = await getGlobalSetting(PROMO_BANNER_KEY).catch(() => null);
-    return <PlatformLanding dict={dict} lang={lang} promoBanner={promoBanner} />;
+    // BAM's own published listings with a live tour, as proof (plans/08 6.5).
+    // Empty (and the section absent) until one exists, or if the DB is down.
+    const showcase = tenant
+      ? (await listPublicListings(tenant.id).catch(() => [])).filter((listing) => listing.hasTour).slice(0, 3)
+      : [];
+    return <PlatformLanding dict={dict} lang={lang} promoBanner={promoBanner} showcase={showcase} />;
   }
 
   if (!tenant) {

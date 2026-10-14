@@ -7,6 +7,7 @@
     "backHome": "Back to home",
     "signedInAs": "Signed in as",
     "adminLink": "Agency admin",
+    "serviceAdminLink": "Service listings",
     "platformLink": "Platform admin",
     "signOut": "Sign out",
     "signOutWitus": "Sign out of WitUS"
@@ -50,6 +51,8 @@
         "body": "The listing goes live on its own page and gives you a snippet. Paste it into your own site once; it keeps working for the life of the listing."
       }
     ],
+    "showcaseTitle": "Walk a real listing",
+    "showcaseIntro": "Tours we shot and published. Open one and look around, the way a buyer would.",
     "embedTitle": "The embed is the point",
     "embedIntro": "Most tour vendors host your tour on their domain and put their brand around it. Yours lives on your listing page and inside your own website, sized to whatever space you give it.",
     "embedSteps": [
@@ -357,7 +360,8 @@
       "LINK_NOT_FOUND": "That doorway isn't in this listing.",
       "FLOOR_LABEL": "Floor names need 1 to 40 characters.",
       "FLOOR_NOT_FOUND": "That floor isn't in this listing.",
-      "CONFIRM": "Tick the box to confirm, then try again."
+      "CONFIRM": "Tick the box to confirm, then try again.",
+      "BAD_AGENT": "Pick an agent from this agency's team."
     },
     "listings": {
       "title": "Listings",
@@ -492,9 +496,13 @@
         "done": "Uploaded",
         "failed": "Failed: {reason}",
         "notConfigured": "Uploads aren't set up yet (Cloudinary keys, user task 05).",
-        "panoramaHint": "360 photos exported as JPG, twice as wide as they are tall.",
-        "photoHint": "JPG, PNG or WebP. Big photos are fine; they are resized for phones.",
-        "floorPlanHint": "A plan image drawn by a person or supplied by the agent. Never AI-generated."
+        "panoramaHint": "360 photos exported as JPG, twice as wide as they are tall. Big ones are resized here to 6144 x 3072 before upload.",
+        "photoHint": "JPG, PNG or WebP. Big photos are resized here before upload (longest side 3200 px).",
+        "floorPlanHint": "A plan image drawn by a person or supplied by the agent. Never AI-generated. Resized here to 2400 px if larger.",
+        "resizing": "Preparing {name}",
+        "badType": "Use a JPG, PNG or WebP image.",
+        "tooBig": "This image is still over 10 MB after resizing. Export it smaller and try again.",
+        "summary": "{done} of {total} uploaded."
       }
     },
     "tour": {

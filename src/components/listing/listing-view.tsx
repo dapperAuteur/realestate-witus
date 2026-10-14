@@ -152,7 +152,14 @@ export function ListingView({
   return (
     <ListingProvider>
       <div className="bg-white pb-28 text-slate-900 [color-scheme:light] lg:pb-12">
-        <ListingTopBar slug={listing.slug} title={listing.title} backHref={`/${lang}`} sections={sections} labels={d.header} />
+        <ListingTopBar
+          slug={listing.slug}
+          title={listing.title}
+          backHref={`/${lang}`}
+          sections={sections}
+          // On the platform host "back" is the product landing, not an agency's listings.
+          labels={tenant.flags.platform ? { ...d.header, back: dict.common.brand } : d.header}
+        />
         {preview ? (
           <p role="note" className="bg-amber-100 px-4 py-2 text-center text-sm font-semibold text-amber-950">
             {d.previewNotice}

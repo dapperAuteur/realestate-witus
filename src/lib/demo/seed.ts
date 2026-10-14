@@ -1,6 +1,14 @@
 import { and, eq, inArray } from "drizzle-orm";
 import { db } from "@/db";
-import { mediaAssets, supportMessages, supportThreads, tenantDomains, tenants } from "@/db/schema";
+import {
+  listings,
+  mediaAssets,
+  properties,
+  supportMessages,
+  supportThreads,
+  tenantDomains,
+  tenants,
+} from "@/db/schema";
 
 // Demo agency content, shared by scripts/seed-demo.ts and the nightly reset
 // cron. Copy describes a FICTIONAL brokerage — no real agent, address, or
@@ -76,6 +84,15 @@ export async function wipeDemoContent(tenantId: string): Promise<void> {
       .where(inArray(supportMessages.threadId, threadIds));
     await db().delete(supportThreads).where(eq(supportThreads.tenantId, tenantId));
   }
+  // Listings before media: tour scenes, listing photos, floor plans and moment
+  // photos reference media_assets ON DELETE RESTRICT, so deleting media first
+  // would fail the whole reset once the demo holds a listing. Deleting a
+  // listing cascades to its scenes (and their links, hotspots and moment
+  // photos), floor plans, moments, photos, inquiries and view counts.
+  // Properties restrict deletion while a listing points at them, so they go
+  // second; their buildings and units cascade with them.
+  await db().delete(listings).where(eq(listings.tenantId, tenantId));
+  await db().delete(properties).where(eq(properties.tenantId, tenantId));
   await db().delete(mediaAssets).where(eq(mediaAssets.tenantId, tenantId));
 }
 

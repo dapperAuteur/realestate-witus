@@ -111,12 +111,60 @@ unset for its test-only fallbacks. See user-task 05.
 `/platform` (tenants, domains, billing, logs, support), `api/auth`, `api/health`, `api/media/*`,
 `og`, `sitemap.xml`, `manifest.webmanifest`, middleware locale redirect.
 
-**Placeholder code that exists to be replaced, not extended:** `src/components/tenant-home.tsx`
-and `tenant-header.tsx` (they prove brand/template resolution end to end and nothing more),
-and `src/app/[lang]/admin/page.tsx` (a door list where the listings board goes).
+**Placeholder code that exists to be replaced, not extended:** `tenant-header.tsx` (it proves
+brand/template resolution end to end and nothing more). `tenant-home.tsx` now lists the agency's
+public listings; the admin overview is a door list with Listings first (see "Plan 08 progress").
 
 **All landing and roadmap copy is a Claude-written draft** pending BAM's rewrite
 (user-task 04) — the content rule says humans own what customers read.
+
+## Plan 08 progress (2026-10-14, branch `bundle/tour-engine-foundation`)
+
+**Landed (phases A to D):**
+- **Schema** (migration 0001, user task 12 runs it): properties (+ bare buildings/units),
+  listings, listing_photos, listing_inquiries, listing_views (daily counters, no visitor data),
+  tour_floor_plans (one per floor), tour_scenes, scene_links, scene_hotspots, tour_moments,
+  scene_moment_panoramas. The start room is a flag on the scene (partial unique index), not a
+  listings column, so there's no FK cycle. Media and property references are ON DELETE NO
+  ACTION, not RESTRICT, so a tenant delete cascades regardless of trigger order.
+- **Engine** (`src/lib/tour/`, `src/components/tour/`): ported from Wanderlust @ c7f5616 with
+  provenance headers. PSV pinned at 5.14.1 for all five packages. New here: per-floor mini-map,
+  hotspots as buttons, every agent-typed string escaped before PSV renders it, `kind: "inquiry"`
+  tour links. `buildTour` is the pure, tested assembly; `loadListingTour` does the queries.
+- **Public**: `/[lang]/listings/[slug]` (the plans/08 section 6 design lock), `/embed/listings/[slug]`
+  (outside `[lang]`; middleware passes `/embed/`), inquiry and view-count APIs, agency home grid,
+  listings in the sitemap.
+- **Admin** (`/[lang]/admin/listings/...`): board, new/edit form, photos, embed snippet, numbers,
+  inquiries, tour workspace (bulk rooms, graph badges, bulk publish, Connections), room editor
+  (click to place arrows and hotspots, start and arrival views, roll, view limit), floor pins.
+  Owners and managers edit everything; agents edit listings assigned to them.
+
+**Not yet:**
+- Moments admin (phase E): creating Before/After and uploading the second photo per room. The
+  data model and the viewer already support it.
+- Hiding people and gear (manual blur boxes).
+- The still Before/After comparison on the page.
+- The landing update (plans/08 6.5) and the demo seed. Both wait for user task 11's photos and
+  consent, and the demo seed must re-create the sample listing nightly: `wipeDemoContent`
+  deletes listings.
+
+**Decisions for BAM:**
+- **Where BAM's own service listings live.** `/admin` refuses the platform host
+  (`getStaffContext` returns `no_tenant` for `flags.platform`). Either allow listing admin on
+  the platform tenant for the platform owner, or give BAM's service work its own tenant.
+- **Cloudinary limits for 360 photos** (user task 13).
+
+**How it was verified without touching Neon:** a throwaway Postgres cluster in the session
+scratchpad (`initdb` + `pg_ctl` on TCP 127.0.0.1:54329; the socket path is too long on macOS)
+with 0000 and 0001 applied, constraint checks in psql, and the listings integration suite run
+through a scratch-only Vitest config that aliases `@/db` to node-postgres. UI was checked with
+Playwright on uncommitted fixture pages. Two harness traps:
+- Playwright's screenshot caret-hiding writes an inline style before React hydrates in dev, which
+  looks like an app hydration bug. Use `caret: "initial"`.
+- `next build` and `next dev` share `.next`, so stop dev first.
+
+**Repo gaps found:** ESLint was never configured (`next lint` only prompts), so plans/07's
+"chain into lint" needs that first.
 
 ## Short-term plan (workstream order)
 

@@ -112,8 +112,8 @@
     "intro": "What we are building for agents and brokerages on RealEstate.WitUS, in the order we are building it. Dates are targets we work toward, not promises.",
     "phases": [
       {
-        "label": "Building now",
-        "timeframe": "For the first paid listings",
+        "label": "Built, in final testing",
+        "timeframe": "Live with the first listing",
         "items": [
           {
             "title": "Listings and 360 tours",
@@ -128,6 +128,32 @@
             "body": "A soft inquiry form on every listing page. No popups, no gates. Messages reach you and stay attached to the listing."
           },
           {
+            "title": "Floor plans in the tour",
+            "body": "One plan per floor, with every room pinned on it. Inside the tour the plan follows the buyer from floor to floor; tap a room on the plan to jump there."
+          },
+          {
+            "title": "Hide people and gear",
+            "body": "Blur faces, cover photos on the wall, and put a patch with your logo over the tripod. The edit is saved into a new copy, so the original can't be recovered from the listing."
+          },
+          {
+            "title": "Before and after",
+            "body": "Show a room at two times, lined up from the same spot, in the tour and on the listing page."
+          },
+          {
+            "title": "Faster tour building",
+            "body": "Build a forty-room tour from a spreadsheet, then check and fix its doorways on a map of the rooms before fine-tuning each one."
+          },
+          {
+            "title": "A report for your seller",
+            "body": "Views, tour opens and inquiries for 7, 30 or 90 days, ready to print or save as a PDF. Counts only: nobody who looked is named."
+          }
+        ]
+      },
+      {
+        "label": "Building now",
+        "timeframe": "For the first paid listings",
+        "items": [
+          {
             "title": "Your brand, your domain",
             "body": "Your logo, colors, and web address across every listing page, set up from your admin without a developer."
           }
@@ -138,20 +164,12 @@
         "timeframe": "First fast-follows",
         "items": [
           {
-            "title": "Floor plans synced to the tour",
-            "body": "A floor plan beside the viewer with a live position marker, so a buyer always knows where in the property they are standing. Tap a room on the plan to jump there."
-          },
-          {
             "title": "Dollhouse view for premium listings",
             "body": "An optional 3D dollhouse and auto-generated floor plan on the properties that warrant it, layered onto the same listing page."
           },
           {
-            "title": "Faster tour building",
-            "body": "Wire a forty-scene commercial walkthrough by dragging connections on a map of the tour, then fine-tune each doorway. Bulk imports for large jobs."
-          },
-          {
-            "title": "View analytics",
-            "body": "How many buyers opened the tour, how long they stayed, and which rooms held them. Per listing, in plain numbers."
+            "title": "Deeper tour analytics",
+            "body": "Which rooms held buyers longest and where they left the tour, per listing, in plain numbers."
           }
         ]
       },

@@ -47,14 +47,16 @@ export default async function RoadmapPage({
           </p>
         </header>
 
-        {r.phases.map((phase) => (
+        {r.phases.map((phase, index) => (
           <section
             key={phase.label}
-            aria-labelledby={`phase-${phase.label}`}
+            // An index, not the label: an id can't hold spaces, and
+            // aria-labelledby would read "Building now" as two missing ids.
+            aria-labelledby={`phase-${index}`}
             className="mt-12"
           >
             <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-              <h2 id={`phase-${phase.label}`} className="text-2xl font-bold">
+              <h2 id={`phase-${index}`} className="text-2xl font-bold">
                 {phase.label}
               </h2>
               <p

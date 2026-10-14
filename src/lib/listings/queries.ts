@@ -58,6 +58,7 @@ export interface ListingPageData {
 export const tourUrlBuilders: TourUrlBuilders = {
   panorama: (publicId) => limitedUrl(publicId, 6144),
   thumbnail: (publicId) => limitedUrl(publicId, 480),
+  preview: (publicId) => limitedUrl(publicId, 1600),
   floorPlan: (publicId, intrinsicWidth) => {
     const url = limitedUrl(publicId, 1600);
     return url ? { url, width: Math.min(intrinsicWidth, 1600) } : null;

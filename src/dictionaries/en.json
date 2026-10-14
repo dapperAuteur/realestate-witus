@@ -361,7 +361,10 @@
       "FLOOR_LABEL": "Floor names need 1 to 40 characters.",
       "FLOOR_NOT_FOUND": "That floor isn't in this listing.",
       "CONFIRM": "Tick the box to confirm, then try again.",
-      "BAD_AGENT": "Pick an agent from this agency's team."
+      "BAD_AGENT": "Pick an agent from this agency's team.",
+      "MOMENT_LABEL": "Names for a time need 1 to 40 characters.",
+      "MOMENT_BASE": "The current photos can't be removed while other times exist.",
+      "MOMENT_NOT_FOUND": "That time isn't in this listing."
     },
     "listings": {
       "title": "Listings",
@@ -609,7 +612,16 @@
         "editHotspot": "Edit",
         "cancel": "Cancel",
         "placed": "placed",
-        "unplaced": "not placed yet"
+        "unplaced": "not placed yet",
+        "momentsTitle": "Other times",
+        "momentsNone": "This tour has one time. Add Before / After on the tour page.",
+        "momentAdd": "Add the {moment} photo of this room",
+        "momentPhoto": "{moment} photo",
+        "momentShow": "Show {moment} in the viewer",
+        "heading": "Turn to line it up: {deg} degrees",
+        "headingHint": "Show it in the viewer, then turn until the walls match the current photo. The preview moves as you do.",
+        "saveHeading": "Save the alignment",
+        "removeMomentPhoto": "Remove the {moment} photo"
       },
       "floor": {
         "title": "Place rooms: {floor}",
@@ -622,6 +634,48 @@
         "autoArrange": "Arrange unpinned rooms",
         "pinFor": "Pin for {room}",
         "selected": "Selected: {room}"
+      },
+      "moments": {
+        "title": "Before / After",
+        "intro": "Show one place at different times: a renovation, an empty room and a staged one, day and night, or a build in progress. The rooms' current 360 photos are one time. For each other time, add a second photo per room.",
+        "presetsLabel": "Quick start",
+        "presets": [
+          {
+            "name": "Before / After",
+            "base": "After",
+            "other": "Before",
+            "placement": "earlier"
+          },
+          {
+            "name": "Vacant / Staged",
+            "base": "Staged",
+            "other": "Vacant",
+            "placement": "earlier"
+          },
+          {
+            "name": "Day / Night",
+            "base": "Day",
+            "other": "Night",
+            "placement": "later"
+          }
+        ],
+        "presetHint": "The current photos become the second name; you add photos for the first.",
+        "customTitle": "Or name it yourself",
+        "baseLabel": "Your current photos show",
+        "baseHint": "For a renovation: After.",
+        "label": "The other photos show",
+        "labelHint": "For a renovation: Before. For a build: the month, like March 2026.",
+        "placement": "On the timeline, the other photos come",
+        "earlier": "Before the current ones",
+        "later": "After the current ones",
+        "add": "Add this time",
+        "current": "Current photos",
+        "coverage": "{n} of {total} rooms have a photo",
+        "rename": "Rename",
+        "nameField": "Name",
+        "delete": "Delete this time",
+        "confirmDelete": "Yes, delete it and its photos",
+        "next": "Next: open each room and add its photo for this time."
       }
     }
   },
@@ -788,6 +842,7 @@
       "overview": "Overview",
       "tour": "360 tour",
       "floorPlan": "Floor plan",
+      "beforeAfter": "Before / After",
       "facts": "Facts",
       "location": "Location",
       "agent": "Agent"
@@ -856,6 +911,12 @@
       "floors": "Floor",
       "openRoom": "Open {room} in the 360 tour",
       "planAlt": "Floor plan, {floor}"
+    },
+    "beforeAfter": {
+      "title": "Before / After",
+      "intro": "See the change room by room, then walk it in 360.",
+      "show": "Show",
+      "walk": "Walk the {moment} in 360"
     },
     "agent": {
       "title": "Your agent",

@@ -7,6 +7,7 @@ import {
   addFloorPlanAction,
   attachPhotosAction,
   createScenesAction,
+  setMomentPhotoAction,
 } from "@/app/[lang]/admin/listings/actions";
 
 // Signed Cloudinary uploads for the listing admin (plans/08 phase D). The
@@ -351,6 +352,41 @@ export function FloorPlanUploader({
         }}
       />
       <p role="status" aria-live="polite" className="text-sm text-slate-700">
+        {upload.note}
+      </p>
+      <UploadList rows={upload.rows} labels={labels} />
+    </div>
+  );
+}
+
+/** One room's 360 photo for another time (Before / After). */
+export function MomentPhotoUploader({
+  sceneId,
+  momentId,
+  labels,
+}: {
+  sceneId: string;
+  momentId: string;
+  labels: UploadLabels;
+}) {
+  const router = useRouter();
+  const upload = useBatchUpload("panorama", labels);
+  return (
+    <div>
+      <Picker
+        labels={labels}
+        multiple={false}
+        disabled={upload.busy}
+        onFiles={async (files) => {
+          const done = await upload.run(files.slice(0, 1));
+          if (done[0]) {
+            const result = await setMomentPhotoAction(sceneId, momentId, done[0].mediaId);
+            if (!result.ok) upload.setNote(result.error);
+          }
+          router.refresh();
+        }}
+      />
+      <p role="status" aria-live="polite" className="mt-2 text-sm text-slate-700">
         {upload.note}
       </p>
       <UploadList rows={upload.rows} labels={labels} />

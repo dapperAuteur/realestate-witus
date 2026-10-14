@@ -81,6 +81,17 @@ export default async function SceneEditorPage({
         incoming={incoming}
         hotspots={hotspots}
         moments={data.moments.map((m) => ({ id: m.id, label: m.label }))}
+        otherTimes={data.moments
+          .filter((m) => !m.isBase)
+          .map((m) => {
+            const photo = data.momentPhotos.find((p) => p.sceneId === sceneId && p.momentId === m.id);
+            return {
+              momentId: m.id,
+              label: m.label,
+              photo: photo ? { headingOffsetDeg: photo.headingOffsetDeg, thumbUrl: photo.thumbUrl } : null,
+            };
+          })}
+        uploadLabels={{ ...dict.admin.listings.upload, hint: dict.admin.listings.upload.panoramaHint }}
         editorBase={base}
         labels={{ ...t, ...dict.admin.tour.connections, placed: t.placed, unplaced: t.unplaced }}
         viewerLabels={tourLabels(dict).viewer}

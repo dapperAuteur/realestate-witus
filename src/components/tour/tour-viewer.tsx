@@ -87,6 +87,14 @@ export interface TourViewerApi {
   setRoll(degrees: number | null): void;
   /** Live-preview the view limit in degrees; null removes it until the next room. */
   setMinPitch(degrees: number | null): void;
+  /**
+   * Live-preview horizon roll and heading turn together, in degrees (the
+   * editor lining a Before photo up with the current one). Null for either
+   * leaves it out. Same lifetime as setRoll: the next room re-applies saved values.
+   */
+  setCorrection(next: { rollDeg: number | null; panDeg: number | null }): void;
+  /** Switch the whole tour to a time (the editor showing the photo it is aligning). */
+  showMoment(momentId: string): void;
 }
 
 interface TourViewerProps {
@@ -105,6 +113,8 @@ interface TourViewerProps {
   onInquiry?: (intent: InquiryIntent) => void;
   /** Six-digit hex for hotspot pins, usually the tenant accent. Anything else falls back. */
   pinColor?: string;
+  /** Open in this time instead of the current photos (the Before / After section's "walk it"). */
+  initialMomentId?: string | null;
 }
 
 const DEFAULT_ARROW_COLOR = "#ffffff";
@@ -166,6 +176,7 @@ export default function TourViewer({
   onPositionClick,
   onInquiry,
   pinColor,
+  initialMomentId,
 }: TourViewerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   // The element PSV sends fullscreen. Overlays that must survive fullscreen
@@ -181,8 +192,10 @@ export default function TourViewer({
   // The chosen moment is global, so arrows keep it.
   const timeline = tour.timeline ?? [];
   const baseMomentId = timeline.find((moment) => moment.isBase)?.id ?? null;
-  const [selectedMoment, setSelectedMoment] = useState<string | null>(baseMomentId);
-  const selectedMomentRef = useRef<string | null>(baseMomentId);
+  const firstMoment =
+    initialMomentId && timeline.some((moment) => moment.id === initialMomentId) ? initialMomentId : baseMomentId;
+  const [selectedMoment, setSelectedMoment] = useState<string | null>(firstMoment);
+  const selectedMomentRef = useRef<string | null>(firstMoment);
   // Set while the CURRENT node reloads for a time switch, so the transition
   // keeps the view and node-changed skips the arrival work.
   const momentSwitchRef = useRef(false);
@@ -577,6 +590,10 @@ export default function TourViewer({
           setMinPitch: (degrees) => {
             visibleRange?.setVerticalRange(verticalRangeFor(degrees));
           },
+          setCorrection: ({ rollDeg, panDeg }) => {
+            viewer.setOption("sphereCorrection", sphereCorrectionFor(rollDeg ?? undefined, panDeg ?? undefined) ?? {});
+          },
+          showMoment: (momentId) => selectMomentRef.current(momentId),
         };
       }
 

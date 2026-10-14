@@ -22,7 +22,11 @@ import {
   addFloorPlan,
   addHotspot,
   addLink,
+  addMoment,
   autoArrangeFloor,
+  deleteMoment,
+  setMomentHeading,
+  setMomentPhoto,
   createScenes,
   placeSceneOnPlan,
   setSceneStatuses,
@@ -120,6 +124,7 @@ describe.skipIf(!ready)("listings and tours against the database", () => {
     await add("photo1", "photo", 1600, 1067);
     await add("photo2", "photo", 1600, 1067);
     await add("plan", "floor_plan", 2000, 1400);
+    await add("kitchenBefore", "panorama", 6000, 3000);
     await add("foreign", "panorama", 6000, 3000, otherTenantId);
   });
 
@@ -258,6 +263,38 @@ describe.skipIf(!ready)("listings and tours against the database", () => {
     const cards = await listPublicListings(tenantId);
     expect(cards).toHaveLength(1);
     expect(cards[0]).toMatchObject({ slug, hasTour: true });
+  });
+
+  it("adds Before / After and shows the Before photo to buyers", async () => {
+    const data = await tourEditData(tenantId, listingId);
+    const kitchen = data!.scenes.find((s) => s.name === "Room 2")!;
+    const added = await addMoment(tenantId, listingId, { label: "Before", baseLabel: "After", placement: "earlier" });
+    expect(added.ok).toBe(true);
+    if (!added.ok) return;
+    const timeline = (await tourEditData(tenantId, listingId))!.moments;
+    expect(timeline.map((m) => [m.label, m.isBase])).toEqual([
+      ["Before", false],
+      ["After", true],
+    ]);
+    const base = timeline.find((m) => m.isBase)!;
+
+    expect(await setMomentPhoto(tenantId, kitchen.id, base.id, media.kitchenBefore)).toMatchObject({ ok: false, code: "MOMENT_BASE" });
+    expect(await setMomentPhoto(tenantId, kitchen.id, added.data.id, media.photo1)).toMatchObject({ ok: false, code: "NO_PANORAMAS" });
+    expect((await setMomentPhoto(tenantId, kitchen.id, added.data.id, media.kitchenBefore)).ok).toBe(true);
+    await setMomentHeading(tenantId, kitchen.id, added.data.id, 200);
+
+    const tour = (await getListingPage(tenantId, slug))!.tour!;
+    expect(tour.timeline?.map((m) => m.label)).toEqual(["Before", "After"]);
+    const kitchenScene = tour.scenes.find((s) => s.id === kitchen.id)!;
+    expect(kitchenScene.moments).toEqual([
+      expect.objectContaining({ momentId: added.data.id, headingOffsetDeg: -160, preview: expect.stringContaining("w_1600") }),
+    ]);
+    expect(kitchenScene.preview).toEqual(expect.stringContaining("w_1600"));
+
+    expect(await deleteMoment(tenantId, base.id)).toMatchObject({ ok: false, code: "MOMENT_BASE" });
+    expect((await deleteMoment(tenantId, added.data.id)).ok).toBe(true);
+    expect((await tourEditData(tenantId, listingId))!.moments).toEqual([]);
+    expect((await getListingPage(tenantId, slug))!.tour!.timeline).toBeUndefined();
   });
 
   it("counts views per day and surface", async () => {

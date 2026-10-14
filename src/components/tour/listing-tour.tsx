@@ -53,13 +53,14 @@ export function ListingTour({
    * there if it is still a poster, or walks to it if it is already open. A new
    * `nonce` makes the same room twice still count.
    */
-  request?: { sceneId: string | null; nonce: number } | null;
+  request?: { sceneId: string | null; momentId?: string | null; nonce: number } | null;
   /** The embed leaves it out: a fixed-height iframe has no room under the viewer. */
   roomStrip?: boolean;
 }) {
   const [open, setOpen] = useState(startOpen);
   // Set only BEFORE the viewer mounts: changing the tour after would rebuild it.
   const [startOverride, setStartOverride] = useState<string | null>(null);
+  const [startMoment, setStartMoment] = useState<string | null>(null);
   const openRef = useRef(open);
   openRef.current = open;
   const [currentSceneId, setCurrentSceneId] = useState<string | null>(tour.startSceneId);
@@ -85,10 +86,12 @@ export function ListingTour({
         setCurrentSceneId(request.sceneId);
         setVisited(new Set([request.sceneId]));
       }
+      if (request.momentId) setStartMoment(request.momentId);
       setOpen(true);
       onOpen?.();
-    } else if (known && request.sceneId) {
-      apiRef.current?.goToScene(request.sceneId);
+    } else {
+      if (request.momentId) apiRef.current?.showMoment(request.momentId);
+      if (known && request.sceneId) apiRef.current?.goToScene(request.sceneId);
     }
     // Only a new request should act, not a re-render.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -131,6 +134,7 @@ export function ListingTour({
       <div className="overflow-hidden rounded-xl bg-slate-900" style={{ height }}>
         <Tour
           tour={viewerTour}
+          initialMomentId={startMoment}
           labels={labels.viewer}
           height="100%"
           apiRef={apiRef}

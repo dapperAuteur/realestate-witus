@@ -17,6 +17,7 @@ import type { TenantRecord } from "@/lib/tenant";
 import type { InquiryIntent } from "@/lib/tour/tour-links";
 import type { ListingTourLabels } from "@/components/tour/listing-tour";
 import { ActionBar, ActionCard } from "./action-panel";
+import { BeforeAfterSection } from "./before-after-section";
 import { ContactButton } from "./contact-button";
 import { ExpandableText, FeatureGroup } from "./expandable";
 import { FloorPlanSection } from "./floor-plan-section";
@@ -126,10 +127,13 @@ export function ListingView({
         : { lat: rawLat, lng: rawLng }
       : null;
 
+  // A Before / After section only when a room has a second time with a still to show.
+  const hasBeforeAfter = Boolean(tour?.timeline && tour.scenes.some((scene) => scene.moments?.length && scene.preview));
   const sections = [
     { id: "overview", label: d.sections.overview },
     tour ? { id: "tour", label: d.sections.tour } : null,
     tour?.floorPlans ? { id: "floor-plan", label: d.sections.floorPlan } : null,
+    hasBeforeAfter ? { id: "before-after", label: d.sections.beforeAfter } : null,
     featureGroups.length ? { id: "facts", label: d.sections.facts } : null,
     coords ? { id: "location", label: d.sections.location } : null,
     { id: "agent", label: d.sections.agent },
@@ -174,7 +178,7 @@ export function ListingView({
             sections={{
               tour: Boolean(tour),
               floorPlan: Boolean(tour?.floorPlans),
-              beforeAfter: Boolean(tour?.timeline),
+              beforeAfter: hasBeforeAfter,
               map: Boolean(coords),
             }}
             labels={{
@@ -269,6 +273,10 @@ export function ListingView({
 
               {tour?.floorPlans ? (
                 <FloorPlanSection floorPlans={tour.floorPlans} scenes={tour.scenes} labels={d.floorPlan} />
+              ) : null}
+
+              {hasBeforeAfter && tour?.timeline ? (
+                <BeforeAfterSection timeline={tour.timeline} scenes={tour.scenes} labels={d.beforeAfter} />
               ) : null}
 
               {featureGroups.length ? (

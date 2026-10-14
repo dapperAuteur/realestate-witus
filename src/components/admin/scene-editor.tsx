@@ -4,10 +4,13 @@ import { useRouter } from "next/navigation";
 import { useCallback, useId, useRef, useState } from "react";
 import {
   deleteHotspotAction,
+  removeMomentPhotoAction,
   saveHotspotAction,
+  setMomentHeadingAction,
   updateLinkAction,
   updateSceneAction,
 } from "@/app/[lang]/admin/listings/actions";
+import { MomentPhotoUploader, type UploadLabels } from "./uploaders";
 import { Tour, type PositionClick, type TourViewerApi, type TourViewerLabels } from "@/components/tour/tour";
 import type { VirtualTour } from "@/components/tour/types";
 import { ROLL_LIMIT_DEG } from "@/lib/tour/tour-input";
@@ -29,6 +32,13 @@ export interface EditorLink {
   placed: boolean;
   hasArrival: boolean;
   arrowRotation: number;
+}
+
+export interface EditorOtherTime {
+  momentId: string;
+  label: string;
+  /** This room's photo for the time, if it has one. */
+  photo: { headingOffsetDeg: number; thumbUrl: string | null } | null;
 }
 
 export interface EditorHotspot {
@@ -56,6 +66,8 @@ export function SceneEditor({
   incoming,
   hotspots,
   moments,
+  otherTimes = [],
+  uploadLabels,
   editorBase,
   labels,
   viewerLabels,
@@ -68,6 +80,9 @@ export function SceneEditor({
   incoming: EditorLink[];
   hotspots: EditorHotspot[];
   moments: { id: string; label: string }[];
+  /** Before / After: the tour's other times and this room's photo for each. */
+  otherTimes?: EditorOtherTime[];
+  uploadLabels?: UploadLabels;
   /** `/en/admin/listings/<id>/tour`: each room's editor lives under it. */
   editorBase: string;
   labels: Labels;
@@ -365,6 +380,27 @@ export function SceneEditor({
           </button>
         </section>
 
+        {otherTimes.length ? (
+          <section aria-labelledby="times-title" className="flex flex-col gap-3">
+            <h3 id="times-title" className="font-semibold">
+              {labels.momentsTitle}
+            </h3>
+            {otherTimes.map((time) => (
+              <OtherTime
+                key={time.momentId}
+                time={time}
+                sceneId={sceneId}
+                roll={roll}
+                apiRef={apiRef}
+                busy={busy}
+                run={run}
+                labels={labels}
+                uploadLabels={uploadLabels}
+              />
+            ))}
+          </section>
+        ) : null}
+
         <section aria-labelledby="hotspots-title" className="flex flex-col gap-3">
           <h3 id="hotspots-title" className="font-semibold">
             {labels.hotspots}
@@ -444,6 +480,91 @@ export function SceneEditor({
             </form>
           ) : null}
         </section>
+      </div>
+    </div>
+  );
+}
+
+/** One other time for this room: add its photo, or line it up and save. */
+function OtherTime({
+  time,
+  sceneId,
+  roll,
+  apiRef,
+  busy,
+  run,
+  labels,
+  uploadLabels,
+}: {
+  time: EditorOtherTime;
+  sceneId: string;
+  roll: number;
+  apiRef: React.MutableRefObject<TourViewerApi | null>;
+  busy: boolean;
+  run: (work: () => Promise<{ ok: boolean; error?: string }>, done: string) => Promise<void>;
+  labels: Labels;
+  uploadLabels?: UploadLabels;
+}) {
+  const [heading, setHeading] = useState(time.photo?.headingOffsetDeg ?? 0);
+  const id = useId();
+  const named = (key: string) => labels[key].replace("{moment}", time.label);
+  if (!time.photo) {
+    return (
+      <div className="rounded-lg border border-slate-200 p-3 dark:border-slate-800">
+        {uploadLabels ? (
+          <MomentPhotoUploader sceneId={sceneId} momentId={time.momentId} labels={{ ...uploadLabels, choose: named("momentAdd") }} />
+        ) : null}
+      </div>
+    );
+  }
+  return (
+    <div className="flex flex-col gap-2 rounded-lg border border-slate-200 p-3 dark:border-slate-800">
+      <p className="font-medium">{named("momentPhoto")}</p>
+      {time.photo.thumbUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={time.photo.thumbUrl} alt="" className="aspect-[2/1] w-full rounded object-cover" />
+      ) : null}
+      <button type="button" onClick={() => apiRef.current?.showMoment(time.momentId)} className={BUTTON}>
+        {named("momentShow")}
+      </button>
+      <label htmlFor={id} className="text-sm font-medium">
+        {labels.heading.replace("{deg}", String(heading))}
+        <input
+          id={id}
+          type="range"
+          min={-180}
+          max={180}
+          step={1}
+          value={heading}
+          aria-describedby={`${id}-hint`}
+          onChange={(event) => {
+            const value = Number(event.target.value);
+            setHeading(value);
+            apiRef.current?.setCorrection({ rollDeg: roll || null, panDeg: value || null });
+          }}
+          className="mt-2 block min-h-11 w-full"
+        />
+      </label>
+      <p id={`${id}-hint`} className="text-xs text-slate-600 dark:text-slate-400">
+        {labels.headingHint}
+      </p>
+      <div className="flex flex-wrap gap-2">
+        <button
+          type="button"
+          disabled={busy}
+          onClick={() => void run(() => setMomentHeadingAction(sceneId, time.momentId, heading), labels.saved)}
+          className={BUTTON}
+        >
+          {labels.saveHeading}
+        </button>
+        <button
+          type="button"
+          disabled={busy}
+          onClick={() => void run(() => removeMomentPhotoAction(sceneId, time.momentId), labels.saved)}
+          className={BUTTON}
+        >
+          {named("removeMomentPhoto")}
+        </button>
       </div>
     </div>
   );

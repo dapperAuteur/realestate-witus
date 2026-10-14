@@ -5,6 +5,7 @@ import {
   mediaAssets,
   sceneHotspots,
   sceneLinks,
+  sceneMomentPanoramas,
   tourFloorPlans,
   tourMoments,
   tourScenes,
@@ -14,6 +15,7 @@ import { limitedUrl } from "@/lib/media/cloudinary";
 import { err, ok, type Result } from "@/lib/result";
 import { tourUrlBuilders } from "@/lib/listings/queries";
 import { rotateArrow } from "./arrow-rotation";
+import { normalizeHeadingOffset, sortMoments } from "./moments/moments";
 import { parseHttpUrl } from "./http-url";
 import { planBulkSceneStatus, type SceneStatus } from "./scene-status";
 import { analyzeTourGraph, layoutTourGraph, type SceneGraphStats } from "./tour-graph";
@@ -79,12 +81,21 @@ export interface EditorFloorPlan {
   height: number | null;
 }
 
+export interface EditorMomentPhoto {
+  sceneId: string;
+  momentId: string;
+  headingOffsetDeg: number;
+  thumbUrl: string | null;
+}
+
 export interface TourEditData {
   scenes: EditorScene[];
   links: EditorLink[];
   hotspots: (typeof sceneHotspots.$inferSelect)[];
   floorPlans: EditorFloorPlan[];
+  /** In timeline order, base included. */
   moments: (typeof tourMoments.$inferSelect)[];
+  momentPhotos: EditorMomentPhoto[];
 }
 
 export async function tourEditData(tenantId: string, listingId: string): Promise<TourEditData | null> {
@@ -124,6 +135,18 @@ export async function tourEditData(tenantId: string, listingId: string): Promise
       .where(and(eq(tourMoments.tenantId, tenantId), eq(tourMoments.listingId, listingId)))
       .orderBy(asc(tourMoments.sortOrder)),
   ]);
+  const momentPhotos = sceneIds.length
+    ? await db()
+        .select({
+          sceneId: sceneMomentPanoramas.sceneId,
+          momentId: sceneMomentPanoramas.momentId,
+          headingOffsetDeg: sceneMomentPanoramas.headingOffsetDeg,
+          publicId: mediaAssets.cloudinaryPublicId,
+        })
+        .from(sceneMomentPanoramas)
+        .innerJoin(mediaAssets, eq(mediaAssets.id, sceneMomentPanoramas.mediaId))
+        .where(and(eq(sceneMomentPanoramas.tenantId, tenantId), inArray(sceneMomentPanoramas.sceneId, sceneIds)))
+    : [];
 
   const start = scenes.find((row) => row.scene.isStart)?.scene.id ?? scenes[0]?.scene.id ?? null;
   const stats = analyzeTourGraph({
@@ -178,7 +201,13 @@ export async function tourEditData(tenantId: string, listingId: string): Promise
         height: delivered && width && height ? Math.round((height * delivered.width) / width) : null,
       };
     }),
-    moments,
+    moments: sortMoments(moments.map((m) => ({ ...m, occurredOn: m.occurredOn ?? null }))),
+    momentPhotos: momentPhotos.map((photo) => ({
+      sceneId: photo.sceneId,
+      momentId: photo.momentId,
+      headingOffsetDeg: photo.headingOffsetDeg,
+      thumbUrl: limitedUrl(photo.publicId, 320),
+    })),
   };
 }
 
@@ -564,4 +593,155 @@ export async function listingIdForFloorPlan(tenantId: string, floorPlanId: strin
     .where(and(eq(tourFloorPlans.tenantId, tenantId), eq(tourFloorPlans.id, floorPlanId)))
     .limit(1);
   return row?.listingId ?? null;
+}
+
+// ── Moments: Before / After (plans/08 phase E) ───────────────────────────────
+// The timeline belongs to the listing's tour. The base row is the rooms' own
+// photos ("After" in a renovation); every other moment adds a second photo
+// per room. Labels are free text with presets (decision D2).
+
+export async function listingIdForMoment(tenantId: string, momentId: string): Promise<string | null> {
+  if (!UUID.test(momentId)) return null;
+  const [row] = await db()
+    .select({ listingId: tourMoments.listingId })
+    .from(tourMoments)
+    .where(and(eq(tourMoments.tenantId, tenantId), eq(tourMoments.id, momentId)))
+    .limit(1);
+  return row?.listingId ?? null;
+}
+
+function cleanMomentLabel(label: string): string | null {
+  const clean = label.trim();
+  return clean.length >= 1 && clean.length <= 40 ? clean : null;
+}
+
+/**
+ * Adds a time to the tour. The first one also creates the base row, labeled
+ * for what the current photos show. `placement` puts the new time before or
+ * after everything already on the timeline.
+ */
+export async function addMoment(
+  tenantId: string,
+  listingId: string,
+  input: { label: string; baseLabel?: string; placement: "earlier" | "later" },
+): Promise<Result<{ id: string }>> {
+  const listing = await findOwnedListing(tenantId, listingId);
+  if (!listing) return err("LISTING_NOT_FOUND", "That listing isn't in this agency.");
+  const label = cleanMomentLabel(input.label);
+  if (!label) return err("MOMENT_LABEL", "Moment names need 1 to 40 characters.");
+  const existing = await db()
+    .select()
+    .from(tourMoments)
+    .where(and(eq(tourMoments.tenantId, tenantId), eq(tourMoments.listingId, listingId)));
+  let baseLabel: string | null = null;
+  if (!existing.some((m) => m.isBase)) {
+    baseLabel = cleanMomentLabel(input.baseLabel ?? "Now");
+    if (!baseLabel) return err("MOMENT_LABEL", "Moment names need 1 to 40 characters.");
+  }
+  const orders = existing.map((m) => m.sortOrder);
+  const sortOrder =
+    input.placement === "earlier" ? Math.min(0, ...orders) - 1 : Math.max(baseLabel ? 0 : -1, ...orders) + 1;
+  const id = await withTx(async (tx) => {
+    if (baseLabel) {
+      await tx.insert(tourMoments).values({ tenantId, listingId, label: baseLabel, isBase: true, sortOrder: 0 });
+    }
+    const [row] = await tx
+      .insert(tourMoments)
+      .values({ tenantId, listingId, label, isBase: false, sortOrder })
+      .returning({ id: tourMoments.id });
+    return row.id;
+  });
+  return ok({ id });
+}
+
+export async function renameMoment(tenantId: string, momentId: string, label: string): Promise<Result<{ saved: true }>> {
+  const clean = cleanMomentLabel(label);
+  if (!clean) return err("MOMENT_LABEL", "Moment names need 1 to 40 characters.");
+  await db()
+    .update(tourMoments)
+    .set({ label: clean, updatedAt: new Date() })
+    .where(and(eq(tourMoments.tenantId, tenantId), eq(tourMoments.id, momentId)));
+  return ok({ saved: true });
+}
+
+/**
+ * Removes a time and its photos (cascade); hotspots limited to it show in
+ * every time again (set null). The base row can't go while other times
+ * exist, and goes with the last of them: a timeline of one is no timeline.
+ */
+export async function deleteMoment(tenantId: string, momentId: string): Promise<Result<{ deleted: true }>> {
+  const listingId = await listingIdForMoment(tenantId, momentId);
+  if (!listingId) return err("MOMENT_NOT_FOUND", "That moment isn't in this listing.");
+  const moments = await db()
+    .select()
+    .from(tourMoments)
+    .where(and(eq(tourMoments.tenantId, tenantId), eq(tourMoments.listingId, listingId)));
+  const target = moments.find((m) => m.id === momentId)!;
+  if (target.isBase) return err("MOMENT_BASE", "The current photos can't be removed while other times exist.");
+  const others = moments.filter((m) => !m.isBase && m.id !== momentId);
+  const ids = others.length ? [momentId] : moments.map((m) => m.id);
+  await db().delete(tourMoments).where(and(eq(tourMoments.tenantId, tenantId), inArray(tourMoments.id, ids)));
+  return ok({ deleted: true });
+}
+
+/** A room's photo for a time. Replacing it starts the heading again at zero. */
+export async function setMomentPhoto(
+  tenantId: string,
+  sceneId: string,
+  momentId: string,
+  mediaId: string,
+): Promise<Result<{ saved: true }>> {
+  const scene = await ownedScene(tenantId, sceneId);
+  if (!scene) return NOT_FOUND;
+  const [moment] = await db()
+    .select()
+    .from(tourMoments)
+    .where(and(eq(tourMoments.tenantId, tenantId), eq(tourMoments.id, momentId)))
+    .limit(1);
+  if (!moment || moment.listingId !== scene.listingId) return err("MOMENT_NOT_FOUND", "That moment isn't in this listing.");
+  if (moment.isBase) return err("MOMENT_BASE", "The current photo is the room's own 360 photo.");
+  const owned = await ownedReadyMedia(tenantId, [mediaId], "panorama");
+  if (!owned.has(mediaId)) return err("NO_PANORAMAS", "Upload a 360 photo first.");
+  await db()
+    .insert(sceneMomentPanoramas)
+    .values({ tenantId, sceneId, momentId, mediaId, headingOffsetDeg: 0 })
+    .onConflictDoUpdate({
+      target: [sceneMomentPanoramas.sceneId, sceneMomentPanoramas.momentId],
+      set: { mediaId, headingOffsetDeg: 0, updatedAt: new Date() },
+    });
+  return ok({ saved: true });
+}
+
+/** How far the time's photo is turned to line up with the current one, -180..180 degrees. */
+export async function setMomentHeading(
+  tenantId: string,
+  sceneId: string,
+  momentId: string,
+  degrees: number,
+): Promise<Result<{ saved: true }>> {
+  if (!Number.isFinite(degrees)) return err("BAD_HEADING", "The heading must be a number.");
+  await db()
+    .update(sceneMomentPanoramas)
+    .set({ headingOffsetDeg: normalizeHeadingOffset(Math.round(degrees)), updatedAt: new Date() })
+    .where(
+      and(
+        eq(sceneMomentPanoramas.tenantId, tenantId),
+        eq(sceneMomentPanoramas.sceneId, sceneId),
+        eq(sceneMomentPanoramas.momentId, momentId),
+      ),
+    );
+  return ok({ saved: true });
+}
+
+export async function removeMomentPhoto(tenantId: string, sceneId: string, momentId: string): Promise<Result<{ deleted: true }>> {
+  await db()
+    .delete(sceneMomentPanoramas)
+    .where(
+      and(
+        eq(sceneMomentPanoramas.tenantId, tenantId),
+        eq(sceneMomentPanoramas.sceneId, sceneId),
+        eq(sceneMomentPanoramas.momentId, momentId),
+      ),
+    );
+  return ok({ deleted: true });
 }

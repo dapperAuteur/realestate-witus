@@ -172,13 +172,15 @@ export const listings = pgTable(
     tenantId: uuid("tenant_id")
       .notNull()
       .references(() => tenants.id, { onDelete: "cascade" }),
-    // Restrict all three: deleting a place must never silently re-level or
-    // orphan a listing someone may have embedded on their own site.
+    // Blocked while referenced (NO ACTION, checked at the end of the statement
+    // rather than RESTRICT's immediate check, so deleting a whole tenant can
+    // cascade through listings and properties in any order). Deleting a place
+    // must never silently re-level or orphan a listing someone embedded.
     propertyId: uuid("property_id")
       .notNull()
-      .references(() => properties.id, { onDelete: "restrict" }),
-    buildingId: uuid("building_id").references(() => buildings.id, { onDelete: "restrict" }),
-    unitId: uuid("unit_id").references(() => units.id, { onDelete: "restrict" }),
+      .references(() => properties.id, { onDelete: "no action" }),
+    buildingId: uuid("building_id").references(() => buildings.id, { onDelete: "no action" }),
+    unitId: uuid("unit_id").references(() => units.id, { onDelete: "no action" }),
     /**
      * Globally unique, not per tenant: the embed URL carries it, and plans/05's
      * ownership transfer must keep every embedded snippet working.
@@ -233,7 +235,7 @@ export const listingPhotos = pgTable(
       .references(() => listings.id, { onDelete: "cascade" }),
     mediaId: uuid("media_id")
       .notNull()
-      .references(() => mediaAssets.id, { onDelete: "restrict" }),
+      .references(() => mediaAssets.id, { onDelete: "no action" }),
     sortOrder: integer("sort_order").notNull().default(0),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },

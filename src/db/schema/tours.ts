@@ -51,7 +51,7 @@ export const tourFloorPlans = pgTable(
     sortOrder: integer("sort_order").notNull().default(0),
     mediaId: uuid("media_id")
       .notNull()
-      .references(() => mediaAssets.id, { onDelete: "restrict" }),
+      .references(() => mediaAssets.id, { onDelete: "no action" }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
@@ -76,7 +76,7 @@ export const tourScenes = pgTable(
     caption: text("caption"),
     panoramaMediaId: uuid("panorama_media_id")
       .notNull()
-      .references(() => mediaAssets.id, { onDelete: "restrict" }),
+      .references(() => mediaAssets.id, { onDelete: "no action" }),
     posterMediaId: uuid("poster_media_id").references(() => mediaAssets.id, {
       onDelete: "set null",
     }),
@@ -221,7 +221,7 @@ export const sceneMomentPanoramas = pgTable(
       .references(() => tourMoments.id, { onDelete: "cascade" }),
     mediaId: uuid("media_id")
       .notNull()
-      .references(() => mediaAssets.id, { onDelete: "restrict" }),
+      .references(() => mediaAssets.id, { onDelete: "no action" }),
     /** Degrees (-180..180) the photo is turned to line up with the base view. */
     headingOffsetDeg: real("heading_offset_deg").notNull().default(0),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),

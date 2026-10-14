@@ -1,5 +1,5 @@
 {
-  "id": "fa78e799-8956-4a2e-97f8-8830d5daa1e7",
+  "id": "ed51de92-cd8b-440c-b5ce-1d089b8bf12b",
   "prevId": "feeba342-3b77-4da6-b63d-9e3e9514ee5e",
   "version": "7",
   "dialect": "postgresql",
@@ -1326,7 +1326,7 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "restrict",
+          "onDelete": "no action",
           "onUpdate": "no action"
         }
       },
@@ -1677,7 +1677,7 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "restrict",
+          "onDelete": "no action",
           "onUpdate": "no action"
         },
         "listings_building_id_buildings_id_fk": {
@@ -1690,7 +1690,7 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "restrict",
+          "onDelete": "no action",
           "onUpdate": "no action"
         },
         "listings_unit_id_units_id_fk": {
@@ -1703,7 +1703,7 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "restrict",
+          "onDelete": "no action",
           "onUpdate": "no action"
         },
         "listings_agent_user_id_users_id_fk": {
@@ -3150,7 +3150,7 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "restrict",
+          "onDelete": "no action",
           "onUpdate": "no action"
         }
       },
@@ -3276,7 +3276,7 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "restrict",
+          "onDelete": "no action",
           "onUpdate": "no action"
         }
       },
@@ -3628,7 +3628,7 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "restrict",
+          "onDelete": "no action",
           "onUpdate": "no action"
         },
         "tour_scenes_poster_media_id_media_assets_id_fk": {

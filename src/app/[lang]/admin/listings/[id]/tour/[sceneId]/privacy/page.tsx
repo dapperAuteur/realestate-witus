@@ -7,7 +7,7 @@ import { getDictionary, hasLocale } from "@/lib/dictionaries";
 import { env } from "@/lib/env";
 import { canEditListing, findOwnedListing } from "@/lib/listings/admin";
 import { tourEditData } from "@/lib/tour/admin";
-import { patchLogos, privacyEditData } from "@/lib/tour/privacy";
+import { builtinLogosAllowed, patchLogos, privacyEditData } from "@/lib/tour/privacy";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Hide people and gear" };
@@ -53,6 +53,7 @@ export default async function PrivacyPage({
           backHref={back}
           labels={p}
           logos={logos}
+          builtinLogos={builtinLogosAllowed(ctx.tenant) ? [{ key: "witus", label: p.witusLogo }] : []}
           uploadLabels={{ ...dict.admin.listings.upload, choose: p.uploadLogo, hint: p.logoHint }}
         />
       ) : (

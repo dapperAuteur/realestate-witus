@@ -1,6 +1,8 @@
 import type { FeatureGroupKey } from "@/db/schema/listings";
 import { presetByKey } from "@/lib/brand-presets";
+import { ListingCard } from "./listing-card";
 import type { Dictionary } from "@/lib/dictionaries";
+import type { ListingCard as ListingCardData } from "@/lib/listings/queries";
 import {
   approximateCoordinates,
   descriptionParagraphs,
@@ -67,6 +69,7 @@ export function ListingView({
   startTourOpen,
   preview,
   initialInquiry,
+  more = [],
 }: {
   data: ListingPageData;
   tenant: TenantRecord;
@@ -77,6 +80,8 @@ export function ListingView({
   preview: boolean;
   /** `?inquiry=`: the embed's pinned action sent the buyer here for this form. */
   initialInquiry?: InquiryIntent | null;
+  /** Other live listings from this agency (plans/08 6.1 item 10). Never another agency's. */
+  more?: ListingCardData[];
 }) {
   const { listing, property, photos, agent, tour } = data;
   const d = dict.listing;
@@ -353,6 +358,21 @@ export function ListingView({
                 initialIntent={initialInquiry ?? undefined}
                 labels={d.inquiry}
               />
+
+              {more.length ? (
+                <section aria-labelledby="more-title">
+                  <h2 id="more-title" className="text-xl font-semibold text-slate-900">
+                    {d.more.title.replace("{agency}", agencyName)}
+                  </h2>
+                  <ul className="mt-4 grid gap-6 sm:grid-cols-2">
+                    {more.map((card) => (
+                      <li key={card.slug}>
+                        <ListingCard listing={card} dict={dict} lang={lang} />
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              ) : null}
             </div>
 
             <div className="hidden lg:block">

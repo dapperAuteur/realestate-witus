@@ -5,6 +5,7 @@ import { useEffect, useId, useRef, useState, type KeyboardEvent, type PointerEve
 import { applyPrivacyEditAction } from "@/app/[lang]/admin/listings/actions";
 import { paintNadirPatch } from "@/lib/tour/nadir-patch";
 import {
+  BUILTIN_LOGOS,
   DEFAULT_PATCH_COLOR,
   PRIVACY_BOTTOM_MAX_DEG,
   PRIVACY_BOTTOM_MIN_DEG,
@@ -15,7 +16,9 @@ import {
   boxRects,
   emptyPrivacyRecipe,
   privacyTransformation,
+  type BuiltinLogo,
   type PrivacyBox,
+  type PrivacyPatch,
   type PrivacyRecipe,
 } from "@/lib/tour/privacy-edit";
 import { LogoUploader, type UploadLabels } from "./uploaders";
@@ -86,6 +89,7 @@ export function PrivacyEditor({
   backHref,
   labels,
   logos = [],
+  builtinLogos = [],
   uploadLabels,
 }: {
   sceneId: string;
@@ -103,6 +107,8 @@ export function PrivacyEditor({
   labels: Labels;
   /** The agency's uploaded logos, for the floor patch. */
   logos?: { id: string; url: string }[];
+  /** The app's own logos this tenant may use (BAM's listings, the demo): offered first, and the default. */
+  builtinLogos?: { key: BuiltinLogo; label: string }[];
   uploadLabels: UploadLabels;
 }) {
   const router = useRouter();
@@ -117,8 +123,17 @@ export function PrivacyEditor({
   const areaRef = useRef<HTMLDivElement>(null);
   const boxRefs = useRef(new Map<string, HTMLButtonElement>());
 
-  const patch = recipe.bottom.patch ?? { color: DEFAULT_PATCH_COLOR, logoMediaId: null };
-  const logoUrl = patch.logoMediaId ? (logos.find((logo) => logo.id === patch.logoMediaId)?.url ?? null) : null;
+  const defaultPatch: PrivacyPatch = {
+    color: DEFAULT_PATCH_COLOR,
+    logoMediaId: null,
+    ...(builtinLogos[0] ? { builtinLogo: builtinLogos[0].key } : {}),
+  };
+  const patch = recipe.bottom.patch ?? defaultPatch;
+  const logoUrl = patch.builtinLogo
+    ? BUILTIN_LOGOS[patch.builtinLogo]
+    : patch.logoMediaId
+      ? (logos.find((logo) => logo.id === patch.logoMediaId)?.url ?? null)
+      : null;
   const patching = recipe.bottom.mode === "patch";
 
   // Repaint the patch whenever what it shows changes. Cheap: a 2048 px strip.
@@ -139,7 +154,7 @@ export function PrivacyEditor({
     };
   }, [patching, patch.color, logoUrl, recipe.bottom.angleDeg, labels.logoFailed]);
 
-  const setPatch = (change: Partial<typeof patch>) =>
+  const setPatch = (change: Partial<PrivacyPatch>) =>
     setRecipe((r) => ({ ...r, bottom: { ...r.bottom, patch: { ...patch, ...change } } }));
 
   const size = source.width && source.height ? { width: source.width, height: source.height } : undefined;
@@ -362,7 +377,10 @@ export function PrivacyEditor({
             { value: "pixelate", label: labels.pixelate },
             { value: "patch", label: labels.patch },
           ]}
-          onChange={(mode) => setRecipe((r) => ({ ...r, bottom: { ...r.bottom, mode } }))}
+          onChange={(mode) =>
+            // A patch always carries its details, so the server never gets a patch without them.
+            setRecipe((r) => ({ ...r, bottom: { ...r.bottom, mode, ...(mode === "patch" && !r.bottom.patch ? { patch: defaultPatch } : {}) } }))
+          }
         />
         {recipe.bottom.mode !== "off" ? (
           <label className="text-sm font-medium">
@@ -396,19 +414,33 @@ export function PrivacyEditor({
                   <input
                     type="radio"
                     name="patch-logo"
-                    checked={!patch.logoMediaId}
-                    onChange={() => setPatch({ logoMediaId: null })}
+                    checked={!patch.logoMediaId && !patch.builtinLogo}
+                    onChange={() => setPatch({ logoMediaId: null, builtinLogo: undefined })}
                     className="h-5 w-5"
                   />
                   {labels.noLogo}
                 </label>
+                {builtinLogos.map((logo) => (
+                  <label key={logo.key} className="flex min-h-11 items-center gap-2 text-sm">
+                    <input
+                      type="radio"
+                      name="patch-logo"
+                      checked={patch.builtinLogo === logo.key}
+                      onChange={() => setPatch({ logoMediaId: null, builtinLogo: logo.key })}
+                      className="h-5 w-5"
+                    />
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={BUILTIN_LOGOS[logo.key]} alt="" className="h-10 w-10 rounded bg-slate-800 object-contain p-1" />
+                    {logo.label}
+                  </label>
+                ))}
                 {logos.map((logo, i) => (
                   <label key={logo.id} className="flex min-h-11 items-center gap-2 text-sm">
                     <input
                       type="radio"
                       name="patch-logo"
                       checked={patch.logoMediaId === logo.id}
-                      onChange={() => setPatch({ logoMediaId: logo.id })}
+                      onChange={() => setPatch({ logoMediaId: logo.id, builtinLogo: undefined })}
                       className="h-5 w-5"
                     />
                     {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -418,7 +450,7 @@ export function PrivacyEditor({
                 ))}
               </div>
             </fieldset>
-            <LogoUploader labels={uploadLabels} onUploaded={(mediaId) => setPatch({ logoMediaId: mediaId })} />
+            <LogoUploader labels={uploadLabels} onUploaded={(mediaId) => setPatch({ logoMediaId: mediaId, builtinLogo: undefined })} />
           </div>
         ) : null}
 

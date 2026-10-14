@@ -196,15 +196,27 @@ public listings; the admin overview is a door list with Listings first (see "Pla
   integration tests (they make and delete their own tenant). Every Cloudinary call in them is
   faked.
 
+**Added 2026-10-14 (branch `bundle/demo-ready-2026-10-14`, no migration):**
+- Floor patch: the WitUS duality mark (`public/brand/witus/logomark-512.png`) is a built-in logo,
+  default on the platform tenant and the demo agency only (server refuses it elsewhere).
+- Demo copy: platform owner picks a live listing ("The demo agency" card on the listing page);
+  `lib/demo/clone.ts` copies it into the demo now and on every nightly reset. No originals, street
+  address hidden, files borrowed (demo privacy edits never move or delete them). Choice lives in
+  `flags.demoSourceListingId`; `seed-tenants` now merges flags.
+- Landing: `lib/listings/landing.ts` + `LandingTour`. With a live toured listing, the hero shows
+  the real tour (poster first, no view counting), the embed section the real iframe and snippet,
+  and benefit cards appear only for capabilities a live listing uses (max 8).
+- Listing page: "More from {agency}" (up to two other live listings, same agency).
+- BAM 2026-10-14: old files left in Cloudinary are fine; no cleanup pass needed.
+
 **Not yet:**
-- The demo seed and the landing's benefit cards, which wait for user task 11. The demo seed must
+- Blog posts for `bundle/demo-ready-2026-10-14` (demo copy decisions, the landing that waits for
+  proof): ecosystem rule, next session.
+- The demo seed and the landing switch-over run themselves once task 11's listing is live. The demo seed must
   re-create the sample listing nightly: `wipeDemoContent` deletes listings.
 - Originals are public-but-unlisted Cloudinary assets: after an edit their name is random and
   never sent to buyers, and old addresses are invalidated. A copy someone already saved can't be
   recalled. Stronger still: upload originals as `type: authenticated` and sign editor URLs.
-- Replacing a room's photo, or a Before photo, leaves the old file and its edited copy in
-  Cloudinary (not reachable from the listing). A cleanup pass could retire them like the privacy
-  flow does.
 - The design page has no logo upload; `theme.logoUrl` is never set. The floor-patch logos live
   in the media library (kind `logo`) and could seed it.
 

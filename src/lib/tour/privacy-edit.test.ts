@@ -163,7 +163,16 @@ describe("the floor patch", () => {
     const logo = "0b8f0d5e-5d0a-4c55-9a43-1f2d3c4b5a69";
     const parsed = parsePrivacyRecipe({ ...emptyPrivacyRecipe(), bottom: { mode: "patch", angleDeg: 25, patch: { color: "#1E293B", logoMediaId: logo } } });
     expect(parsed).toMatchObject({ ok: true, data: { bottom: { mode: "patch", patch: { color: "#1e293b", logoMediaId: logo } } } });
-    for (const patch of [undefined, { color: "red", logoMediaId: null }, { color: "#000000", logoMediaId: "x" }]) {
+    expect(
+      parsePrivacyRecipe({ ...emptyPrivacyRecipe(), bottom: { mode: "patch", angleDeg: 25, patch: { color: "#000000", logoMediaId: null, builtinLogo: "witus" } } }),
+    ).toMatchObject({ ok: true, data: { bottom: { patch: { builtinLogo: "witus" } } } });
+    for (const patch of [
+      undefined,
+      { color: "red", logoMediaId: null },
+      { color: "#000000", logoMediaId: "x" },
+      { color: "#000000", logoMediaId: null, builtinLogo: "acme" },
+      { color: "#000000", logoMediaId: logo, builtinLogo: "witus" },
+    ]) {
       expect(parsePrivacyRecipe({ ...emptyPrivacyRecipe(), bottom: { mode: "patch", angleDeg: 25, patch } }).ok).toBe(false);
     }
   });

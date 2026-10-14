@@ -76,11 +76,32 @@
       },
       {
         "title": "A listing page that converts",
-        "body": "Full-bleed photography, the tour high on the page, the facts buyers scan for, and an inquiry form that reaches you directly."
+        "body": "Full-bleed photography, the tour high on the page, the facts buyers scan for, and an inquiry form that reaches you directly.",
+        "bodyLive": "The tour high on the page with Request a tour pinned inside it, the facts buyers scan for, and an inquiry form that reaches you directly. Tour requests come from buyers who already walked the home."
+      },
+      {
+        "title": "Floor plans buyers can walk",
+        "body": "Buyers see how the rooms connect before they book a visit. Tap a room on the plan and the tour opens there.",
+        "when": "floorPlans"
+      },
+      {
+        "title": "Hide people and gear",
+        "body": "Shoot an occupied home without showing who lives there. Faces, family photos and the tripod are covered in the photo itself, not just hidden from view.",
+        "when": "privacy"
+      },
+      {
+        "title": "Before and after",
+        "body": "Show the renovation, not just the finished room: the same spot at two times, lined up.",
+        "when": "moments"
+      },
+      {
+        "title": "Show your seller the numbers",
+        "body": "How many buyers saw the listing and walked the tour, in a report you can print or send as a PDF.",
+        "when": "live"
       },
       {
         "title": "Your brand, your domain",
-        "body": "Your logo, your colors, your web address. Buyers see your agency, never ours."
+        "body": "Your name, your colors and fonts, your web address. Buyers see your agency, never ours."
       },
       {
         "title": "Sold listings keep working",
@@ -105,7 +126,11 @@
     "statusBadge": "Taking capture slots now",
     "statusBody": "RealEstate.WitUS is taking its first listings. Have a property to shoot? Reach out through witus.online.",
     "contactCta": "Ask about a property",
-    "roadmapCta": "See the public roadmap"
+    "roadmapCta": "See the public roadmap",
+    "heroLiveCaption": "A real listing, live now: {title}. Tap the photo to walk it.",
+    "heroLiveLink": "Open the full listing",
+    "embedSnippetNoteLive": "This is the real snippet for the listing beside it: paste it into any page and the same tour appears there.",
+    "embedLiveTitle": "{title}, as it appears on an agent's site"
   },
   "roadmap": {
     "title": "Roadmap",
@@ -384,7 +409,10 @@
       "MOMENT_BASE": "The current photos can't be removed while other times exist.",
       "MOMENT_NOT_FOUND": "That time isn't in this listing.",
       "PRIVACY_STALE": "This photo changed since you opened the editor. Reload and try again.",
-      "PRIVACY_RECIPE": "That edit couldn't be read. Reload and try again."
+      "PRIVACY_RECIPE": "That edit couldn't be read. Reload and try again.",
+      "DEMO_SOURCE": "Only the listing the demo uses can be copied into it. Pick it with “Use this listing in the demo” first.",
+      "DEMO_SOURCE_DRAFT": "The demo copies a live listing only. Publish it first.",
+      "DEMO_COPY_FAILED": "The copy into the demo didn't finish. Nothing in your listing changed. Try again."
     },
     "listings": {
       "title": "Listings",
@@ -527,6 +555,20 @@
         "day": "Day",
         "empty": "No views in this period yet. Share the listing link or add the embed to your site, then check back.",
         "privacy": "These are counts only. The listing records how many times it was seen and its tour opened, never who looked. Days run midnight to midnight UTC. Inquiries are counted here, not named."
+      },
+      "demo": {
+        "title": "The demo agency",
+        "intro": "The demo at demo.realestate.witus.online shows a copy of one of your live listings, made fresh every night, so prospects can walk a real tour and try its admin. The copy hides the street address and never includes an original photo you hid people in.",
+        "isSource": "This listing is the demo's. It's copied in again every night at midnight UTC, so changes you make here reach the demo by morning, or now with the button.",
+        "otherSource": "The demo copies “{title}” now. Using this one instead replaces it.",
+        "none": "The demo has no listing yet.",
+        "use": "Use this listing in the demo",
+        "copyNow": "Copy it into the demo now",
+        "stop": "Stop using it in the demo",
+        "needsLive": "Publish it first: the demo copies a live listing only.",
+        "demoLink": "The demo copy",
+        "copied": "Copied into the demo agency. It's live at the demo address below.",
+        "stopped": "The demo has no listing now. It stays empty until you pick one."
       },
       "inquiries": {
         "title": "Inquiries",
@@ -839,6 +881,7 @@
         "patchColor": "Patch color",
         "patchLogo": "Logo on the patch",
         "noLogo": "No logo",
+        "witusLogo": "WitUS logo",
         "logoN": "Logo {n}",
         "uploadLogo": "Upload a logo",
         "logoHint": "A PNG with a transparent background works best. It sits in the middle of the patch, upright for someone facing the room's starting view.",
@@ -1123,6 +1166,9 @@
       "networkError": "That didn't send. Check your connection and try again.",
       "privacy": "{agency} uses these details only to reply to you.",
       "honeypot": "Leave this field empty"
+    },
+    "more": {
+      "title": "More from {agency}"
     },
     "footer": {
       "updated": "Updated {date}",

@@ -50,6 +50,8 @@ import {
 import { submitInquiry } from "./inquiries";
 import { reportDays, sellerReport } from "./seller-report";
 import type { ListingInput, PropertyInput } from "./listing-input";
+import { cloneListingInto } from "@/lib/demo/clone";
+import { landingProof } from "./landing";
 import { importTourCsv } from "@/lib/tour/import";
 import { applyPrivacyEdit } from "@/lib/tour/privacy";
 import { emptyPrivacyRecipe } from "@/lib/tour/privacy-edit";
@@ -448,6 +450,12 @@ describe.skipIf(!ready)("listings and tours against the database", () => {
     expect(
       await applyPrivacyEdit({ ...base, recipe: patched(media.foreign), patchDataUrl: "data:image/jpeg;base64,AAAA" }),
     ).toMatchObject({ ok: false, code: "PRIVACY_PATCH" });
+    // The app's own WitUS logo: BAM's listings and the demo agency only.
+    const witus = { ...emptyPrivacyRecipe(), bottom: { mode: "patch" as const, angleDeg: 30, patch: { color: "#1e293b", logoMediaId: null, builtinLogo: "witus" as const } } };
+    expect(await applyPrivacyEdit({ ...base, recipe: witus, patchDataUrl: "data:image/jpeg;base64,AAAA" })).toMatchObject({
+      ok: false,
+      code: "PRIVACY_PATCH",
+    });
     expect(calls).toEqual([]);
 
     const done = await applyPrivacyEdit({ ...base, recipe: patched(logo.id), patchDataUrl: "data:image/jpeg;base64,AAAA" });
@@ -547,6 +555,133 @@ describe.skipIf(!ready)("listings and tours against the database", () => {
     const scenes = await db().select().from(tourScenes).where(eq(tourScenes.listingId, listingId));
     const photos = await db().select().from(listingPhotos).where(eq(listingPhotos.listingId, listingId));
     expect([scenes.length, photos.length]).toEqual([0, 0]);
+  });
+
+  it("copies a live listing into the demo agency: no originals, no street address, files borrowed not moved", async () => {
+    // A stand-in platform tenant (no demo choice set, so the real reset can never pick it) and a stand-in demo.
+    const [platform] = await db()
+      .insert(tenants)
+      .values({ slug: `itest-platform-${suffix}`, name: "Platform Stand-in", flags: { platform: true } })
+      .returning({ id: tenants.id });
+    const [demo] = await db()
+      .insert(tenants)
+      .values({ slug: `itest-demo-${suffix}`, name: "Demo Stand-in" })
+      .returning({ id: tenants.id });
+    try {
+      const pano = async (key: string, owner = platform.id) =>
+        (
+          await db()
+            .insert(mediaAssets)
+            .values({ tenantId: owner, cloudinaryPublicId: `itest/${suffix}/clone-${key}`, kind: key === "plan" ? "floor_plan" : key === "photo" ? "photo" : "panorama", width: 6000, height: 3000, status: "ready" })
+            .returning({ id: mediaAssets.id })
+        )[0].id;
+      const [hallMedia, denMedia, beforeMedia, planMedia, photoMedia] = await Promise.all(["hall", "den", "before", "plan", "photo"].map((k) => pano(k)));
+      const made = await createListing({
+        tenantId: platform.id,
+        userId,
+        property,
+        listing: { ...listingInput, title: "Sample house for the demo" },
+        tourLinkLabels: { requestTour: "Request a tour", contactAgent: "Contact agent" },
+      });
+      if (!made.ok) throw new Error(made.error);
+      const source = made.data;
+      await attachPhotos(platform.id, source.id, [photoMedia]);
+      await createScenes(platform.id, source.id, [
+        { mediaId: hallMedia, filename: "hall.jpg" },
+        { mediaId: denMedia, filename: "den.jpg" },
+      ]);
+      const built = (await tourEditData(platform.id, source.id))!;
+      const [hall, den] = built.scenes;
+      await addLink(platform.id, hall.id, den.id, true);
+      const plan = await addFloorPlan(platform.id, source.id, planMedia, "Ground floor");
+      if (!plan.ok) throw new Error(plan.error);
+      await placeSceneOnPlan(platform.id, hall.id, plan.data.id, { x: 0.3, y: 0.4 });
+      const moment = await addMoment(platform.id, source.id, { label: "Before", baseLabel: "After", placement: "earlier" });
+      if (!moment.ok) throw new Error(moment.error);
+      await setMomentPhoto(platform.id, den.id, moment.data.id, beforeMedia);
+      await addHotspot(platform.id, hall.id, { yaw: 0, pitch: 0, title: "Range", content: "Gas", externalUrl: null, momentId: moment.data.id });
+      // Hide a face in the hall: the platform keeps an original the demo must never get.
+      const edited = await applyPrivacyEdit({
+        tenantId: platform.id,
+        sceneId: hall.id,
+        currentMediaId: hallMedia,
+        recipe: { ...emptyPrivacyRecipe(), faces: "blur" },
+        userId,
+        fetchImpl: fakeCloudinary(),
+      });
+      if (!edited.ok) throw new Error(edited.error);
+      const originalName = (await db().select().from(mediaAssets).where(eq(mediaAssets.id, hallMedia)))[0].cloudinaryPublicId;
+
+      // The landing claims nothing before a listing is live.
+      expect(await landingProof(platform.id, source.id)).toEqual({
+        listing: null,
+        capabilities: { live: false, floorPlans: false, privacy: false, moments: false },
+      });
+      expect(await cloneListingInto(source.id, demo.id, { agentUserId: userId })).toMatchObject({ ok: false, code: "DEMO_SOURCE_DRAFT" });
+      expect(await cloneListingInto(listingId, demo.id, { agentUserId: userId })).toMatchObject({ ok: false, code: "DEMO_SOURCE" });
+      await changeListingStatus(platform.id, source.id, "for_sale");
+      await setSceneStatuses(platform.id, source.id, [hall.id, den.id], "published");
+
+      // Live, with a floor plan, a privacy edit and a Before photo: every card is earned.
+      const proof = await landingProof(platform.id, source.id);
+      expect(proof.capabilities).toEqual({ live: true, floorPlans: true, privacy: true, moments: true });
+      expect(proof.listing?.listing.slug).toBe(source.slug);
+      expect(proof.listing?.tour?.scenes).toHaveLength(2);
+
+      const copy = await cloneListingInto(source.id, demo.id, { agentUserId: userId });
+      expect(copy).toMatchObject({ ok: true, data: { slug: `${source.slug}-demo`, rooms: 2 } });
+      if (!copy.ok) return;
+      const [copied] = await db().select().from(listings).where(eq(listings.id, copy.data.listingId));
+      expect(copied).toMatchObject({ tenantId: demo.id, status: "for_sale", hideAddress: true, agentUserId: userId, title: "Sample house for the demo" });
+
+      const demoTour = (await tourEditData(demo.id, copy.data.listingId))!;
+      expect(demoTour.scenes.map((s2) => s2.name)).toEqual(["Hall", "Den"]);
+      expect(demoTour.links).toHaveLength(2);
+      expect(demoTour.floorPlans.map((p) => p.label)).toEqual(["Ground floor"]);
+      expect(demoTour.momentPhotos).toHaveLength(1);
+      expect(demoTour.hotspots[0]).toMatchObject({ title: "Range", momentId: demoTour.moments.find((m) => !m.isBase)!.id });
+      const demoScenes = await db().select().from(tourScenes).where(eq(tourScenes.listingId, copy.data.listingId));
+      expect(demoScenes.every((row) => row.originalPanoramaMediaId === null && row.privacyRecipe === null)).toBe(true);
+      // The demo borrows the files buyers see, and never the original behind the hall's edit.
+      const demoFiles = (await db().select().from(mediaAssets).where(eq(mediaAssets.tenantId, demo.id))).map((m) => m.cloudinaryPublicId);
+      expect(demoFiles).not.toContain(originalName);
+      expect(demoFiles).toHaveLength(5);
+      const page = await getListingPage(demo.id, copy.data.slug);
+      expect(page?.tour?.scenes).toHaveLength(2);
+
+      // A privacy edit in the demo never moves or deletes a borrowed file.
+      const calls: CloudinaryCall[] = [];
+      const denCopy = demoScenes.find((row) => row.name === "Den")!;
+      const inDemo = await applyPrivacyEdit({
+        tenantId: demo.id,
+        sceneId: denCopy.id,
+        currentMediaId: denCopy.panoramaMediaId,
+        recipe: { ...emptyPrivacyRecipe(), faces: "pixelate" },
+        userId,
+        borrowsFiles: true,
+        fetchImpl: fakeCloudinary(calls),
+      });
+      expect(inDemo.ok).toBe(true);
+      expect(calls.filter((c) => c.url.endsWith("/rename") || c.url.endsWith("/destroy"))).toEqual([]);
+      const restored = await applyPrivacyEdit({
+        tenantId: demo.id,
+        sceneId: denCopy.id,
+        currentMediaId: inDemo.ok ? inDemo.data.mediaId : "",
+        recipe: { ...emptyPrivacyRecipe(), faces: "pixelate" },
+        userId,
+        deleteOriginal: true,
+        borrowsFiles: true,
+        fetchImpl: fakeCloudinary(calls),
+      });
+      expect(restored.ok).toBe(true);
+      // The demo's own edited copy may go; BAM's den photo never does.
+      const destroyed = calls.filter((c) => c.url.endsWith("/destroy")).map((c) => c.fields.public_id);
+      expect(destroyed).not.toContain(`itest/${suffix}/clone-den`);
+      expect((await db().select().from(mediaAssets).where(eq(mediaAssets.id, denMedia)))[0].cloudinaryPublicId).toBe(`itest/${suffix}/clone-den`);
+    } finally {
+      await db().delete(tenants).where(eq(tenants.id, demo.id));
+      await db().delete(tenants).where(eq(tenants.id, platform.id));
+    }
   });
 
   it("builds a tour from a spreadsheet, writes nothing from a bad one, and changes nothing the second time", async () => {

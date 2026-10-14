@@ -58,7 +58,20 @@ export interface PrivacyPatch {
   color: string;
   /** The agency's uploaded logo (media kind "logo"), or none. */
   logoMediaId: string | null;
+  /**
+   * A logo the app ships instead of an upload: the WitUS mark, for BAM's own
+   * listings and the demo agency. Never set together with logoMediaId.
+   */
+  builtinLogo?: BuiltinLogo;
 }
+
+export const BUILTIN_LOGOS = {
+  // The 02-duality mark this app already uses for its favicon (gemini/witus
+  // public/brand), rasterized at 512 px: drawn for dark backgrounds, like the
+  // default patch.
+  witus: "/brand/witus/logomark-512.png",
+} as const;
+export type BuiltinLogo = keyof typeof BUILTIN_LOGOS;
 
 export interface PrivacyRecipe {
   faces: "off" | "blur" | "pixelate";
@@ -99,14 +112,16 @@ export function parsePrivacyRecipe(input: unknown): Result<PrivacyRecipe> {
   if (bottom.mode === "patch") {
     const raw = bottom.patch as Record<string, unknown> | undefined;
     const logo = raw?.logoMediaId;
+    const builtin = raw?.builtinLogo;
     if (
       typeof raw?.color !== "string" ||
       !/^#[0-9a-f]{6}$/i.test(raw.color) ||
-      (logo !== null && (typeof logo !== "string" || !/^[0-9a-f-]{36}$/i.test(logo)))
+      (logo !== null && (typeof logo !== "string" || !/^[0-9a-f-]{36}$/i.test(logo))) ||
+      (builtin !== undefined && (typeof builtin !== "string" || !(builtin in BUILTIN_LOGOS) || logo !== null))
     ) {
       return bad;
     }
-    patch = { color: raw.color.toLowerCase(), logoMediaId: logo };
+    patch = { color: raw.color.toLowerCase(), logoMediaId: logo, ...(builtin ? { builtinLogo: builtin as BuiltinLogo } : {}) };
   }
   if (!Array.isArray(raw.boxes) || raw.boxes.length > PRIVACY_MAX_BOXES) {
     return err("PRIVACY_BOXES", `At most ${PRIVACY_MAX_BOXES} boxes on one photo.`);

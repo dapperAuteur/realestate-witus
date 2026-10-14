@@ -6,6 +6,7 @@
 // agency tenants are created from /platform when an engagement starts, so no
 // placeholder customer rows exist to clean up later.
 
+import { sql } from "drizzle-orm";
 import { db } from "../src/db";
 import { tenantDomains, tenants } from "../src/db/schema";
 
@@ -18,7 +19,9 @@ async function upsertTenant(values: typeof tenants.$inferInsert) {
       set: {
         name: values.name,
         tagline: values.tagline,
-        flags: values.flags,
+        // Merged, not replaced: flags set from the app (the demo listing
+        // choice) must survive a re-seed.
+        flags: sql`${tenants.flags} || ${JSON.stringify(values.flags ?? {})}::jsonb`,
         theme: values.theme,
         updatedAt: new Date(),
       },

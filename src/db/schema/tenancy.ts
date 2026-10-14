@@ -49,6 +49,11 @@ export interface TenantFlags {
   comingSoon?: boolean;
   /** "Powered by RealEstate.WitUS" badge in the footer. */
   poweredBy?: boolean;
+  /**
+   * Platform tenant only: the listing the demo agency copies on every nightly
+   * reset (src/lib/demo/clone.ts). Set from that listing's admin page.
+   */
+  demoSourceListingId?: string;
 }
 
 export interface TenantEmailConfig {

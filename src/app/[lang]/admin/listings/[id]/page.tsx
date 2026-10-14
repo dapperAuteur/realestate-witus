@@ -7,18 +7,23 @@ import { PhotoUploader } from "@/components/admin/uploaders";
 import { StatusChip } from "@/components/listing/status-chip";
 import { requireStaffPage } from "@/lib/admin/guard";
 import { getDictionary, hasLocale } from "@/lib/dictionaries";
-import { assignableAgents, canEditListing, listingEditData } from "@/lib/listings/admin";
+import { DEMO_SLUG_SUFFIX } from "@/lib/demo/clone";
+import { DEMO_HOST } from "@/lib/demo/seed";
+import { assignableAgents, canEditListing, findOwnedListing, listingEditData } from "@/lib/listings/admin";
 import { embedSnippet, listingEmbedUrl, listingPageUrl } from "@/lib/listings/embed";
 import { isPublicStatus, type ListingStatus } from "@/lib/listings/format";
 import { requestOrigin } from "@/lib/listings/origin";
 import { roleSatisfies } from "@/lib/rbac";
 import {
+  copyToDemoNowAction,
   movePhotoAction,
   removePhotoAction,
   saveListingAction,
   setInquiryStatusAction,
   setListingStatusAction,
   setPhotoAltAction,
+  stopDemoAction,
+  useForDemoAction,
 } from "../actions";
 import { Flash } from "../../flash";
 
@@ -52,7 +57,22 @@ export default async function EditListingPage({
     embedUrl: listingEmbedUrl(origin, listing.slug),
     title: dict.listing.embed.title.replace("{title}", listing.title),
   });
-  const okText = sp.ok === "created" ? l.created : sp.ok === "saved" ? l.saved : undefined;
+  const okText =
+    sp.ok === "created"
+      ? l.created
+      : sp.ok === "saved"
+        ? l.saved
+        : sp.ok === "demo"
+          ? l.demo.copied
+          : sp.ok === "demoStopped"
+            ? l.demo.stopped
+            : undefined;
+  // BAM's own listings only: which one the demo agency copies (lib/demo/clone.ts).
+  const demoOwner = Boolean(ctx.tenant.flags.platform) && ctx.role === "owner";
+  const demoSourceId = ctx.tenant.flags.demoSourceListingId ?? null;
+  const otherDemoSource =
+    demoOwner && demoSourceId && demoSourceId !== listing.id ? await findOwnedListing(ctx.tenant.id, demoSourceId) : null;
+  const demoUrl = `https://${DEMO_HOST}/${lang}/listings/${listing.slug}${DEMO_SLUG_SUFFIX}`;
   const sectionTitle = "text-lg font-semibold";
   const card = "rounded-xl border border-slate-200 p-5 dark:border-slate-800";
 
@@ -142,6 +162,56 @@ export default async function EditListingPage({
           <p className={HINT}>{l.report.openHint}</p>
         </div>
       </section>
+
+      {demoOwner ? (
+        <section id="demo" aria-labelledby="demo-title" className={`${card} scroll-mt-24`}>
+          <h3 id="demo-title" className={sectionTitle}>
+            {l.demo.title}
+          </h3>
+          <p className={HINT}>{l.demo.intro}</p>
+          {demoSourceId === listing.id ? (
+            <>
+              <p className="mt-3 text-sm font-medium">{l.demo.isSource}</p>
+              <p className="mt-2 text-sm">
+                {l.demo.demoLink}: <CopyButton value={demoUrl} label={l.demo.demoLink} />
+              </p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <form action={copyToDemoNowAction}>
+                  <input type="hidden" name="lang" value={lang} />
+                  <input type="hidden" name="listingId" value={listing.id} />
+                  <button type="submit" className={SECONDARY_BUTTON}>
+                    {l.demo.copyNow}
+                  </button>
+                </form>
+                <form action={stopDemoAction}>
+                  <input type="hidden" name="lang" value={lang} />
+                  <input type="hidden" name="listingId" value={listing.id} />
+                  <button type="submit" className={SECONDARY_BUTTON}>
+                    {l.demo.stop}
+                  </button>
+                </form>
+              </div>
+            </>
+          ) : (
+            <>
+              <p className="mt-3 text-sm">
+                {otherDemoSource ? l.demo.otherSource.replace("{title}", otherDemoSource.title) : l.demo.none}
+              </p>
+              {isPublicStatus(status) ? (
+                <form action={useForDemoAction} className="mt-3">
+                  <input type="hidden" name="lang" value={lang} />
+                  <input type="hidden" name="listingId" value={listing.id} />
+                  <button type="submit" className={SECONDARY_BUTTON}>
+                    {l.demo.use}
+                  </button>
+                </form>
+              ) : (
+                <p className="mt-2 text-sm font-medium text-amber-800 dark:text-amber-300">{l.demo.needsLive}</p>
+              )}
+            </>
+          )}
+        </section>
+      ) : null}
 
       <section id="photos" aria-labelledby="photos-title" className={card}>
         <h3 id="photos-title" className={sectionTitle}>

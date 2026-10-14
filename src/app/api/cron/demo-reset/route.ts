@@ -28,7 +28,8 @@ async function handle(request: Request) {
   if (!result.ok) {
     return NextResponse.json(result, { status: 500 });
   }
-  return NextResponse.json(ok({ resetAt: new Date().toISOString() }));
+  // copied/reason say whether the demo listing came back (BAM's choice in the listing admin).
+  return NextResponse.json(ok({ resetAt: new Date().toISOString(), copied: result.data.copied, reason: result.data.reason }));
 }
 
 export async function GET(request: Request) {

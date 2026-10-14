@@ -2,6 +2,8 @@ import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { TenantHome } from "@/components/tenant-home";
 import { PlatformLanding } from "@/components/platform-landing";
+import { landingProof } from "@/lib/listings/landing";
+import { requestOrigin } from "@/lib/listings/origin";
 import { listPublicListings } from "@/lib/listings/queries";
 import { getDictionary, hasLocale } from "@/lib/dictionaries";
 import { getGlobalSetting, PROMO_BANNER_KEY } from "@/lib/platform/settings";
@@ -37,7 +39,20 @@ export default async function HomePage({
     const showcase = tenant
       ? (await listPublicListings(tenant.id).catch(() => [])).filter((listing) => listing.hasTour).slice(0, 3)
       : [];
-    return <PlatformLanding dict={dict} lang={lang} promoBanner={promoBanner} showcase={showcase} />;
+    // The real tour, embed and benefit cards, once BAM has a live listing (plans/08 6.5).
+    const proof = tenant
+      ? await landingProof(tenant.id, tenant.flags.demoSourceListingId ?? null).catch(() => null)
+      : null;
+    return (
+      <PlatformLanding
+        dict={dict}
+        lang={lang}
+        promoBanner={promoBanner}
+        showcase={showcase}
+        proof={proof}
+        origin={await requestOrigin()}
+      />
+    );
   }
 
   if (!tenant) {

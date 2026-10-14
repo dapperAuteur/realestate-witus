@@ -1,10 +1,14 @@
 import Link from "next/link";
 import { CopyButton } from "@/components/copy-button";
+import { LandingTour } from "@/components/landing-tour";
+import { tourLabels } from "@/components/listing/listing-view";
 import { ListingCard } from "@/components/listing/listing-card";
 import { SiteFooter } from "@/components/site-footer";
 import { EmbedMock, TourMock } from "@/components/tour-mock";
 import { DEMO_HOST } from "@/lib/demo/seed";
 import type { Dictionary } from "@/lib/dictionaries";
+import { embedSnippet, listingEmbedUrl, listingPageUrl } from "@/lib/listings/embed";
+import type { LandingProof } from "@/lib/listings/landing";
 import type { ListingCard as ListingCardData } from "@/lib/listings/queries";
 import type { Locale } from "@/lib/locales";
 
@@ -44,10 +48,19 @@ export function PlatformLanding({
   lang,
   promoBanner,
   showcase = [],
+  proof = null,
+  origin = "",
 }: {
   dict: Dictionary;
   lang: Locale;
   promoBanner?: string | null;
+  /**
+   * BAM's live listing and what his live listings really do (lib/listings/landing.ts).
+   * Null keeps the mock-ups and the base cards: nothing is claimed before it's real.
+   */
+  proof?: LandingProof | null;
+  /** This request's origin, for the real embed snippet. */
+  origin?: string;
   /**
    * Real, published listings with a live tour (BAM's own service listings).
    * plans/08 6.5: proof only from real tours, so the row simply isn't there
@@ -56,6 +69,16 @@ export function PlatformLanding({
   showcase?: ListingCardData[];
 }) {
   const d = dict.landing;
+  const live = proof?.listing?.tour ? proof.listing : null;
+  const caps = proof?.capabilities ?? { live: false, floorPlans: false, privacy: false, moments: false };
+  const liveUrl = live ? listingPageUrl(origin, live.listing.slug, lang) : "";
+  const livePoster = live?.tour?.scenes.find((s) => s.id === live.tour?.startSceneId)?.thumbnail ?? live?.photos[0]?.url;
+  // At most eight cards (plans/08 6.5): a capability's card joins only once a
+  // live listing uses it, and the list is cut from the end.
+  const cards = d.features
+    .filter((f) => !("when" in f) || caps[f.when as keyof typeof caps])
+    .slice(0, 8)
+    .map((f) => ({ title: f.title, body: caps.live && "bodyLive" in f ? f.bodyLive : f.body }));
 
   return (
     <>
@@ -97,11 +120,19 @@ export function PlatformLanding({
               </div>
             </div>
 
-            <TourMock
-              label={d.heroMockLabel}
-              scene={d.heroMockScene}
-              scenes={d.heroMockScenes}
-            />
+            {live?.tour ? (
+              <figure className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-950 dark:border-slate-800">
+                <LandingTour tour={live.tour} labels={tourLabels(dict)} posterUrl={livePoster} listingUrl={liveUrl} />
+                <figcaption className="flex flex-wrap items-center justify-between gap-2 bg-white px-4 py-2 text-sm text-slate-700 dark:bg-slate-900 dark:text-slate-300">
+                  <span>{d.heroLiveCaption.replace("{title}", live.listing.title)}</span>
+                  <a href={liveUrl} className={`inline-flex min-h-11 items-center font-semibold underline underline-offset-4 ${FOCUS}`}>
+                    {d.heroLiveLink}
+                  </a>
+                </figcaption>
+              </figure>
+            ) : (
+              <TourMock label={d.heroMockLabel} scene={d.heroMockScene} scenes={d.heroMockScenes} />
+            )}
           </div>
         </section>
 
@@ -192,15 +223,36 @@ export function PlatformLanding({
               </ol>
 
               <div className="mt-6 max-w-full">
-                <CopyButton value={SNIPPET} label={d.embedSnippetLabel} />
+                <CopyButton
+                  value={
+                    live
+                      ? embedSnippet({
+                          embedUrl: listingEmbedUrl(origin, live.listing.slug),
+                          title: dict.listing.embed.title.replace("{title}", live.listing.title),
+                        })
+                      : SNIPPET
+                  }
+                  label={d.embedSnippetLabel}
+                />
                 {/* slate-600 over the tinted band: slate-500 measures 4.44:1 here. */}
                 <p className="mt-2 text-xs text-slate-600 dark:text-slate-400">
-                  {d.embedSnippetNote}
+                  {live ? d.embedSnippetNoteLive : d.embedSnippetNote}
                 </p>
               </div>
             </div>
 
-            <EmbedMock label={d.embedPreviewLabel} barCta={d.embedPreviewBar} />
+            {live ? (
+              // The real embed, exactly what an agent's site shows; lazy, so it costs nothing above the fold.
+              <iframe
+                src={listingEmbedUrl(origin, live.listing.slug)}
+                title={d.embedLiveTitle.replace("{title}", live.listing.title)}
+                loading="lazy"
+                allowFullScreen
+                className="aspect-[4/3] w-full rounded-2xl border border-slate-200 dark:border-slate-800"
+              />
+            ) : (
+              <EmbedMock label={d.embedPreviewLabel} barCta={d.embedPreviewBar} />
+            )}
           </div>
         </section>
 
@@ -217,7 +269,7 @@ export function PlatformLanding({
               {d.featuresLabel}
             </h2>
             <ul className="mt-10 grid gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
-              {d.features.map((f) => (
+              {cards.map((f) => (
                 <li key={f.title}>
                   <span
                     aria-hidden="true"

@@ -5,6 +5,7 @@ import { auth } from "@/lib/auth";
 import { env, hasDemoLogin } from "@/lib/env";
 import { err, ok, type Result } from "@/lib/result";
 import {
+  DEMO_OWNER_USER_ID,
   demoTenantHasContent,
   ensureDemoTenant,
   seedDemoContent,
@@ -18,7 +19,7 @@ import {
 // ever a platform owner. Passwords come from env and are re-hashed on every
 // ensure, so rotating the env var rotates the login.
 
-const DEMO_ADMIN_ID = "demo-admin";
+const DEMO_ADMIN_ID = DEMO_OWNER_USER_ID;
 const DEMO_VISITOR_ID = "demo-visitor";
 
 async function upsertCredentialUser(args: {
@@ -103,25 +104,26 @@ export async function ensureDemoAccounts(tenantId: string): Promise<Result<null>
  * baseline, re-assert the demo accounts. Strictly scoped to the demo tenant
  * id throughout.
  */
-export async function resetDemoData(): Promise<Result<{ tenantId: string }>> {
+export async function resetDemoData(): Promise<Result<{ tenantId: string; copied: boolean; reason?: string }>> {
   const tenantId = await ensureDemoTenant();
   await wipeDemoContent(tenantId);
-  await seedDemoContent(tenantId);
+  // Accounts first: the copied listing names the demo owner as its agent.
   if (hasDemoLogin) {
     await ensureDemoAccounts(tenantId);
   }
-  return ok({ tenantId });
+  const seeded = await seedDemoContent(tenantId);
+  return ok({ tenantId, ...seeded });
 }
 
 /** First-time setup path used by the seed script (no wipe if content exists). */
 export async function setupDemo(): Promise<Result<{ tenantId: string; seeded: boolean }>> {
   const tenantId = await ensureDemoTenant();
   const hasContent = await demoTenantHasContent(tenantId);
-  if (!hasContent) {
-    await seedDemoContent(tenantId);
-  }
   if (hasDemoLogin) {
     await ensureDemoAccounts(tenantId);
+  }
+  if (!hasContent) {
+    await seedDemoContent(tenantId);
   }
   return ok({ tenantId, seeded: !hasContent });
 }

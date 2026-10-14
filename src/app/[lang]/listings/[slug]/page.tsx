@@ -7,7 +7,7 @@ import { getDictionary, hasLocale } from "@/lib/dictionaries";
 import { listingPageUrl } from "@/lib/listings/embed";
 import { displayAddress, isPublicStatus, type ListingStatus, type PropertyKind } from "@/lib/listings/format";
 import { requestOrigin } from "@/lib/listings/origin";
-import { getListingPage } from "@/lib/listings/queries";
+import { getListingPage, listPublicListings } from "@/lib/listings/queries";
 import { isListingSlug } from "@/lib/listings/slug";
 import { listingJsonLd, serializeJsonLd } from "@/lib/listings/structured-data";
 import { resolveTenant } from "@/lib/tenant";
@@ -76,6 +76,10 @@ export default async function ListingPage({ params, searchParams }: { params: Pa
   const dict = await getDictionary(lang);
   const preview = !isPublicStatus(data.listing.status as ListingStatus);
   const origin = await requestOrigin();
+  // More from this agency, live and not this one; none on a staff preview.
+  const more = preview
+    ? []
+    : (await listPublicListings(tenant.id).catch(() => [])).filter((card) => card.slug !== data.listing.slug).slice(0, 2);
   const jsonLd = listingJsonLd({
     url: listingPageUrl(origin, data.listing.slug, lang),
     title: data.listing.title,
@@ -103,6 +107,7 @@ export default async function ListingPage({ params, searchParams }: { params: Pa
         startTourOpen={Boolean(scene && data.tour?.scenes.some((s) => s.id === scene))}
         preview={preview}
         initialInquiry={inquiry === "tour_request" || inquiry === "question" ? inquiry : null}
+        more={more}
       />
     </>
   );

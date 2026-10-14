@@ -4,6 +4,8 @@ import { redirect } from "next/navigation";
 import type { TenantRole } from "@/db/schema";
 import { getStaffContext, type StaffContext } from "@/lib/admin/guard";
 import { writeAudit } from "@/lib/audit";
+import { resetDemoData } from "@/lib/demo/accounts";
+import { setDemoSource } from "@/lib/demo/clone";
 import { getDictionary, hasLocale, type Locale } from "@/lib/dictionaries";
 import {
   assignableAgents,
@@ -20,6 +22,7 @@ import {
   setPhotoAlt,
   updateListing,
 } from "@/lib/listings/admin";
+import { isPublicStatus } from "@/lib/listings/format";
 import { parseListingInput, parsePropertyInput, parseStatus } from "@/lib/listings/listing-input";
 import { err, type Result } from "@/lib/result";
 import {
@@ -55,7 +58,7 @@ import {
 } from "@/lib/tour/admin";
 import { CSV_MAX_CHARS, CSV_MAX_ROOMS } from "@/lib/tour/csv-import";
 import { importTourCsv, type TourImportResult } from "@/lib/tour/import";
-import { applyPrivacyEdit } from "@/lib/tour/privacy";
+import { applyPrivacyEdit, borrowsFiles, builtinLogosAllowed } from "@/lib/tour/privacy";
 import { parsePrivacyRecipe } from "@/lib/tour/privacy-edit";
 import { parsePlanPoint, parsePosition, parseRoll, parseViewLimit } from "@/lib/tour/tour-input";
 
@@ -587,6 +590,8 @@ export async function applyPrivacyEditAction(
     momentId,
     deleteOriginal,
     patchDataUrl,
+    allowBuiltinLogo: builtinLogosAllowed(gate.ctx.tenant),
+    borrowsFiles: borrowsFiles(gate.ctx.tenant),
   });
   if (result.ok) {
     await writeAudit({
@@ -637,4 +642,51 @@ export async function importTourCsvAction(
     }).catch(() => undefined);
   }
   return result;
+}
+
+// ── The demo agency's listing (plans/08 6.5) ────────────────────────────────
+// BAM picks one of his own live listings; the demo copies it now and every
+// night (lib/demo/clone.ts). Platform tenant owner only.
+
+async function demoGate(formData: FormData) {
+  const lang = langOf(formData);
+  const listingId = str(formData, "listingId");
+  const back = `/${lang}/admin/listings/${listingId}#demo`;
+  const gate = await editor(listingId);
+  if (!gate || !gate.ctx.tenant.flags.platform || gate.ctx.role !== "owner") backTo(back, "error", "FORBIDDEN");
+  return { gate, listingId, back };
+}
+
+async function copyIntoDemo(gate: { ctx: StaffContext }, back: string, flag: "demo" | "demoStopped", listingId: string) {
+  const reset = await resetDemoData();
+  const copied = reset.ok && reset.data.copied;
+  if (flag === "demo" && !copied) backTo(back, "error", "DEMO_COPY_FAILED");
+  await writeAudit({
+    tenantId: gate.ctx.tenant.id,
+    actorUserId: gate.ctx.user.id,
+    kind: "demo.listing",
+    summary: flag === "demo" ? "Listing copied into the demo agency" : "Demo listing cleared",
+    data: { listingId },
+  }).catch(() => undefined);
+  backTo(back, "ok", flag);
+}
+
+export async function useForDemoAction(formData: FormData): Promise<void> {
+  const { gate, listingId, back } = await demoGate(formData);
+  const listing = await findOwnedListing(gate.ctx.tenant.id, listingId);
+  if (!listing || !isPublicStatus(listing.status)) backTo(back, "error", "DEMO_SOURCE_DRAFT");
+  await setDemoSource(gate.ctx.tenant.id, listingId);
+  await copyIntoDemo(gate, back, "demo", listingId);
+}
+
+export async function copyToDemoNowAction(formData: FormData): Promise<void> {
+  const { gate, listingId, back } = await demoGate(formData);
+  if (gate.ctx.tenant.flags.demoSourceListingId !== listingId) backTo(back, "error", "DEMO_SOURCE");
+  await copyIntoDemo(gate, back, "demo", listingId);
+}
+
+export async function stopDemoAction(formData: FormData): Promise<void> {
+  const { gate, listingId, back } = await demoGate(formData);
+  await setDemoSource(gate.ctx.tenant.id, null);
+  await copyIntoDemo(gate, back, "demoStopped", listingId);
 }

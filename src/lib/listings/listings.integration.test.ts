@@ -426,6 +426,44 @@ describe.skipIf(!ready)("listings and tours against the database", () => {
     expect(await sceneRow()).toMatchObject({ panoramaMediaId: final.data.mediaId, originalPanoramaMediaId: null, privacyRecipe: null });
   });
 
+  it("paints a logo patch over the floor, and deletes the helper file after the bake", async () => {
+    const bedroom = (await tourEditData(tenantId, listingId))!.scenes.find((s) => s.name === "Main bedroom")!;
+    const [logo] = await db()
+      .insert(mediaAssets)
+      .values({ tenantId, cloudinaryPublicId: `itest/${suffix}/logo`, kind: "logo", width: 400, height: 200, status: "ready" })
+      .returning({ id: mediaAssets.id });
+    const calls: CloudinaryCall[] = [];
+    const fetchImpl = fakeCloudinary(calls);
+    const patched = (logoMediaId: string | null) => ({
+      ...emptyPrivacyRecipe(),
+      bottom: { mode: "patch" as const, angleDeg: 30, patch: { color: "#1e293b", logoMediaId } },
+    });
+    const base = { tenantId, sceneId: bedroom.id, currentMediaId: media.bedroom, userId, fetchImpl };
+
+    // Refused before anything moves: no painting, or someone else's logo.
+    expect(await applyPrivacyEdit({ ...base, recipe: patched(null) })).toMatchObject({ ok: false, code: "PRIVACY_PATCH" });
+    expect(
+      await applyPrivacyEdit({ ...base, recipe: patched(media.foreign), patchDataUrl: "data:image/jpeg;base64,AAAA" }),
+    ).toMatchObject({ ok: false, code: "PRIVACY_PATCH" });
+    expect(calls).toEqual([]);
+
+    const done = await applyPrivacyEdit({ ...base, recipe: patched(logo.id), patchDataUrl: "data:image/jpeg;base64,AAAA" });
+    expect(done.ok).toBe(true);
+    const uploads = calls.filter((c) => c.url.endsWith("/image/upload"));
+    const patchName = uploads[0].fields.public_id;
+    expect(patchName).toMatch(new RegExp(`^realestate-witus/${tenantId}/privacy-patches/[0-9a-f]{16}$`));
+    expect(uploads[0].fields.file).toBe("data:image/jpeg;base64,AAAA");
+    // Laid over the bottom 30 degrees, full width, in the photo's pixels (6000 x 3000).
+    const render = calls.find((c) => c.url.startsWith("https://res.cloudinary.com/"))!.url;
+    expect(render).toContain(`/l_${patchName.replace(/\//g, ":")}/c_scale,w_6000,h_500/fl_layer_apply,g_south/q_90/`);
+    // The helper patch goes once the copy is baked; the copy itself stays.
+    const destroyed = calls.filter((c) => c.url.endsWith("/image/destroy")).map((c) => c.fields.public_id);
+    expect(destroyed).toEqual([patchName]);
+    expect((await db().select().from(tourScenes).where(eq(tourScenes.id, bedroom.id)))[0].privacyRecipe).toMatchObject({
+      bottom: { mode: "patch", patch: { logoMediaId: logo.id } },
+    });
+  });
+
   it("counts views per day and surface", async () => {
     const day = new Date().toISOString().slice(0, 10);
     await recordListingView({ tenantId, listingId, surface: "page", event: "page", day });

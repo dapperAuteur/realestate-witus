@@ -12,13 +12,15 @@
 export const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
 export const MAX_UPLOAD_MEGAPIXELS = 25;
 
-export type ResizeKind = "photo" | "panorama" | "floor_plan";
+export type ResizeKind = "photo" | "panorama" | "floor_plan" | "logo";
 
 /** Longest edge per kind. Panoramas are measured by width (they are 2:1). */
 export const MAX_EDGE: Record<ResizeKind, number> = {
   panorama: 6144,
   photo: 3200,
   floor_plan: 2400,
+  // Painted into a floor patch at 512 px at most; 1024 leaves room for later uses.
+  logo: 1024,
 };
 
 /** iOS Safari refuses canvases over 16,777,216 pixels; 4096 x 2048 stays well inside. */
@@ -57,8 +59,10 @@ export function planResize(input: ResizeInput, kind: ResizeKind, opts: { ios?: b
   const scale = Math.min(1, cap / longest);
   const width = Math.max(1, Math.round(input.width * scale));
   const height = Math.max(1, Math.round(input.height * scale));
-  // Line drawings stay PNG (crisp edges); everything photographic becomes JPEG.
-  const type = kind === "floor_plan" && input.type === "image/png" ? "image/png" : "image/jpeg";
+  // Line drawings stay PNG (crisp edges), and logos always become PNG (a
+  // transparent background must stay transparent); photographs become JPEG.
+  const type =
+    kind === "logo" || (kind === "floor_plan" && input.type === "image/png") ? "image/png" : "image/jpeg";
   return { action: "resize", width, height, type, quality: 0.88 };
 }
 

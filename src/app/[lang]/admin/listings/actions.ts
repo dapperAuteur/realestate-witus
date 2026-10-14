@@ -547,8 +547,11 @@ export async function applyPrivacyEditAction(
   currentMediaId: string,
   recipe: unknown,
   momentId: string | null = null,
-  deleteOriginal: unknown = false,
+  options: unknown = {},
 ): Promise<Result<{ mediaId: string }>> {
+  const opts = (options && typeof options === "object" ? options : {}) as Record<string, unknown>;
+  const deleteOriginal = opts.deleteOriginal === true;
+  const patchDataUrl = typeof opts.patchDataUrl === "string" ? opts.patchDataUrl : null;
   const gate = momentId ? await momentPhotoEditor(sceneId, momentId) : (await sceneEditor(sceneId)).gate;
   if (!gate) return FORBIDDEN;
   const parsed = parsePrivacyRecipe(recipe);
@@ -560,15 +563,16 @@ export async function applyPrivacyEditAction(
     recipe: parsed.data,
     userId: gate.ctx.user.id,
     momentId,
-    deleteOriginal: deleteOriginal === true,
+    deleteOriginal,
+    patchDataUrl,
   });
   if (result.ok) {
     await writeAudit({
       tenantId: gate.ctx.tenant.id,
       actorUserId: gate.ctx.user.id,
       kind: "tour.privacy",
-      summary: deleteOriginal === true ? "Hide people and gear applied; original deleted" : "Hide people and gear applied to a room",
-      data: { sceneId, momentId, mediaId: result.data.mediaId, deleteOriginal: deleteOriginal === true },
+      summary: deleteOriginal ? "Hide people and gear applied; original deleted" : "Hide people and gear applied to a room",
+      data: { sceneId, momentId, mediaId: result.data.mediaId, deleteOriginal },
     }).catch(() => undefined);
   }
   return result;

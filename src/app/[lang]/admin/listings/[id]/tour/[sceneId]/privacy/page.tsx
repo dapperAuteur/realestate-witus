@@ -7,7 +7,7 @@ import { getDictionary, hasLocale } from "@/lib/dictionaries";
 import { env } from "@/lib/env";
 import { canEditListing, findOwnedListing } from "@/lib/listings/admin";
 import { tourEditData } from "@/lib/tour/admin";
-import { privacyEditData } from "@/lib/tour/privacy";
+import { patchLogos, privacyEditData } from "@/lib/tour/privacy";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Hide people and gear" };
@@ -32,6 +32,7 @@ export default async function PrivacyPage({
     ? (await tourEditData(ctx.tenant.id, listing.id))?.moments.find((m) => m.id === momentId)?.label
     : null;
   const p = dict.admin.tour.privacy;
+  const logos = await patchLogos(ctx.tenant.id);
   const back = `/${lang}/admin/listings/${listing.id}/tour/${sceneId}`;
 
   return (
@@ -51,6 +52,8 @@ export default async function PrivacyPage({
           edited={data.edited}
           backHref={back}
           labels={p}
+          logos={logos}
+          uploadLabels={{ ...dict.admin.listings.upload, choose: p.uploadLogo, hint: p.logoHint }}
         />
       ) : (
         <p role="alert">{dict.admin.listings.upload.notConfigured}</p>

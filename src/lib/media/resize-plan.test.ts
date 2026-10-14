@@ -85,3 +85,16 @@ describe("nextAttempt", () => {
     expect(next).toMatchObject({ width: 5222, height: 2611 });
   });
 });
+
+describe("logos", () => {
+  it("keep their transparency when resized, as PNG, at most 1024 px", () => {
+    expect(planResize({ width: 4000, height: 2000, bytes: 3_000_000, type: "image/webp" }, "logo")).toEqual({
+      action: "resize",
+      width: 1024,
+      height: 512,
+      type: "image/png",
+      quality: 0.88,
+    });
+    expect(planResize({ width: 800, height: 400, bytes: 90_000, type: "image/png" }, "logo")).toEqual({ action: "keep" });
+  });
+});

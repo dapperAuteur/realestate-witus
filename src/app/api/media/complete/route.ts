@@ -26,9 +26,10 @@ export async function POST(request: Request) {
     kind?: string;
   } | null;
   // What the upload is for. Photos by default; the tour editor sends
-  // "panorama" and "floor_plan". Anything else is refused, never guessed.
+  // "panorama", "floor_plan" and "logo" (for the floor patch). Anything else
+  // is refused, never guessed.
   const kind = body?.kind ?? "photo";
-  if (kind !== "photo" && kind !== "panorama" && kind !== "floor_plan") {
+  if (kind !== "photo" && kind !== "panorama" && kind !== "floor_plan" && kind !== "logo") {
     return NextResponse.json(err("BAD_KIND", "Unknown upload kind."), { status: 400 });
   }
   if (kind === "panorama" && !looksEquirectangular(body?.width, body?.height)) {

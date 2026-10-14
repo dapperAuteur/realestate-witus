@@ -2,6 +2,13 @@
 
 *Created 2026-07-16 at project kickoff; updated 2026-07-21 when the template strip landed. Purpose: let a Claude session opened in THIS repo work with full context. Sessions here do not inherit other directories' memory — this file plus CLAUDE.md is the bridge. **Workstream 1 is done** (`bundle/template-strip`): the Stay.WitUS hotel domain is gone and the platform spine is renamed to RealEstate.WitUS. See "Post-strip state" below for exactly what survives.*
 
+> **Current plan: `plans/08-tour-engine-port-and-portal-listing-prd.md`** (approved by BAM
+> 2026-10-13, amended 2026-10-14). It replaces the engine source for workstreams 2 to 5 below:
+> port **Wanderlust's** tour engine (`gemini/wanderlearn/wanderlearn-app`), not
+> `virtual-tour-kit`, and build a portal-grade listing page inside plans/03's shell. Its
+> phases A to F map onto workstreams 2 to 5. Read it before touching listings, tours, the
+> listing page, or the product landing (section 6.5 keeps the landing selling to agents).
+
 ## What this is
 
 RealEstate.WitUS (`realestate.witus.online`) is BAM's **virtual-tour product for commercial and residential real estate that's for sale**: professionally captured 360° tours published as fast branded listing pages, with **embeds as a first-class feature** — every paid listing ships an embed snippet agents drop into their own websites. Part of the WitUS ecosystem (registry: `gemini/witus/lib/products.ts`).
@@ -33,9 +40,9 @@ RealEstate.WitUS (`realestate.witus.online`) is BAM's **virtual-tour product for
 | Market research (pricing comps, diaspora, competitors, RealSee/X5 findings) | `gemini/wanderlearn/plans/reports/virtual-tour-market-research.md` |
 | Hotel tour client docs (proposal, shoot checklist — before-shoot ~July 2026, after-shoot ~Dec 2026) | `gemini/wanderlearn/plans/reports/` |
 | PRD_3 "VistaLoft" (original real-estate listings vision) | `gemini/wanderlearn/PRD-insta360... ammendments/PRD_3_Real_Estate_Immersive_Listings.docx` |
-| PSV tour engine prior art | `gemini/wanderlearn/virtual-tour-kit/` (types, viewer components, ffmpeg frame-extract script) |
+| PSV tour engine to port (plans/08) | `gemini/wanderlearn/wanderlearn-app` (Wanderlust): viewer, assembly, tour graph, Moments, floor-plan map. The older `gemini/wanderlearn/virtual-tour-kit/` is superseded |
 | Template parent + its handoff/lessons | `claude/stay-witus` (its HANDOFF.md documents the platform spine this repo inherits, incl. the neon-http vs withTx transaction lesson and admin-guard streaming lesson) |
-| Repo-local plans (gitignored) | `plans/`: 01 template-strip plan, 02 floor-plan-sync SWOT, user-tasks/ |
+| Repo-local plans (gitignored) | `plans/`: 01 template strip, 02 floor-plan sync SWOT, 03 design direction, 04 node-GUI builder, 05 property hierarchy, 06 imports, 07 em-dash guard, **08 tour-engine port + listing page PRD (current)**, user-tasks/ |
 
 ## Post-strip state (what the code actually is now, 2026-07-21)
 
@@ -116,10 +123,13 @@ and `src/app/[lang]/admin/page.tsx` (a door list where the listings board goes).
 1. ~~**Template strip** (plans/01)~~ — **done 2026-07-21**, `bundle/template-strip`.
    tsc + vitest + build green; no "stay.witus"/"hotel"/"booking" outside the baseline
    migration's history note.
-2. **Listings + tours schema:** listings, tour_scenes, scene_links/hotspots (port kit types into Drizzle), listing_media, listing_inquiries, view counters. Tenant-scoped like everything else.
-3. **PSV tour player:** port virtual-tour-kit components into `src/components/tour/`, dynamic import (no SSR), mobile-first.
-4. **Public listing page + embed route + snippet generator** (click-to-copy, responsive iframe, OG image) + inquiry form (→ Mailgun to agent + platform; witus-inbox later).
-5. **Admin (service workflow):** BAM/staff CRUD for listings/scenes + hotspot editor (yaw/pitch click-capture), publish flow, sale-status transitions; agency tenants via existing /platform.
+Workstreams 2 to 5 now follow **plans/08** (phases A to D); the lines below are the
+original outline, kept for history.
+
+2. **Listings + tours schema** (plans/08 phase A): properties, listings, tour_scenes, scene_links/hotspots, floor plans, moments, listing_inquiries, view counters. Tenant-scoped like everything else.
+3. **PSV tour player** (phase B): port Wanderlust's engine into `src/components/tour/` and `src/lib/tour/`, dynamic import (no SSR), mobile-first.
+4. **Public listing page + embed route + snippet generator** (phase C): click-to-copy, responsive iframe, OG image, inquiry form (→ Mailgun to agent + platform; witus-inbox later), and the product landing update (plans/08 section 6.5).
+5. **Admin (service workflow)** (phase D): BAM/staff CRUD for listings/scenes + hotspot editor (yaw/pitch click-capture), publish flow, sale-status transitions; agency tenants via existing /platform.
 6. **Billing hookup** (listing packages on existing invoices) + product landing page.
 
 **Later:** RealSee premium embed field (host-allowlisted), floor-plan sync (plans/02), **node-GUI tour builder over the same data model** (plans/04 — graph mode for quick wiring + scene mode for yaw/pitch fine-tune, both on CRUD), **property hierarchy + ownership transfer** (plans/05), **CSV/floor-plan/campus-map imports** (plans/06), analytics dashboard, self-serve SaaS tier, the before/after + construction-progress vertical (merge the spec in), Ghana/diaspora marketing content.

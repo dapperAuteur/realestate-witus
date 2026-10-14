@@ -707,7 +707,8 @@ export async function setMomentPhoto(
     .values({ tenantId, sceneId, momentId, mediaId, headingOffsetDeg: 0 })
     .onConflictDoUpdate({
       target: [sceneMomentPanoramas.sceneId, sceneMomentPanoramas.momentId],
-      set: { mediaId, headingOffsetDeg: 0, updatedAt: new Date() },
+      // A new photo has no edits yet: drop any original kept for the old one.
+      set: { mediaId, headingOffsetDeg: 0, originalMediaId: null, privacyRecipe: null, updatedAt: new Date() },
     });
   return ok({ saved: true });
 }

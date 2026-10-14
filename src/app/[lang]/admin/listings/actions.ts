@@ -544,8 +544,9 @@ export async function applyPrivacyEditAction(
   sceneId: string,
   currentMediaId: string,
   recipe: unknown,
+  momentId: string | null = null,
 ): Promise<Result<{ mediaId: string }>> {
-  const { gate } = await sceneEditor(sceneId);
+  const gate = momentId ? await momentPhotoEditor(sceneId, momentId) : (await sceneEditor(sceneId)).gate;
   if (!gate) return FORBIDDEN;
   const parsed = parsePrivacyRecipe(recipe);
   if (!parsed.ok) return parsed;
@@ -555,6 +556,7 @@ export async function applyPrivacyEditAction(
     currentMediaId,
     recipe: parsed.data,
     userId: gate.ctx.user.id,
+    momentId,
   });
   if (result.ok) {
     await writeAudit({
@@ -562,7 +564,7 @@ export async function applyPrivacyEditAction(
       actorUserId: gate.ctx.user.id,
       kind: "tour.privacy",
       summary: "Hide people and gear applied to a room",
-      data: { sceneId, mediaId: result.data.mediaId },
+      data: { sceneId, momentId, mediaId: result.data.mediaId },
     }).catch(() => undefined);
   }
   return result;

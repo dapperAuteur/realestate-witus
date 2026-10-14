@@ -390,6 +390,7 @@ export function SceneEditor({
                 key={time.momentId}
                 time={time}
                 sceneId={sceneId}
+                privacyBase={`${editorBase}/${sceneId}/privacy`}
                 roll={roll}
                 apiRef={apiRef}
                 busy={busy}
@@ -489,6 +490,7 @@ export function SceneEditor({
 function OtherTime({
   time,
   sceneId,
+  privacyBase,
   roll,
   apiRef,
   busy,
@@ -498,6 +500,7 @@ function OtherTime({
 }: {
   time: EditorOtherTime;
   sceneId: string;
+  privacyBase: string;
   roll: number;
   apiRef: React.MutableRefObject<TourViewerApi | null>;
   busy: boolean;
@@ -527,6 +530,9 @@ function OtherTime({
       <button type="button" onClick={() => apiRef.current?.showMoment(time.momentId)} className={BUTTON}>
         {named("momentShow")}
       </button>
+      <a href={`${privacyBase}?moment=${time.momentId}`} className={BUTTON}>
+        {named("momentPrivacy")}
+      </a>
       <label htmlFor={id} className="text-sm font-medium">
         {labels.heading.replace("{deg}", String(heading))}
         <input

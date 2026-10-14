@@ -12,6 +12,7 @@ import {
   listings,
   mediaAssets,
   sceneLinks,
+  sceneMomentPanoramas,
   tenantMemberships,
   tenants,
   tourScenes,
@@ -52,11 +53,12 @@ import { getListingPage, listPublicListings, loadAgent, recordListingView } from
 
 const hasDb = Boolean(process.env.STORAGE_DATABASE_URL ?? process.env.DATABASE_URL);
 
-// Ready once the newest migration this suite needs has run: 0002 adds
-// tour_scenes.privacy_recipe. Before that every room query fails, so skip.
+// Ready once the newest migration this suite needs has run: 0003 adds
+// scene_moment_panoramas.privacy_recipe. Before that, writes to those columns
+// fail, so skip rather than fail a branch BAM hasn't migrated yet.
 async function tablesExist(): Promise<boolean> {
   const result = (await db().execute(
-    sql`select 1 as ok from information_schema.columns where table_name = 'tour_scenes' and column_name = 'privacy_recipe'`,
+    sql`select 1 as ok from information_schema.columns where table_name = 'scene_moment_panoramas' and column_name = 'privacy_recipe'`,
   )) as unknown as { rows: { ok: number }[] };
   return result.rows.length > 0;
 }
@@ -294,6 +296,40 @@ describe.skipIf(!ready)("listings and tours against the database", () => {
       expect.objectContaining({ momentId: added.data.id, headingOffsetDeg: -160, preview: expect.stringContaining("w_1600") }),
     ]);
     expect(kitchenScene.preview).toEqual(expect.stringContaining("w_1600"));
+
+    // Hide people in the Before photo: the same bake, on the moment's row.
+    const fakeCloudinary = (async (url: string | URL | Request) =>
+      String(url).startsWith("https://res.cloudinary.com/")
+        ? new Response(null, { status: 200 })
+        : new Response(JSON.stringify({ public_id: "realestate-witus/x/before-private", width: 6000, height: 3000, bytes: 9 }), {
+            status: 200,
+          })) as unknown as typeof fetch;
+    const privacyRecipe = { ...emptyPrivacyRecipe(), faces: "pixelate" as const };
+    const edited = await applyPrivacyEdit({
+      tenantId,
+      sceneId: kitchen.id,
+      momentId: added.data.id,
+      currentMediaId: media.kitchenBefore,
+      recipe: privacyRecipe,
+      userId,
+      fetchImpl: fakeCloudinary,
+    });
+    expect(edited.ok).toBe(true);
+    const [beforeRow] = await db()
+      .select()
+      .from(sceneMomentPanoramas)
+      .where(and(eq(sceneMomentPanoramas.sceneId, kitchen.id), eq(sceneMomentPanoramas.momentId, added.data.id)));
+    expect(beforeRow).toMatchObject({ originalMediaId: media.kitchenBefore, privacyRecipe });
+    expect(beforeRow.mediaId).not.toBe(media.kitchenBefore);
+    // The room's current photo is untouched by a Before edit.
+    expect((await db().select().from(tourScenes).where(eq(tourScenes.id, kitchen.id)))[0].originalPanoramaMediaId).toBeNull();
+    // Replacing the Before photo drops the kept original: the new photo has no edits.
+    await setMomentPhoto(tenantId, kitchen.id, added.data.id, media.kitchenBefore);
+    const [replaced] = await db()
+      .select()
+      .from(sceneMomentPanoramas)
+      .where(and(eq(sceneMomentPanoramas.sceneId, kitchen.id), eq(sceneMomentPanoramas.momentId, added.data.id)));
+    expect(replaced).toMatchObject({ mediaId: media.kitchenBefore, originalMediaId: null, privacyRecipe: null });
 
     expect(await deleteMoment(tenantId, base.id)).toMatchObject({ ok: false, code: "MOMENT_BASE" });
     expect((await deleteMoment(tenantId, added.data.id)).ok).toBe(true);

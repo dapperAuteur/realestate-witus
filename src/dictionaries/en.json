@@ -365,7 +365,7 @@
       "MOMENT_LABEL": "Names for a time need 1 to 40 characters.",
       "MOMENT_BASE": "The current photos can't be removed while other times exist.",
       "MOMENT_NOT_FOUND": "That time isn't in this listing.",
-      "PRIVACY_STALE": "This room's photo changed since you opened the editor. Reload and try again.",
+      "PRIVACY_STALE": "This photo changed since you opened the editor. Reload and try again.",
       "PRIVACY_RECIPE": "That edit couldn't be read. Reload and try again."
     },
     "listings": {
@@ -623,7 +623,8 @@
         "heading": "Turn to line it up: {deg} degrees",
         "headingHint": "Show it in the viewer, then turn until the walls match the current photo. The preview moves as you do.",
         "saveHeading": "Save the alignment",
-        "removeMomentPhoto": "Remove the {moment} photo"
+        "removeMomentPhoto": "Remove the {moment} photo",
+        "momentPrivacy": "Hide people and gear in the {moment} photo"
       },
       "floor": {
         "title": "Place rooms: {floor}",

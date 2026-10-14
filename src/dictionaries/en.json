@@ -76,11 +76,32 @@
       },
       {
         "title": "A listing page that converts",
-        "body": "Full-bleed photography, the tour high on the page, the facts buyers scan for, and an inquiry form that reaches you directly."
+        "body": "Full-bleed photography, the tour high on the page, the facts buyers scan for, and an inquiry form that reaches you directly.",
+        "bodyLive": "The tour high on the page with Request a tour pinned inside it, the facts buyers scan for, and an inquiry form that reaches you directly. Tour requests come from buyers who already walked the home."
+      },
+      {
+        "title": "Floor plans buyers can walk",
+        "body": "Buyers see how the rooms connect before they book a visit. Tap a room on the plan and the tour opens there.",
+        "when": "floorPlans"
+      },
+      {
+        "title": "Hide people and gear",
+        "body": "Shoot an occupied home without showing who lives there. Faces, family photos and the tripod are covered in the photo itself, not just hidden from view.",
+        "when": "privacy"
+      },
+      {
+        "title": "Before and after",
+        "body": "Show the renovation, not just the finished room: the same spot at two times, lined up.",
+        "when": "moments"
+      },
+      {
+        "title": "Show your seller the numbers",
+        "body": "How many buyers saw the listing and walked the tour, in a report you can print or send as a PDF.",
+        "when": "live"
       },
       {
         "title": "Your brand, your domain",
-        "body": "Your logo, your colors, your web address. Buyers see your agency, never ours."
+        "body": "Your name, your colors and fonts, your web address. Buyers see your agency, never ours."
       },
       {
         "title": "Sold listings keep working",
@@ -105,7 +126,11 @@
     "statusBadge": "Taking capture slots now",
     "statusBody": "RealEstate.WitUS is taking its first listings. Have a property to shoot? Reach out through witus.online.",
     "contactCta": "Ask about a property",
-    "roadmapCta": "See the public roadmap"
+    "roadmapCta": "See the public roadmap",
+    "heroLiveCaption": "A real listing, live now: {title}. Tap the photo to walk it.",
+    "heroLiveLink": "Open the full listing",
+    "embedSnippetNoteLive": "This is the real snippet for the listing beside it: paste it into any page and the same tour appears there.",
+    "embedLiveTitle": "{title}, as it appears on an agent's site"
   },
   "roadmap": {
     "title": "Roadmap",

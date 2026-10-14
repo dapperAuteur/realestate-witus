@@ -37,6 +37,7 @@ export function ListingTour({
   onOpen,
   request,
   roomStrip = true,
+  posterPriority = false,
 }: {
   tour: VirtualTour;
   labels: ListingTourLabels;
@@ -56,6 +57,8 @@ export function ListingTour({
   request?: { sceneId: string | null; momentId?: string | null; nonce: number } | null;
   /** The embed leaves it out: a fixed-height iframe has no room under the viewer. */
   roomStrip?: boolean;
+  /** The poster is the page's LCP image (the landing hero), so fetch it first. */
+  posterPriority?: boolean;
 }) {
   const [open, setOpen] = useState(startOpen);
   // Set only BEFORE the viewer mounts: changing the tour after would rebuild it.
@@ -107,7 +110,12 @@ export function ListingTour({
       <div className="relative overflow-hidden rounded-xl bg-slate-900" style={{ height }}>
         {posterUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={posterUrl} alt="" className="absolute inset-0 h-full w-full object-cover opacity-80" />
+          <img
+            src={posterUrl}
+            alt=""
+            fetchPriority={posterPriority ? "high" : undefined}
+            className="absolute inset-0 h-full w-full object-cover opacity-80"
+          />
         ) : null}
         <button
           type="button"

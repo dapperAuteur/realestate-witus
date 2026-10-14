@@ -51,6 +51,7 @@ import { submitInquiry } from "./inquiries";
 import { reportDays, sellerReport } from "./seller-report";
 import type { ListingInput, PropertyInput } from "./listing-input";
 import { cloneListingInto } from "@/lib/demo/clone";
+import { landingProof } from "./landing";
 import { importTourCsv } from "@/lib/tour/import";
 import { applyPrivacyEdit } from "@/lib/tour/privacy";
 import { emptyPrivacyRecipe } from "@/lib/tour/privacy-edit";
@@ -611,10 +612,21 @@ describe.skipIf(!ready)("listings and tours against the database", () => {
       if (!edited.ok) throw new Error(edited.error);
       const originalName = (await db().select().from(mediaAssets).where(eq(mediaAssets.id, hallMedia)))[0].cloudinaryPublicId;
 
+      // The landing claims nothing before a listing is live.
+      expect(await landingProof(platform.id, source.id)).toEqual({
+        listing: null,
+        capabilities: { live: false, floorPlans: false, privacy: false, moments: false },
+      });
       expect(await cloneListingInto(source.id, demo.id, { agentUserId: userId })).toMatchObject({ ok: false, code: "DEMO_SOURCE_DRAFT" });
       expect(await cloneListingInto(listingId, demo.id, { agentUserId: userId })).toMatchObject({ ok: false, code: "DEMO_SOURCE" });
       await changeListingStatus(platform.id, source.id, "for_sale");
       await setSceneStatuses(platform.id, source.id, [hall.id, den.id], "published");
+
+      // Live, with a floor plan, a privacy edit and a Before photo: every card is earned.
+      const proof = await landingProof(platform.id, source.id);
+      expect(proof.capabilities).toEqual({ live: true, floorPlans: true, privacy: true, moments: true });
+      expect(proof.listing?.listing.slug).toBe(source.slug);
+      expect(proof.listing?.tour?.scenes).toHaveLength(2);
 
       const copy = await cloneListingInto(source.id, demo.id, { agentUserId: userId });
       expect(copy).toMatchObject({ ok: true, data: { slug: `${source.slug}-demo`, rooms: 2 } });

@@ -164,9 +164,17 @@ public listings; the admin overview is a door list with Listings first (see "Pla
   exist; doorways arrive unplaced. Photo URLs in the CSV are refused for now (X5 files exceed
   Cloudinary's 10 MB fetch limit; the browser resizes picked files instead).
 
+- Fixed 2026-10-14: an edited copy was named `<original id>-private-<hash>`, so deleting the
+  suffix from a buyer-visible address loaded the unedited original. Copies are now
+  `private-<hash of our ids>`; the integration test asserts the name. Any copy made before the
+  fix keeps its old name until the edit is saved again (no real tours existed yet).
+
 **Not yet:**
 - The painted logo patch for the floor.
 - The demo seed and the landing's benefit cards, which wait for user task 11.
+- Originals are still public-but-unlinked Cloudinary assets. A room published BEFORE its privacy
+  edit has already sent its original's address to buyers; the editor now says to edit first.
+  Hardening: upload originals as `type: authenticated` and sign the editor's URLs.
 - The landing update (plans/08 6.5) and the demo seed. Both wait for user task 11's photos and
   consent, and the demo seed must re-create the sample listing nightly: `wipeDemoContent`
   deletes listings.

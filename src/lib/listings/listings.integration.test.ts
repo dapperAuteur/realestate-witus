@@ -345,12 +345,15 @@ describe.skipIf(!ready)("listings and tours against the database", () => {
     const original = before.panoramaMediaId;
     // Only Cloudinary is faked: the render is ready at once, and the upload echoes a new asset.
     const calls: string[] = [];
+    const named: string[] = [];
     const fakeCloudinary = (async (url: string | URL | Request, init?: RequestInit) => {
       const href = String(url);
       calls.push(`${init?.method ?? "GET"} ${href}`);
       if (href.startsWith("https://res.cloudinary.com/")) return new Response(null, { status: 200 });
+      const publicId = init?.body instanceof FormData ? String(init.body.get("public_id")) : "";
+      named.push(publicId);
       return new Response(
-        JSON.stringify({ public_id: `realestate-witus/${tenantId}/hall-private`, width: 6000, height: 3000, bytes: 1234 }),
+        JSON.stringify({ public_id: publicId, width: 6000, height: 3000, bytes: 1234 }),
         { status: 200, headers: { "content-type": "application/json" } },
       );
     }) as unknown as typeof fetch;
@@ -366,6 +369,8 @@ describe.skipIf(!ready)("listings and tours against the database", () => {
     expect(calls[0]).toMatch(/^HEAD https:\/\/res\.cloudinary\.com\/.*\/e_blur_faces:1500\/e_pixelate_region:40,x_2700,y_1200,w_600,h_600\/q_90\/itest\//);
     const [after] = await db().select().from(tourScenes).where(eq(tourScenes.id, hall.id));
     expect(after).toMatchObject({ panoramaMediaId: applied.data.mediaId, originalPanoramaMediaId: original, privacyRecipe: recipe });
+    // Buyers see the copy's address. It must not lead back to the original's ("hall").
+    expect(named[0]).toMatch(new RegExp(`^realestate-witus/${tenantId}/private-[0-9a-f]{16}$`));
 
     // A second edit starts again from the original, not from the edited copy.
     calls.length = 0;

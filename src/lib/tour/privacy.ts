@@ -154,9 +154,11 @@ export async function applyPrivacyEdit(input: PrivacyEditInput): Promise<Result<
   if (!rendered.ok) return err("PRIVACY_RENDER", `Cloudinary couldn't apply the edit: ${rendered.error}`);
 
   // Same recipe on the same original gives the same name: a retry doesn't pile up copies.
-  const hash = createHash("sha256").update(`${source.id}:${JSON.stringify(input.recipe)}`).digest("hex").slice(0, 10);
-  const base = source.cloudinaryPublicId.split("/").pop() ?? "pano";
-  const uploaded = await uploadFromUrl(renderUrl, `realestate-witus/${tenantId}/${base}-private-${hash}`, input.fetchImpl);
+  // The name must say nothing about the original's: buyers see this address,
+  // and "<original>-private-<hash>" was one deleted suffix away from the
+  // unedited photo. A hash of our own ids can't be walked back to it.
+  const hash = createHash("sha256").update(`${source.id}:${JSON.stringify(input.recipe)}`).digest("hex").slice(0, 16);
+  const uploaded = await uploadFromUrl(renderUrl, `realestate-witus/${tenantId}/private-${hash}`, input.fetchImpl);
   if (!uploaded.ok) return err("PRIVACY_UPLOAD", uploaded.error);
 
   const [asset] = await db()

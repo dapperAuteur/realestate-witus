@@ -744,7 +744,7 @@
       },
       "privacy": {
         "title": "Hide people and gear: {name}",
-        "intro": "Blur or pixelate faces, family photos, documents and plates, and cover the tripod on the floor. The edit is saved as a new copy of the photo; the original is kept, so you can change or undo it later. Nothing here is generated: it only blurs or pixelates what the camera took.",
+        "intro": "Blur or pixelate faces, family photos, documents and plates, and cover the tripod on the floor. The edit is saved as a new copy of the photo; the original is kept, so you can change or undo it later. Do this before the room goes live: a photo buyers were already sent can't be called back. Nothing here is generated: it only blurs or pixelates what the camera took.",
         "open": "Hide people and gear",
         "drawHint": "Drag on the photo to cover something. A click drops a person-sized box.",
         "keyboardHint": "Keyboard: Tab to a box, arrow keys move it, Shift with arrows resizes it, Alt for small steps, Delete removes it.",

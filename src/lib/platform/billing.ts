@@ -140,7 +140,7 @@ async function notifyInvoice(
         : [];
     await sendEmail({
       to,
-      subject: `RealEstate.WitUS invoice ${code} — ${amount}`,
+      subject: `RealEstate.WitUS invoice ${code}: ${amount}`,
       text: [
         `Invoice ${code} for ${tenant?.name ?? "your agency"}: ${amount}.`,
         ...momo,

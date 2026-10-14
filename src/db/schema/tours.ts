@@ -237,6 +237,9 @@ export const sceneMomentPanoramas = pgTable(
       .references(() => mediaAssets.id, { onDelete: "no action" }),
     /** Degrees (-180..180) the photo is turned to line up with the base view. */
     headingOffsetDeg: real("heading_offset_deg").notNull().default(0),
+    /** Hide people and gear, as on tour_scenes: the untouched photo while mediaId is the edited copy. */
+    originalMediaId: uuid("original_media_id").references(() => mediaAssets.id, { onDelete: "set null" }),
+    privacyRecipe: jsonb("privacy_recipe").$type<PrivacyRecipe>(),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },

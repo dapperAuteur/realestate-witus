@@ -27,7 +27,7 @@ export async function sendEmail({
 
   if (!hasMailgun) {
     console.log(
-      `[mailer:dev] (Mailgun not configured — logging instead)\n  From: ${sender}\n  To: ${to}\n  Subject: ${subject}\n  ${text}`,
+      `[mailer:dev] (Mailgun not configured, logging instead)\n  From: ${sender}\n  To: ${to}\n  Subject: ${subject}\n  ${text}`,
     );
     return { id: null };
   }

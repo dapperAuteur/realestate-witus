@@ -365,7 +365,7 @@
       "MOMENT_LABEL": "Names for a time need 1 to 40 characters.",
       "MOMENT_BASE": "The current photos can't be removed while other times exist.",
       "MOMENT_NOT_FOUND": "That time isn't in this listing.",
-      "PRIVACY_STALE": "This room's photo changed since you opened the editor. Reload and try again.",
+      "PRIVACY_STALE": "This photo changed since you opened the editor. Reload and try again.",
       "PRIVACY_RECIPE": "That edit couldn't be read. Reload and try again."
     },
     "listings": {
@@ -519,6 +519,68 @@
         "title": "Add rooms",
         "hint": "Each 360 photo becomes a draft room. Rename them after."
       },
+      "csv": {
+        "summary": "Build the tour from a spreadsheet",
+        "intro": "For big jobs: list every room in a spreadsheet with its 360 photo, its floor, and the rooms it leads to. Check the preview, then import. Importing the same file again only adds what's new.",
+        "stepsTitle": "How to",
+        "steps": [
+          "Download the template, or copy it into a new spreadsheet.",
+          "Fill in one row per room, then save it as CSV (UTF-8).",
+          "Choose the CSV file.",
+          "Choose the 360 photos it names. You can pick them all at once.",
+          "Check the preview, then import. Doorways come in unplaced: place each arrow in the room editor."
+        ],
+        "columnsTitle": "The columns",
+        "columns": [
+          "room: the room's name. A room already in this tour is updated, not added twice.",
+          "photo: the 360 photo's file name, like kitchen.jpg.",
+          "floor: the name of a floor plan on this tour. Leave it blank if there isn't one.",
+          "links_to: the rooms this one leads to, separated by semicolons. A doorway works both ways, so list it once.",
+          "start: yes on the room the tour opens in."
+        ],
+        "download": "Download the template",
+        "copyLabel": "the template",
+        "chooseCsv": "Choose the CSV file",
+        "csvHint": "A .csv file, saved from Excel, Numbers, or Google Sheets.",
+        "csvPicked": "Spreadsheet: {name}",
+        "choosePhotos": "Choose the 360 photos",
+        "photosHint": "The files the photo column names. Big ones are resized here before upload.",
+        "photosPicked": "Photos picked: {n}",
+        "replacePhotos": "Also replace the photos of rooms already in this tour, for the photos you choose",
+        "previewTitle": "Preview",
+        "problemsTitle": "Fix these in the spreadsheet, then choose it again",
+        "toAdd": "Rooms to add: {n}",
+        "toUpdate": "Rooms already in the tour: {n}",
+        "keepsPhoto": "keeps its photo",
+        "newPhoto": "new photo",
+        "onFloor": "on {floor}",
+        "toConnect": "Pairs of rooms to connect: {n}",
+        "pair": "{a} and {b}",
+        "start": "The tour opens in: {name}",
+        "unused": "Picked but not named in the spreadsheet: {names}",
+        "import": "Import",
+        "importAgain": "Import again",
+        "importing": "Saving the tour",
+        "uploadsFailed": "Some photos didn't upload, so nothing was saved yet. Check the list below, then import again. Photos that made it won't upload twice.",
+        "done": "Imported: {created} rooms added, {updated} updated, {connected} pairs connected. Place each new doorway in the room editor.",
+        "issues": {
+          "empty": "The file is empty, or too big to be a tour spreadsheet.",
+          "header": "Line {line}: the first line must name the columns, starting with room. Download the template to see them.",
+          "tooMany": "One spreadsheet can list at most {max} rooms. Split it into two files.",
+          "noName": "Line {line} has no room name.",
+          "nameLong": "Line {line}: room names can be at most 80 characters.",
+          "duplicate": "Line {line}: “{name}” is already on line {first}. List each room once.",
+          "ambiguous": "Line {line}: this tour already has more than one room named “{name}”. Rename one in the room editor first.",
+          "selfLink": "Line {line}: “{name}” can't lead to itself.",
+          "unknownLink": "Line {line}: links_to names “{target}”, and there's no room by that name.",
+          "unknownLinkGuess": "Line {line}: links_to names “{target}”, and there's no room by that name. Did you mean “{guess}”?",
+          "manyStarts": "Only one room can be the start. Lines {lines} all say yes.",
+          "unknownFloor": "Line {line}: there's no floor named “{floor}”. Add its floor plan under Floor plans first, or leave floor blank.",
+          "photoUrl": "Line {line}: photo must be the name of a file you choose here, not a web address.",
+          "needsPhoto": "Line {line}: “{name}” is a new room, so it needs a photo.",
+          "photoNotPicked": "Line {line}: choose {photo} along with the other photos."
+        }
+      },
       "rooms": {
         "title": "Rooms",
         "empty": "No rooms yet. Upload the 360 photos above.",
@@ -623,7 +685,8 @@
         "heading": "Turn to line it up: {deg} degrees",
         "headingHint": "Show it in the viewer, then turn until the walls match the current photo. The preview moves as you do.",
         "saveHeading": "Save the alignment",
-        "removeMomentPhoto": "Remove the {moment} photo"
+        "removeMomentPhoto": "Remove the {moment} photo",
+        "momentPrivacy": "Hide people and gear in the {moment} photo"
       },
       "floor": {
         "title": "Place rooms: {floor}",
@@ -681,7 +744,7 @@
       },
       "privacy": {
         "title": "Hide people and gear: {name}",
-        "intro": "Blur or pixelate faces, family photos, documents and plates, and cover the tripod on the floor. The edit is saved as a new copy of the photo; the original is kept, so you can change or undo it later. Nothing here is generated: it only blurs or pixelates what the camera took.",
+        "intro": "Blur or pixelate faces, family photos, documents and plates, and cover the tripod on the floor. The edit is saved as a new copy of the photo; the original is kept, so you can change or undo it later. Do this before the room goes live: a photo buyers were already sent can't be called back. Nothing here is generated: it only blurs or pixelates what the camera took.",
         "open": "Hide people and gear",
         "drawHint": "Drag on the photo to cover something. A click drops a person-sized box.",
         "keyboardHint": "Keyboard: Tab to a box, arrow keys move it, Shift with arrows resizes it, Alt for small steps, Delete removes it.",

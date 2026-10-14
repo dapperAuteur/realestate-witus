@@ -120,7 +120,7 @@ export function SiteFooter({ lang }: { lang: Locale }) {
                   Rise Wellness
                   <span className="sr-only">
                     {" "}
-                    (mental-health partner — opens in new tab)
+                    (mental-health partner, opens in a new tab)
                   </span>
                 </a>
                 <p className="text-xs leading-tight text-slate-500 dark:text-slate-400">
@@ -158,7 +158,7 @@ export function SiteFooter({ lang }: { lang: Locale }) {
 
         <div className="mt-8 border-t border-slate-100 pt-6 text-center text-xs text-slate-500 dark:border-slate-900">
           <p>
-            © {year} B4C LLC — A{" "}
+            © {year} B4C LLC · A{" "}
             <a
               href="https://awesomewebstore.com"
               target="_blank"
@@ -231,7 +231,7 @@ function RiseWellnessCallout() {
             <br />
             Indianapolis, IN 46204
             <br />
-            Mon–Sat by appointment · Sun closed
+            Monday to Saturday by appointment · Sunday closed
           </address>
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 pt-2 text-xs">
             <a

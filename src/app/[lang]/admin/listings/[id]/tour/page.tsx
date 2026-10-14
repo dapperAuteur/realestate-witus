@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ACCENT, FIELD, HINT, LABEL, PRIMARY_BUTTON, SECONDARY_BUTTON } from "@/components/admin/listing-form";
+import { TourCsvImport } from "@/components/admin/tour-csv-import";
 import { FloorPlanUploader, PanoramaUploader } from "@/components/admin/uploaders";
 import { requireStaffPage } from "@/lib/admin/guard";
 import { getDictionary, hasLocale } from "@/lib/dictionaries";
@@ -26,7 +27,8 @@ export const metadata: Metadata = { title: "360 tour" };
 // The tour workspace (plans/08 phase D): bulk room creation from uploaded 360
 // photos, graph checks (orphans, dead ends, unreachable rooms, unplaced
 // doorways), bulk publish, the list-based Connections editor (the accessible
-// path plans/04 asks for), and floor plans.
+// path plans/04 asks for), floor plans, and building a tour from a
+// spreadsheet (plans/06).
 
 export default async function TourWorkspacePage({
   params,
@@ -85,6 +87,16 @@ export default async function TourWorkspacePage({
         <div className="mt-3">
           <PanoramaUploader listingId={listing.id} labels={{ ...l.upload, hint: l.upload.panoramaHint }} />
         </div>
+        <details className="mt-6 border-t border-slate-200 pt-4 dark:border-slate-800">
+          <summary className="flex min-h-11 cursor-pointer items-center font-semibold">{t.csv.summary}</summary>
+          <p className={`${HINT} mb-4`}>{t.csv.intro}</p>
+          <TourCsvImport
+            listingId={listing.id}
+            context={{ rooms: data.scenes.map((scene) => scene.name), floors: data.floorPlans.map((plan) => plan.label) }}
+            labels={t.csv}
+            uploadLabels={{ ...l.upload, hint: l.upload.panoramaHint }}
+          />
+        </details>
       </section>
 
       <section id="rooms" aria-labelledby="rooms-title" className="scroll-mt-24">

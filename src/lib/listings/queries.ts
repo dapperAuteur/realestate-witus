@@ -202,8 +202,15 @@ export async function loadListingTour(
       .select()
       .from(tourMoments)
       .where(and(eq(tourMoments.tenantId, tenantId), eq(tourMoments.listingId, listing.id))),
+    // Named columns, not select(): a column added by a later migration must
+    // never take every tour down before that migration has run.
     db()
-      .select()
+      .select({
+        sceneId: sceneMomentPanoramas.sceneId,
+        momentId: sceneMomentPanoramas.momentId,
+        mediaId: sceneMomentPanoramas.mediaId,
+        headingOffsetDeg: sceneMomentPanoramas.headingOffsetDeg,
+      })
       .from(sceneMomentPanoramas)
       .where(and(eq(sceneMomentPanoramas.tenantId, tenantId), inArray(sceneMomentPanoramas.sceneId, sceneIds))),
     db()

@@ -12,6 +12,7 @@ import {
   listings,
   mediaAssets,
   sceneLinks,
+  sceneMomentPanoramas,
   tenantMemberships,
   tenants,
   tourScenes,
@@ -46,17 +47,19 @@ import {
 } from "./admin";
 import { submitInquiry } from "./inquiries";
 import type { ListingInput, PropertyInput } from "./listing-input";
+import { importTourCsv } from "@/lib/tour/import";
 import { applyPrivacyEdit } from "@/lib/tour/privacy";
 import { emptyPrivacyRecipe } from "@/lib/tour/privacy-edit";
 import { getListingPage, listPublicListings, loadAgent, recordListingView } from "./queries";
 
 const hasDb = Boolean(process.env.STORAGE_DATABASE_URL ?? process.env.DATABASE_URL);
 
-// Ready once the newest migration this suite needs has run: 0002 adds
-// tour_scenes.privacy_recipe. Before that every room query fails, so skip.
+// Ready once the newest migration this suite needs has run: 0003 adds
+// scene_moment_panoramas.privacy_recipe. Before that, writes to those columns
+// fail, so skip rather than fail a branch BAM hasn't migrated yet.
 async function tablesExist(): Promise<boolean> {
   const result = (await db().execute(
-    sql`select 1 as ok from information_schema.columns where table_name = 'tour_scenes' and column_name = 'privacy_recipe'`,
+    sql`select 1 as ok from information_schema.columns where table_name = 'scene_moment_panoramas' and column_name = 'privacy_recipe'`,
   )) as unknown as { rows: { ok: number }[] };
   return result.rows.length > 0;
 }
@@ -295,6 +298,40 @@ describe.skipIf(!ready)("listings and tours against the database", () => {
     ]);
     expect(kitchenScene.preview).toEqual(expect.stringContaining("w_1600"));
 
+    // Hide people in the Before photo: the same bake, on the moment's row.
+    const fakeCloudinary = (async (url: string | URL | Request) =>
+      String(url).startsWith("https://res.cloudinary.com/")
+        ? new Response(null, { status: 200 })
+        : new Response(JSON.stringify({ public_id: "realestate-witus/x/before-private", width: 6000, height: 3000, bytes: 9 }), {
+            status: 200,
+          })) as unknown as typeof fetch;
+    const privacyRecipe = { ...emptyPrivacyRecipe(), faces: "pixelate" as const };
+    const edited = await applyPrivacyEdit({
+      tenantId,
+      sceneId: kitchen.id,
+      momentId: added.data.id,
+      currentMediaId: media.kitchenBefore,
+      recipe: privacyRecipe,
+      userId,
+      fetchImpl: fakeCloudinary,
+    });
+    expect(edited.ok).toBe(true);
+    const [beforeRow] = await db()
+      .select()
+      .from(sceneMomentPanoramas)
+      .where(and(eq(sceneMomentPanoramas.sceneId, kitchen.id), eq(sceneMomentPanoramas.momentId, added.data.id)));
+    expect(beforeRow).toMatchObject({ originalMediaId: media.kitchenBefore, privacyRecipe });
+    expect(beforeRow.mediaId).not.toBe(media.kitchenBefore);
+    // The room's current photo is untouched by a Before edit.
+    expect((await db().select().from(tourScenes).where(eq(tourScenes.id, kitchen.id)))[0].originalPanoramaMediaId).toBeNull();
+    // Replacing the Before photo drops the kept original: the new photo has no edits.
+    await setMomentPhoto(tenantId, kitchen.id, added.data.id, media.kitchenBefore);
+    const [replaced] = await db()
+      .select()
+      .from(sceneMomentPanoramas)
+      .where(and(eq(sceneMomentPanoramas.sceneId, kitchen.id), eq(sceneMomentPanoramas.momentId, added.data.id)));
+    expect(replaced).toMatchObject({ mediaId: media.kitchenBefore, originalMediaId: null, privacyRecipe: null });
+
     expect(await deleteMoment(tenantId, base.id)).toMatchObject({ ok: false, code: "MOMENT_BASE" });
     expect((await deleteMoment(tenantId, added.data.id)).ok).toBe(true);
     expect((await tourEditData(tenantId, listingId))!.moments).toEqual([]);
@@ -308,12 +345,15 @@ describe.skipIf(!ready)("listings and tours against the database", () => {
     const original = before.panoramaMediaId;
     // Only Cloudinary is faked: the render is ready at once, and the upload echoes a new asset.
     const calls: string[] = [];
+    const named: string[] = [];
     const fakeCloudinary = (async (url: string | URL | Request, init?: RequestInit) => {
       const href = String(url);
       calls.push(`${init?.method ?? "GET"} ${href}`);
       if (href.startsWith("https://res.cloudinary.com/")) return new Response(null, { status: 200 });
+      const publicId = init?.body instanceof FormData ? String(init.body.get("public_id")) : "";
+      named.push(publicId);
       return new Response(
-        JSON.stringify({ public_id: `realestate-witus/${tenantId}/hall-private`, width: 6000, height: 3000, bytes: 1234 }),
+        JSON.stringify({ public_id: publicId, width: 6000, height: 3000, bytes: 1234 }),
         { status: 200, headers: { "content-type": "application/json" } },
       );
     }) as unknown as typeof fetch;
@@ -329,6 +369,8 @@ describe.skipIf(!ready)("listings and tours against the database", () => {
     expect(calls[0]).toMatch(/^HEAD https:\/\/res\.cloudinary\.com\/.*\/e_blur_faces:1500\/e_pixelate_region:40,x_2700,y_1200,w_600,h_600\/q_90\/itest\//);
     const [after] = await db().select().from(tourScenes).where(eq(tourScenes.id, hall.id));
     expect(after).toMatchObject({ panoramaMediaId: applied.data.mediaId, originalPanoramaMediaId: original, privacyRecipe: recipe });
+    // Buyers see the copy's address. It must not lead back to the original's ("hall").
+    expect(named[0]).toMatch(new RegExp(`^realestate-witus/${tenantId}/private-[0-9a-f]{16}$`));
 
     // A second edit starts again from the original, not from the edited copy.
     calls.length = 0;
@@ -421,5 +463,86 @@ describe.skipIf(!ready)("listings and tours against the database", () => {
     const scenes = await db().select().from(tourScenes).where(eq(tourScenes.listingId, listingId));
     const photos = await db().select().from(listingPhotos).where(eq(listingPhotos.listingId, listingId));
     expect([scenes.length, photos.length]).toEqual([0, 0]);
+  });
+
+  it("builds a tour from a spreadsheet, writes nothing from a bad one, and changes nothing the second time", async () => {
+    const made = await createListing({
+      tenantId,
+      userId,
+      property,
+      listing: { ...listingInput, title: "Spreadsheet test office" },
+      tourLinkLabels: { requestTour: "Request a tour", contactAgent: "Contact agent" },
+    });
+    if (!made.ok) throw new Error(made.error);
+    const id = made.data.id;
+    const floor = await addFloorPlan(tenantId, id, media.plan, "Ground floor");
+    if (!floor.ok) throw new Error(floor.error);
+    const pano: Record<string, string> = {};
+    for (const key of ["lobby", "office", "lab", "lab2"]) {
+      const [row] = await db()
+        .insert(mediaAssets)
+        .values({ tenantId, cloudinaryPublicId: `itest/${suffix}/csv-${key}`, kind: "panorama", width: 6000, height: 3000, status: "ready" })
+        .returning({ id: mediaAssets.id });
+      pano[key] = row.id;
+    }
+    const csv = [
+      "room,photo,floor,links_to,start",
+      "Lobby,lobby.jpg,ground floor,Office;Lab,",
+      "Office,office.jpg,,Lobby,yes",
+      "Lab,lab.jpg,,,",
+    ].join("\n");
+    const photos = [
+      { filename: "lobby.jpg", mediaId: pano.lobby },
+      { filename: "office.jpg", mediaId: pano.office },
+      { filename: "lab.jpg", mediaId: pano.lab },
+    ];
+    const run = (input: Partial<Parameters<typeof importTourCsv>[0]>) =>
+      importTourCsv({ tenantId, listingId: id, csv, photos, replacePhotos: false, ...input });
+    const roomsNow = () =>
+      db()
+        .select()
+        .from(tourScenes)
+        .where(eq(tourScenes.listingId, id))
+        .orderBy(tourScenes.createdAt);
+    const linkCount = async () =>
+      (
+        await db()
+          .select({ id: sceneLinks.id })
+          .from(sceneLinks)
+          .innerJoin(tourScenes, eq(tourScenes.id, sceneLinks.fromSceneId))
+          .where(eq(tourScenes.listingId, id))
+      ).length;
+
+    expect(await run({ csv: `${csv}\nGarage,,,Attic,` })).toMatchObject({ ok: false, code: "CSV_INVALID" });
+    expect(await run({ photos: [{ filename: "lobby.jpg", mediaId: media.foreign }, ...photos.slice(1)] })).toMatchObject({
+      ok: false,
+      code: "CSV_PHOTOS",
+    });
+    expect(await run({ tenantId: otherTenantId })).toMatchObject({ ok: false, code: "LISTING_NOT_FOUND" });
+    expect(await roomsNow()).toEqual([]);
+
+    expect(await run({})).toEqual({ ok: true, data: { created: 3, updated: 0, connected: 2 } });
+    const rooms = await roomsNow();
+    expect(rooms.map((r) => [r.name, r.isStart, r.floorPlanId])).toEqual([
+      ["Lobby", false, floor.data.id],
+      ["Office", true, null],
+      ["Lab", false, null],
+    ]);
+    expect(await linkCount()).toBe(4);
+
+    // The same file again, without picking photos: nothing to do.
+    expect(await run({ photos: [] })).toEqual({ ok: true, data: { created: 0, updated: 0, connected: 0 } });
+    expect(await linkCount()).toBe(4);
+
+    // Replacing one room's photo, and a new doorway to a room the file doesn't list.
+    const next = csv.replace("Lab,lab.jpg,,,", "Lab,lab2.jpg,,,").replace("Office,office.jpg,,Lobby,yes", "Office,,,Lobby,");
+    expect(
+      await run({ csv: `${next}\n`, photos: [{ filename: "lab2.jpg", mediaId: pano.lab2 }], replacePhotos: true }),
+    ).toEqual({ ok: true, data: { created: 0, updated: 1, connected: 0 } });
+    const lab = (await roomsNow()).find((r) => r.name === "Lab")!;
+    expect(lab.panoramaMediaId).toBe(pano.lab2);
+    expect((await roomsNow()).find((r) => r.name === "Office")!.isStart).toBe(true);
+    expect(await run({ csv: "room,links_to\nTerrace,lab", photos: [] })).toMatchObject({ ok: false, code: "CSV_INVALID" });
+    await db().delete(listings).where(eq(listings.id, id));
   });
 });

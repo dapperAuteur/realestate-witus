@@ -150,10 +150,31 @@ public listings; the admin overview is a door list with Listings first (see "Pla
   query fails.
 - The landing shows up to three of BAM's published, toured listings ("Walk a real listing").
 
+**Added 2026-10-14 (branch `bundle/privacy-lint-and-csv`, stacked on the one above; merge that first):**
+- Hide people and gear on Before / After photos too (`?moment=` on the privacy page). Migration
+  0003 adds the columns (user task 15). Until it runs, only writing a time's photo fails: the
+  buyer-facing tour load and the editor name their columns.
+- plans/07 done: ESLint 9 flat config (`next/core-web-vitals` + `next/typescript`) and
+  `scripts/check-em-dashes.ts` (ported from witus-learn). `pnpm lint` runs both; dictionaries
+  may hold no dash at all, code comments and regexes may. Only git-tracked files are scanned.
+- plans/06 surface 1, build a tour from a spreadsheet (tour workspace, under "Add rooms"):
+  `src/lib/tour/csv-import.ts` (pure parse + plan, line-numbered issues as dictionary codes),
+  `src/lib/tour/import.ts` (server re-check, one transaction). Idempotent by room name; existing
+  rooms keep their photo unless "replace" is ticked and the file was picked; floors must already
+  exist; doorways arrive unplaced. Photo URLs in the CSV are refused for now (X5 files exceed
+  Cloudinary's 10 MB fetch limit; the browser resizes picked files instead).
+
+- Fixed 2026-10-14: an edited copy was named `<original id>-private-<hash>`, so deleting the
+  suffix from a buyer-visible address loaded the unedited original. Copies are now
+  `private-<hash of our ids>`; the integration test asserts the name. Any copy made before the
+  fix keeps its old name until the edit is saved again (no real tours existed yet).
+
 **Not yet:**
 - The painted logo patch for the floor.
-- Privacy edits on Before/After photos (base photos only for now).
 - The demo seed and the landing's benefit cards, which wait for user task 11.
+- Originals are still public-but-unlinked Cloudinary assets. A room published BEFORE its privacy
+  edit has already sent its original's address to buyers; the editor now says to edit first.
+  Hardening: upload originals as `type: authenticated` and sign the editor's URLs.
 - The landing update (plans/08 6.5) and the demo seed. Both wait for user task 11's photos and
   consent, and the demo seed must re-create the sample listing nightly: `wipeDemoContent`
   deletes listings.
@@ -172,8 +193,8 @@ Playwright on uncommitted fixture pages. Two harness traps:
   looks like an app hydration bug. Use `caret: "initial"`.
 - `next build` and `next dev` share `.next`, so stop dev first.
 
-**Repo gaps found:** ESLint was never configured (`next lint` only prompts), so plans/07's
-"chain into lint" needs that first.
+**Repo gaps found:** ESLint was never configured (`next lint` only prompts). Fixed 2026-10-14
+(plans/07, above).
 
 ## Short-term plan (workstream order)
 
@@ -189,7 +210,7 @@ original outline, kept for history.
 5. **Admin (service workflow)** (phase D): BAM/staff CRUD for listings/scenes + hotspot editor (yaw/pitch click-capture), publish flow, sale-status transitions; agency tenants via existing /platform.
 6. **Billing hookup** (listing packages on existing invoices) + product landing page.
 
-**Later:** RealSee premium embed field (host-allowlisted), floor-plan sync (plans/02), **node-GUI tour builder over the same data model** (plans/04 — graph mode for quick wiring + scene mode for yaw/pitch fine-tune, both on CRUD), **property hierarchy + ownership transfer** (plans/05), **CSV/floor-plan/campus-map imports** (plans/06), analytics dashboard, self-serve SaaS tier, the before/after + construction-progress vertical (merge the spec in), Ghana/diaspora marketing content.
+**Later:** RealSee premium embed field (host-allowlisted), floor-plan sync (plans/02), **node-GUI tour builder over the same data model** (plans/04 — graph mode for quick wiring + scene mode for yaw/pitch fine-tune, both on CRUD), **property hierarchy + ownership transfer** (plans/05), **floor-plan and campus-map imports** (plans/06; the CSV import landed 2026-10-14), analytics dashboard, self-serve SaaS tier, the before/after + construction-progress vertical (merge the spec in), Ghana/diaspora marketing content.
 
 ## Working rules (inherited; several bit us before)
 

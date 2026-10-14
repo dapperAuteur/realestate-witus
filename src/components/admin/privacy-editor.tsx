@@ -61,6 +61,7 @@ function Choice<T extends string>({
 
 export function PrivacyEditor({
   sceneId,
+  momentId = null,
   currentMediaId,
   source,
   previewBase,
@@ -70,6 +71,8 @@ export function PrivacyEditor({
   labels,
 }: {
   sceneId: string;
+  /** Editing the room's photo for this time (Before / After) instead of its current photo. */
+  momentId?: string | null;
   currentMediaId: string;
   /** The untouched original: its public id and pixel size (regions are written in its pixels). */
   source: { publicId: string; width: number | null; height: number | null };
@@ -146,7 +149,7 @@ export function PrivacyEditor({
   async function save(next: PrivacyRecipe, done: string) {
     setBusy(true);
     setStatus(labels.working);
-    const result = await applyPrivacyEditAction(sceneId, currentMediaId, next);
+    const result = await applyPrivacyEditAction(sceneId, currentMediaId, next, momentId);
     setBusy(false);
     setStatus(result.ok ? done : result.error);
     if (result.ok) router.refresh();

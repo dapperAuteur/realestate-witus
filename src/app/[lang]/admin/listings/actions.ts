@@ -52,6 +52,8 @@ import {
   updateScene,
   type HotspotInput,
 } from "@/lib/tour/admin";
+import { CSV_MAX_CHARS, CSV_MAX_ROOMS } from "@/lib/tour/csv-import";
+import { importTourCsv, type TourImportResult } from "@/lib/tour/import";
 import { applyPrivacyEdit } from "@/lib/tour/privacy";
 import { parsePrivacyRecipe } from "@/lib/tour/privacy-edit";
 import { parsePlanPoint, parsePosition, parseRoll, parseViewLimit } from "@/lib/tour/tour-input";
@@ -544,8 +546,9 @@ export async function applyPrivacyEditAction(
   sceneId: string,
   currentMediaId: string,
   recipe: unknown,
+  momentId: string | null = null,
 ): Promise<Result<{ mediaId: string }>> {
-  const { gate } = await sceneEditor(sceneId);
+  const gate = momentId ? await momentPhotoEditor(sceneId, momentId) : (await sceneEditor(sceneId)).gate;
   if (!gate) return FORBIDDEN;
   const parsed = parsePrivacyRecipe(recipe);
   if (!parsed.ok) return parsed;
@@ -555,6 +558,7 @@ export async function applyPrivacyEditAction(
     currentMediaId,
     recipe: parsed.data,
     userId: gate.ctx.user.id,
+    momentId,
   });
   if (result.ok) {
     await writeAudit({
@@ -562,7 +566,46 @@ export async function applyPrivacyEditAction(
       actorUserId: gate.ctx.user.id,
       kind: "tour.privacy",
       summary: "Hide people and gear applied to a room",
-      data: { sceneId, mediaId: result.data.mediaId },
+      data: { sceneId, momentId, mediaId: result.data.mediaId },
+    }).catch(() => undefined);
+  }
+  return result;
+}
+
+// ── Spreadsheet import (plans/06) ────────────────────────────────────────────
+
+export async function importTourCsvAction(
+  listingId: string,
+  csv: unknown,
+  photos: unknown,
+  replacePhotos: unknown,
+): Promise<Result<TourImportResult>> {
+  const gate = await editor(listingId);
+  if (!gate) return FORBIDDEN;
+  if (typeof csv !== "string" || csv.length > CSV_MAX_CHARS) {
+    return err("CSV_INVALID", "That file isn't a tour spreadsheet. Check the preview and try again.");
+  }
+  const uploads = (Array.isArray(photos) ? photos : [])
+    .filter(
+      (p): p is { filename: string; mediaId: string } =>
+        typeof p?.filename === "string" && typeof p?.mediaId === "string",
+    )
+    .slice(0, CSV_MAX_ROOMS)
+    .map((p) => ({ filename: p.filename.slice(0, 255), mediaId: p.mediaId }));
+  const result = await importTourCsv({
+    tenantId: gate.ctx.tenant.id,
+    listingId,
+    csv,
+    photos: uploads,
+    replacePhotos: replacePhotos === true,
+  });
+  if (result.ok) {
+    await writeAudit({
+      tenantId: gate.ctx.tenant.id,
+      actorUserId: gate.ctx.user.id,
+      kind: "tour.imported",
+      summary: `Tour imported from a spreadsheet: ${result.data.created} rooms added, ${result.data.updated} updated`,
+      data: { listingId, ...result.data },
     }).catch(() => undefined);
   }
   return result;

@@ -54,6 +54,8 @@ export default function GlobalError({
             >
               Try again
             </button>
+            {/* A full page load on purpose: after an error the client router may be what broke. */}
+            {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
             <a
               href="/"
               style={{

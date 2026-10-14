@@ -161,7 +161,7 @@ async function uploadOne(file: File, kind: UploadKind): Promise<Envelope<{ media
 
 type Row = { name: string; state: "waiting" | "uploading" | "done" | "failed"; reason?: string };
 
-function useBatchUpload(kind: UploadKind, labels: UploadLabels) {
+export function useBatchUpload(kind: UploadKind, labels: UploadLabels) {
   const [rows, setRows] = useState<Row[]>([]);
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState("");
@@ -196,7 +196,7 @@ function useBatchUpload(kind: UploadKind, labels: UploadLabels) {
   return { rows, busy, note, setNote, run };
 }
 
-function UploadList({ rows, labels }: { rows: Row[]; labels: UploadLabels }) {
+export function UploadList({ rows, labels }: { rows: Row[]; labels: UploadLabels }) {
   if (rows.length === 0) return null;
   return (
     <ul className="mt-3 space-y-1 text-sm">
@@ -218,10 +218,10 @@ function UploadList({ rows, labels }: { rows: Row[]; labels: UploadLabels }) {
   );
 }
 
-const PICKER =
+export const PICKER =
   "inline-flex min-h-11 cursor-pointer items-center rounded-lg border-2 border-dashed border-slate-400 px-4 font-semibold hover:border-slate-600 focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-slate-900";
 
-function Picker({
+export function Picker({
   labels,
   multiple,
   disabled,

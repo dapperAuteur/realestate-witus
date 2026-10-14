@@ -24,7 +24,7 @@ export function CopyButton({ value, label }: { value: string; label: string }) {
       }}
       className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-slate-300 px-3 text-left font-mono text-xs focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current dark:border-slate-700"
     >
-      <span className="break-all">{value}</span>
+      <span className="break-all whitespace-pre-wrap">{value}</span>
       {/* slate-600, not slate-500: at 10px on a faintly tinted band slate-500
           measures 4.44:1 and misses AA. dark: keeps the dark side passing. */}
       <span

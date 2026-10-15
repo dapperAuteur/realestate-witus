@@ -29,6 +29,13 @@
       "when": 1791993969713,
       "tag": "0003_moment_privacy",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1792029969016,
+      "tag": "0004_room_views",
+      "breakpoints": true
     }
   ]
 }

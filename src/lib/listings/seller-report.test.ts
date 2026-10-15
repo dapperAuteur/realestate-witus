@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseReportRange, reportDays, sellerReport } from "./seller-report";
+import { parseReportRange, reportDays, roomReport, sellerReport } from "./seller-report";
 
 describe("reportDays", () => {
   it("lists every UTC date in the range, oldest first, ending today", () => {
@@ -60,5 +60,28 @@ describe("sellerReport", () => {
   it("never claims more than one open per view", () => {
     // A tour opened from a page view counted the day before, at midnight.
     expect(sellerReport(days, [{ day: "2026-10-13", surface: "page", pageViews: 1, tourOpens: 3 }], []).openRate).toBe(1);
+  });
+});
+
+describe("roomReport", () => {
+  const row = (name: string, visits: number, seconds: number, exits: number) => ({ sceneId: name, name, visits, seconds, exits });
+
+  it("ranks rooms by time on screen, averages per visit, and finds where buyers left", () => {
+    const report = roomReport([row("Hall", 10, 300, 2), row("Kitchen", 6, 600, 5), row("Den", 0, 0, 0), row("Bath", 3, 30, 3)]);
+    expect(report?.rooms.map((r) => [r.name, r.averageSeconds])).toEqual([
+      ["Kitchen", 100],
+      ["Hall", 30],
+      ["Bath", 10],
+    ]);
+    expect(report?.leftFrom).toEqual([
+      { name: "Kitchen", exits: 5, share: 0.5 },
+      { name: "Bath", exits: 3, share: 0.3 },
+      { name: "Hall", exits: 2, share: 0.2 },
+    ]);
+  });
+
+  it("says nothing when no room was visited", () => {
+    expect(roomReport([])).toBeNull();
+    expect(roomReport([row("Den", 0, 0, 0)])).toBeNull();
   });
 });

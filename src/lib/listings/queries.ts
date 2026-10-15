@@ -4,6 +4,7 @@ import { db } from "@/db";
 import {
   listingPhotos,
   listings,
+  listingRoomViews,
   listingViews,
   mediaAssets,
   properties,
@@ -19,6 +20,7 @@ import {
 import type { VirtualTour } from "@/components/tour/types";
 import { deliveryUrl, limitedUrl } from "@/lib/media/cloudinary";
 import { buildTour, type MediaInfo, type TourUrlBuilders } from "@/lib/tour/build-tour";
+import type { RoomStay } from "@/lib/tour/room-stays";
 import { isPublicStatus, type ListingStatus } from "./format";
 
 // Listing reads for the public page, the embed and the agency home. Every
@@ -363,6 +365,55 @@ export async function recordListingView(input: {
       set: {
         pageViews: sql`${listingViews.pageViews} + ${page}`,
         tourOpens: sql`${listingViews.tourOpens} + ${tour}`,
+      },
+    });
+}
+
+/**
+ * One stretch of time in one room (lib/tour/room-stays.ts), added to that
+ * room's count for the day. Only a published room of this listing counts;
+ * anything else is dropped quietly, like every other counter here.
+ */
+export async function recordRoomStay(input: {
+  tenantId: string;
+  listingId: string;
+  surface: "page" | "embed";
+  day: string;
+  stay: RoomStay;
+}): Promise<void> {
+  const [scene] = await db()
+    .select({ id: tourScenes.id })
+    .from(tourScenes)
+    .where(
+      and(
+        eq(tourScenes.tenantId, input.tenantId),
+        eq(tourScenes.listingId, input.listingId),
+        eq(tourScenes.id, input.stay.sceneId),
+        eq(tourScenes.status, "published"),
+      ),
+    )
+    .limit(1);
+  if (!scene) return;
+  const visits = input.stay.entered ? 1 : 0;
+  const exits = input.stay.exit ? 1 : 0;
+  await db()
+    .insert(listingRoomViews)
+    .values({
+      tenantId: input.tenantId,
+      listingId: input.listingId,
+      sceneId: scene.id,
+      day: input.day,
+      surface: input.surface,
+      visits,
+      seconds: input.stay.seconds,
+      exits,
+    })
+    .onConflictDoUpdate({
+      target: [listingRoomViews.sceneId, listingRoomViews.day, listingRoomViews.surface],
+      set: {
+        visits: sql`${listingRoomViews.visits} + ${visits}`,
+        seconds: sql`${listingRoomViews.seconds} + ${input.stay.seconds}`,
+        exits: sql`${listingRoomViews.exits} + ${exits}`,
       },
     });
 }

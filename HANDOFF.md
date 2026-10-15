@@ -209,9 +209,18 @@ public listings; the admin overview is a door list with Listings first (see "Pla
 - Listing page: "More from {agency}" (up to two other live listings, same agency).
 - BAM 2026-10-14: old files left in Cloudinary are fine; no cleanup pass needed.
 
+**Added 2026-10-14 (branch `bundle/room-analytics-2026-10-14`, migration 0004, user task 16):**
+- Which rooms hold buyers: `lib/tour/room-stays.ts` times each room while the tour is open (a
+  stretch ends on walking on, the tab hiding, or leaving; capped at 10 minutes; a return to the tab
+  is the same visit). `ListingTour`'s optional `onRoomStay` sends it from the listing page and the
+  embed (not the landing). `/api/listings/[slug]/views` takes `event: "room"`; `recordRoomStay`
+  counts only published rooms of that listing into `listing_room_views` (visits, seconds, exits).
+- The seller report's Rooms section: time on screen, average visit, where buyers left. Before
+  migration 0004 the query falls back to no rooms, and room beacons are dropped (logged).
+- The listing integration suite now waits for 0004 (skips on Neon until it runs).
+- Blog posts for the demo branch are on bam-landing-page `content/blog-2026-10-14-demo` (task 76).
+
 **Not yet:**
-- Blog posts for `bundle/demo-ready-2026-10-14` (demo copy decisions, the landing that waits for
-  proof): ecosystem rule, next session.
 - The demo seed and the landing switch-over run themselves once task 11's listing is live. The demo seed must
   re-create the sample listing nightly: `wipeDemoContent` deletes listings.
 - Originals are public-but-unlisted Cloudinary assets: after an edit their name is random and

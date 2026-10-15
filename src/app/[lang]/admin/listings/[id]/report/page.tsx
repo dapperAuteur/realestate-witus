@@ -5,7 +5,7 @@ import { requireStaffPage } from "@/lib/admin/guard";
 import { getDictionary, hasLocale } from "@/lib/dictionaries";
 import { canEditListing, findOwnedListing, sellerReportRows } from "@/lib/listings/admin";
 import { displayAddress } from "@/lib/listings/format";
-import { parseReportRange, reportDays, sellerReport } from "@/lib/listings/seller-report";
+import { parseReportRange, reportDays, roomReport, sellerReport } from "@/lib/listings/seller-report";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Seller report" };
@@ -46,6 +46,7 @@ export default async function SellerReportPage({
       report={report}
       backHref={`/${lang}/admin/listings/${listing.id}`}
       today={today}
+      rooms={roomReport(rows.rooms)}
     />
   );
 }

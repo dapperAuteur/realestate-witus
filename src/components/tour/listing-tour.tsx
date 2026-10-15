@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { RoomStayTracker, type RoomStay } from "@/lib/tour/room-stays";
 import type { InquiryIntent } from "@/lib/tour/tour-links";
 import type { SceneUrlSyncMode } from "@/lib/tour/scene-url-sync";
 import { RoomStrip, type RoomStripLabels } from "./room-strip";
@@ -38,6 +39,7 @@ export function ListingTour({
   request,
   roomStrip = true,
   posterPriority = false,
+  onRoomStay,
 }: {
   tour: VirtualTour;
   labels: ListingTourLabels;
@@ -59,6 +61,11 @@ export function ListingTour({
   roomStrip?: boolean;
   /** The poster is the page's LCP image (the landing hero), so fetch it first. */
   posterPriority?: boolean;
+  /**
+   * Time in each room, for "which rooms held buyers" (room-stays.ts). Leave it
+   * out (the landing) and nothing is measured.
+   */
+  onRoomStay?: (stay: RoomStay) => void;
 }) {
   const [open, setOpen] = useState(startOpen);
   // Set only BEFORE the viewer mounts: changing the tour after would rebuild it.
@@ -99,6 +106,35 @@ export function ListingTour({
     // Only a new request should act, not a re-render.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [request?.nonce]);
+
+  // Room timing: one tracker per mounted tour, fed by the room on screen and
+  // the tab's visibility. The callback lives in a ref so a re-render never
+  // restarts the clock.
+  const stayRef = useRef(onRoomStay);
+  stayRef.current = onRoomStay;
+  const trackerRef = useRef<RoomStayTracker | null>(null);
+  const measuring = Boolean(onRoomStay);
+  useEffect(() => {
+    if (!open || !measuring) return;
+    const tracker = new RoomStayTracker(
+      () => Date.now(),
+      (stay) => stayRef.current?.(stay),
+    );
+    trackerRef.current = tracker;
+    const onVisibility = () => (document.visibilityState === "hidden" ? tracker.hide() : tracker.show());
+    const onPageHide = () => tracker.hide();
+    document.addEventListener("visibilitychange", onVisibility);
+    window.addEventListener("pagehide", onPageHide);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisibility);
+      window.removeEventListener("pagehide", onPageHide);
+      tracker.close();
+      trackerRef.current = null;
+    };
+  }, [open, measuring]);
+  useEffect(() => {
+    if (open && currentSceneId) trackerRef.current?.enter(currentSceneId);
+  }, [open, currentSceneId, measuring]);
 
   const viewerTour = useMemo(
     () => (startOverride ? { ...tour, startSceneId: startOverride } : tour),

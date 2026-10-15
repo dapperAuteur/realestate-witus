@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type en from "@/dictionaries/en.json";
 import type { displayAddress } from "@/lib/listings/format";
-import { REPORT_RANGES, type ReportRange, type SellerReport } from "@/lib/listings/seller-report";
+import { REPORT_RANGES, type ReportRange, type RoomReport, type SellerReport } from "@/lib/listings/seller-report";
 import { HINT, SECONDARY_BUTTON } from "./listing-form";
 import { PrintButton } from "./print-button";
 
@@ -22,6 +22,7 @@ export function SellerReportView({
   report,
   backHref,
   today,
+  rooms = null,
 }: {
   lang: string;
   labels: SellerReportLabels;
@@ -35,6 +36,8 @@ export function SellerReportView({
   /** The listing's admin page; the report lives at `${backHref}/report`. */
   backHref: string;
   today: Date;
+  /** Which rooms held buyers (room-stays.ts); null before any room was visited, or before migration 0004. */
+  rooms?: RoomReport | null;
 }) {
   const number = new Intl.NumberFormat(lang);
   const shortDate = new Intl.DateTimeFormat(lang, { month: "short", day: "numeric", timeZone: "UTC" });
@@ -49,6 +52,12 @@ export function SellerReportView({
   const chartAlt = report.busiest
     ? fill(r.chartAlt, { from, to, busiest: fill(r.busiest, { day: longDate.format(asDate(report.busiest.day)), n: number.format(report.busiest.views) }) })
     : fill(r.chartAltQuiet, { from, to });
+  const duration = (seconds: number) =>
+    seconds < 60
+      ? fill(r.durSec, { s: seconds })
+      : seconds < 3600
+        ? fill(r.durMin, { m: Math.floor(seconds / 60), s: seconds % 60 })
+        : fill(r.durHours, { h: Math.floor(seconds / 3600), m: Math.floor((seconds % 3600) / 60) });
   const tile = "rounded-lg bg-slate-100 p-4 dark:bg-slate-900 print:border print:border-slate-300 print:bg-white";
 
   return (
@@ -214,6 +223,56 @@ export function SellerReportView({
           </table>
         </details>
       </section>
+
+      {rooms ? (
+        <section aria-labelledby="report-rooms">
+          <h3 id="report-rooms" className="text-lg font-semibold">
+            {r.roomsTitle}
+          </h3>
+          <p className={`${HINT} max-w-2xl`}>{r.roomsIntro}</p>
+          <table className="mt-2 w-full text-left text-sm">
+            <thead>
+              <tr className="border-b border-slate-200 dark:border-slate-800">
+                <th scope="col" className="py-1 pr-3 font-semibold">
+                  {r.room}
+                </th>
+                <th scope="col" className="py-1 pr-3 font-semibold">
+                  {r.visits}
+                </th>
+                <th scope="col" className="py-1 pr-3 font-semibold">
+                  {r.timeOnScreen}
+                </th>
+                <th scope="col" className="py-1 font-semibold">
+                  {r.averageVisit}
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {rooms.rooms.map((room) => (
+                <tr key={room.sceneId} className="border-b border-slate-100 dark:border-slate-900">
+                  <th scope="row" className="py-1 pr-3 font-normal">
+                    {room.name}
+                  </th>
+                  <td className="py-1 pr-3">{number.format(room.visits)}</td>
+                  <td className="py-1 pr-3">{duration(room.seconds)}</td>
+                  <td className="py-1">{room.averageSeconds === null ? "" : duration(room.averageSeconds)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {rooms.leftFrom.length ? (
+            <div className="mt-4">
+              <h4 className="font-semibold">{r.leftTitle}</h4>
+              <ul className="mt-1 list-disc pl-6 text-sm">
+                {rooms.leftFrom.map((room) => (
+                  <li key={room.name}>{fill(r.leftLine, { name: room.name, pct: Math.round(room.share * 100) })}</li>
+                ))}
+              </ul>
+              <p className={HINT}>{r.leftHint}</p>
+            </div>
+          ) : null}
+        </section>
+      ) : null}
 
       <p className={`${HINT} max-w-2xl`}>{r.privacy}</p>
     </div>

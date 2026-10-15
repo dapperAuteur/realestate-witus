@@ -2,7 +2,7 @@
 
 import { ListingTour, type ListingTourLabels } from "@/components/tour/listing-tour";
 import type { VirtualTour } from "@/components/tour/types";
-import { sendListingView, ViewBeacon } from "./view-beacon";
+import { sendListingView, sendRoomStay, ViewBeacon } from "./view-beacon";
 
 /**
  * The tour inside an agent's own site. Fills the iframe; `?scene=` is kept
@@ -39,6 +39,7 @@ export function EmbedTour({
           window.open(`${listingUrl}?inquiry=${intent}#contact`, "_blank", "noopener,noreferrer");
         }}
         onOpen={() => sendListingView(slug, "embed", "tour")}
+        onRoomStay={(stay) => sendRoomStay(slug, "embed", stay)}
       />
       <ViewBeacon slug={slug} surface="embed" />
     </>

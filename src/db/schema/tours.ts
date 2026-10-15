@@ -277,3 +277,35 @@ export const sceneHotspots = pgTable(
   },
   (t) => [index("scene_hotspots_scene_idx").on(t.sceneId)],
 );
+
+/**
+ * Which rooms hold buyers (lib/tour/room-stays.ts): per room, per day, per
+ * surface, how many visits, how many seconds on screen, and how many times a
+ * buyer left the tour from it. Counts only, like listing_views: nothing about
+ * the visitor.
+ */
+export const listingRoomViews = pgTable(
+  "listing_room_views",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => tenants.id, { onDelete: "cascade" }),
+    listingId: uuid("listing_id")
+      .notNull()
+      .references(() => listings.id, { onDelete: "cascade" }),
+    sceneId: uuid("scene_id")
+      .notNull()
+      .references(() => tourScenes.id, { onDelete: "cascade" }),
+    day: date("day").notNull(),
+    surface: text("surface").notNull(),
+    visits: integer("visits").notNull().default(0),
+    seconds: integer("seconds").notNull().default(0),
+    exits: integer("exits").notNull().default(0),
+  },
+  (t) => [
+    uniqueIndex("listing_room_views_scene_day_surface_uq").on(t.sceneId, t.day, t.surface),
+    index("listing_room_views_listing_day_idx").on(t.listingId, t.day),
+    check("listing_room_views_surface_chk", sql`${t.surface} in ('page','embed')`),
+  ],
+);

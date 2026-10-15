@@ -17,8 +17,9 @@ build; agents, brokerages, and developers buy listings.
 ## Features
 
 For buyers, on the listing page and in the embed:
-- A branded listing page: photos, the facts buyers scan for, a sticky "Request a tour", and a
-  multi-room 360 tour you walk by tapping doorways (`/[lang]/listings/[slug]`).
+- A branded listing page: photos, the facts buyers scan for, a sticky "Request a tour", a
+  multi-room 360 tour you walk by tapping doorways, and more from the same agency
+  (`/[lang]/listings/[slug]`).
 - The same tour as an iframe for the agent's own site (`/embed/listings/[slug]`), with a
   copy-paste snippet in the admin.
 - Floor plans, one per floor, with every room pinned; the plan follows the buyer between floors.
@@ -35,6 +36,13 @@ For agents, in the admin (`/[lang]/admin/listings`):
   be deleted.
 - Inquiries by email and in the admin, and a seller report (views, tour opens, inquiries over
   7, 30 or 90 days) to print or save as a PDF.
+
+On the platform itself:
+- The demo agency (demo.realestate.witus.online) copies one of BAM's live listings every night,
+  chosen on that listing's admin page: street address hidden, no originals behind privacy edits,
+  and nothing done in the demo can move or delete the real listing's files.
+- The product landing shows a real tour, a real embed and only the benefit cards a live listing
+  has earned; mock-ups until then.
 
 ## Stack
 

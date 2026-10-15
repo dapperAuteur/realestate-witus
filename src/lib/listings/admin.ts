@@ -4,6 +4,7 @@ import { db, withTx } from "@/db";
 import {
   listingInquiries,
   listingPhotos,
+  listingRoomViews,
   listings,
   listingViews,
   mediaAssets,
@@ -473,5 +474,25 @@ export async function sellerReportRows(tenantId: string, listing: { id: string; 
       .where(and(eq(properties.tenantId, tenantId), eq(properties.id, listing.propertyId)))
       .limit(1),
   ]);
-  return { views, inquiries, property: property ?? null };
+  // Before migration 0004 the table isn't there: the report then simply has no rooms part.
+  const rooms = await db()
+    .select({
+      sceneId: listingRoomViews.sceneId,
+      name: tourScenes.name,
+      visits: sql<number>`sum(${listingRoomViews.visits})::int`,
+      seconds: sql<number>`sum(${listingRoomViews.seconds})::int`,
+      exits: sql<number>`sum(${listingRoomViews.exits})::int`,
+    })
+    .from(listingRoomViews)
+    .innerJoin(tourScenes, eq(tourScenes.id, listingRoomViews.sceneId))
+    .where(
+      and(
+        eq(listingRoomViews.tenantId, tenantId),
+        eq(listingRoomViews.listingId, listingId),
+        gte(listingRoomViews.day, from),
+      ),
+    )
+    .groupBy(listingRoomViews.sceneId, tourScenes.name)
+    .catch(() => []);
+  return { views, inquiries, property: property ?? null, rooms };
 }

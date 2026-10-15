@@ -87,3 +87,38 @@ export function sellerReport(days: readonly string[], views: readonly ViewRow[],
     busiest,
   };
 }
+
+/** One room's totals over the report's days (listing_room_views, summed). */
+export interface RoomRow {
+  sceneId: string;
+  name: string;
+  visits: number;
+  seconds: number;
+  exits: number;
+}
+
+export interface RoomReport {
+  /** Most time on screen first. */
+  rooms: (RoomRow & { averageSeconds: number | null })[];
+  /** Where buyers were when they left the tour, most first; at most three. */
+  leftFrom: { name: string; exits: number; share: number }[];
+}
+
+/** The rooms part of the report, or null when no room was visited in the period. */
+export function roomReport(rows: readonly RoomRow[]): RoomReport | null {
+  const visited = rows.filter((row) => row.visits > 0 || row.seconds > 0);
+  if (visited.length === 0) return null;
+  const totalExits = visited.reduce((sum, row) => sum + row.exits, 0);
+  return {
+    rooms: [...visited]
+      .sort((a, b) => b.seconds - a.seconds || b.visits - a.visits || a.name.localeCompare(b.name))
+      .map((row) => ({ ...row, averageSeconds: row.visits > 0 ? Math.round(row.seconds / row.visits) : null })),
+    leftFrom: totalExits
+      ? visited
+          .filter((row) => row.exits > 0)
+          .sort((a, b) => b.exits - a.exits || a.name.localeCompare(b.name))
+          .slice(0, 3)
+          .map((row) => ({ name: row.name, exits: row.exits, share: row.exits / totalExits }))
+      : [],
+  };
+}

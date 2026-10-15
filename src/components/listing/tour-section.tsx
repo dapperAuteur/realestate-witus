@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react";
 import { ListingTour, type ListingTourLabels } from "@/components/tour/listing-tour";
 import type { VirtualTour } from "@/components/tour/types";
 import { useListing } from "./listing-provider";
-import { sendListingView } from "./view-beacon";
+import { sendListingView, sendRoomStay } from "./view-beacon";
 
 /** The tour high on the page (plans/08 6.1 item 4), wired to the rest of it. */
 export function TourSection({
@@ -53,6 +53,7 @@ export function TourSection({
         sceneUrlSync="push"
         onInquiry={(intent) => openInquiry(intent, "tour")}
         onOpen={() => sendListingView(slug, "page", "tour")}
+        onRoomStay={(stay) => sendRoomStay(slug, "page", stay)}
         request={tourRequest}
       />
     </section>

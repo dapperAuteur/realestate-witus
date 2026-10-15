@@ -170,7 +170,7 @@
           },
           {
             "title": "A report for your seller",
-            "body": "Views, tour opens and inquiries for 7, 30 or 90 days, ready to print or save as a PDF. Counts only: nobody who looked is named."
+            "body": "Views, tour opens and inquiries for 7, 30 or 90 days, plus which rooms held buyers and where they left the tour, ready to print or save as a PDF. Counts only: nobody who looked is named."
           }
         ]
       },
@@ -191,10 +191,6 @@
           {
             "title": "Dollhouse view for premium listings",
             "body": "An optional 3D dollhouse and auto-generated floor plan on the properties that warrant it, layered onto the same listing page."
-          },
-          {
-            "title": "Deeper tour analytics",
-            "body": "Which rooms held buyers longest and where they left the tour, per listing, in plain numbers."
           }
         ]
       },
@@ -554,7 +550,19 @@
         "tableSummary": "The numbers by day",
         "day": "Day",
         "empty": "No views in this period yet. Share the listing link or add the embed to your site, then check back.",
-        "privacy": "These are counts only. The listing records how many times it was seen and its tour opened, never who looked. Days run midnight to midnight UTC. Inquiries are counted here, not named."
+        "privacy": "These are counts only. The listing records how many times it was seen and its tour opened, never who looked. Days run midnight to midnight UTC. Inquiries are counted here, not named.",
+        "roomsTitle": "Rooms",
+        "roomsIntro": "Which rooms held buyers, by time on screen. A visit ends when the buyer walks on, switches tabs or leaves, and one stretch counts at most ten minutes.",
+        "room": "Room",
+        "visits": "Visits",
+        "timeOnScreen": "Time on screen",
+        "averageVisit": "Average visit",
+        "durSec": "{s} s",
+        "durMin": "{m} min {s} s",
+        "durHours": "{h} h {m} min",
+        "leftTitle": "Where buyers left the tour",
+        "leftLine": "{name}: {pct}% of the times buyers left",
+        "leftHint": "Switching to another tab counts as leaving."
       },
       "demo": {
         "title": "The demo agency",

@@ -48,23 +48,23 @@ import {
   sellerReportRows,
 } from "./admin";
 import { submitInquiry } from "./inquiries";
-import { reportDays, sellerReport } from "./seller-report";
+import { reportDays, roomReport, sellerReport } from "./seller-report";
 import type { ListingInput, PropertyInput } from "./listing-input";
 import { cloneListingInto } from "@/lib/demo/clone";
 import { landingProof } from "./landing";
 import { importTourCsv } from "@/lib/tour/import";
 import { applyPrivacyEdit } from "@/lib/tour/privacy";
 import { emptyPrivacyRecipe } from "@/lib/tour/privacy-edit";
-import { getListingPage, listPublicListings, loadAgent, recordListingView } from "./queries";
+import { getListingPage, listPublicListings, loadAgent, recordListingView, recordRoomStay } from "./queries";
 
 const hasDb = Boolean(process.env.STORAGE_DATABASE_URL ?? process.env.DATABASE_URL);
 
-// Ready once the newest migration this suite needs has run: 0003 adds
-// scene_moment_panoramas.privacy_recipe. Before that, writes to those columns
-// fail, so skip rather than fail a branch BAM hasn't migrated yet.
+// Ready once the newest migration this suite needs has run: 0004 adds
+// listing_room_views. Before that, writes to it fail, so skip rather than
+// fail a branch BAM hasn't migrated yet.
 async function tablesExist(): Promise<boolean> {
   const result = (await db().execute(
-    sql`select 1 as ok from information_schema.columns where table_name = 'scene_moment_panoramas' and column_name = 'privacy_recipe'`,
+    sql`select 1 as ok from information_schema.columns where table_name = 'listing_room_views' and column_name = 'exits'`,
   )) as unknown as { rows: { ok: number }[] };
   return result.rows.length > 0;
 }
@@ -519,6 +519,23 @@ describe.skipIf(!ready)("listings and tours against the database", () => {
     const report = sellerReport(days, rowsForReport.views, rowsForReport.inquiries);
     expect(report.totals).toMatchObject({ views: 3, opens: 1, page: { views: 2, opens: 1 }, embed: { views: 1, opens: 0 }, inquiries: 1, tourRequests: 1 });
     expect(report.days.slice(0, 6).every((d) => d.views === 0)).toBe(true);
+
+    // Rooms: stays count only in published rooms of this listing.
+    const tour = (await tourEditData(tenantId, listingId))!;
+    const hall = tour.scenes.find((s2) => s2.name === "Hall")!;
+    const bedroom = tour.scenes.find((s2) => s2.name === "Main bedroom")!; // never published
+    const day = days[6];
+    await recordRoomStay({ tenantId, listingId, surface: "page", day, stay: { sceneId: hall.id, seconds: 40, entered: true, exit: false } });
+    await recordRoomStay({ tenantId, listingId, surface: "page", day, stay: { sceneId: hall.id, seconds: 20, entered: false, exit: true } });
+    await recordRoomStay({ tenantId, listingId, surface: "embed", day, stay: { sceneId: hall.id, seconds: 30, entered: true, exit: true } });
+    await recordRoomStay({ tenantId, listingId, surface: "page", day, stay: { sceneId: bedroom.id, seconds: 99, entered: true, exit: true } });
+    await recordRoomStay({ tenantId: otherTenantId, listingId, surface: "page", day, stay: { sceneId: hall.id, seconds: 99, entered: true, exit: true } });
+    const withRooms = await sellerReportRows(tenantId, listing, days[0]);
+    expect(withRooms.rooms).toEqual([{ sceneId: hall.id, name: "Hall", visits: 2, seconds: 90, exits: 2 }]);
+    expect(roomReport(withRooms.rooms)).toEqual({
+      rooms: [{ sceneId: hall.id, name: "Hall", visits: 2, seconds: 90, exits: 2, averageSeconds: 45 }],
+      leftFrom: [{ name: "Hall", exits: 2, share: 1 }],
+    });
   });
 
   it("offers only this agency's team as agents", async () => {

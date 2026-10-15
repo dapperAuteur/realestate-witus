@@ -34,8 +34,9 @@ For agents, in the admin (`/[lang]/admin/listings`):
 - Hide people and gear: face blur, boxes, and a floor cover (blur, pixelate, or a patch with
   the agency's logo), baked into a new copy. The original moves out of buyers' reach, or can
   be deleted.
-- Inquiries by email and in the admin, and a seller report (views, tour opens, inquiries over
-  7, 30 or 90 days) to print or save as a PDF.
+- Inquiries by email and in the admin, and a seller report (views, tour opens, inquiries,
+  which rooms held buyers and where they left, over 7, 30 or 90 days) to print or save as a PDF.
+  Room times come from the tour itself, as counts only (`listing_room_views`, migration 0004).
 
 On the platform itself:
 - The demo agency (demo.realestate.witus.online) copies one of BAM's live listings every night,

@@ -36,15 +36,9 @@ jobs:
       - name: Lint
         run: pnpm lint
 
+      # Test-only values for Cloudinary and Better Auth live in vitest.setup.ts.
       - name: Test
         run: pnpm test
-        # The Cloudinary rename/destroy unit tests sign requests with the API
-        # key and secret, and the helper reports "not configured" without them.
-        # vitest.setup.ts only stubs CLOUDINARY_CLOUD_NAME, so CI supplies fake
-        # values here. The tests use a fake fetch; nothing reaches Cloudinary.
-        env:
-          CLOUDINARY_API_KEY: ci-stub-api-key # CI stub, not a real key
-          CLOUDINARY_API_SECRET: ci-stub-api-secret # CI stub, not a real secret
 
       - name: Build
         run: pnpm build

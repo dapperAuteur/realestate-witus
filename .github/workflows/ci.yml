@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck
+        run: pnpm exec tsc --noEmit
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Test
+        run: pnpm test
+        # The Cloudinary rename/destroy unit tests sign requests with the API
+        # key and secret, and the helper reports "not configured" without them.
+        # vitest.setup.ts only stubs CLOUDINARY_CLOUD_NAME, so CI supplies fake
+        # values here. The tests use a fake fetch; nothing reaches Cloudinary.
+        env:
+          CLOUDINARY_API_KEY: ci-stub-api-key # CI stub, not a real key
+          CLOUDINARY_API_SECRET: ci-stub-api-secret # CI stub, not a real secret
+
+      - name: Build
+        run: pnpm build

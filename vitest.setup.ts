@@ -24,6 +24,10 @@ fallback("BETTER_AUTH_URL", "http://localhost:3000");
 // Only used to build delivery URLs (pure string work, no network), so the
 // support attachment assertions stay deterministic wherever they run.
 fallback("CLOUDINARY_CLOUD_NAME", "vitest-cloud");
+// The rename/destroy tests sign requests with the key and secret and check the signature; they use a
+// fake fetch, so nothing reaches Cloudinary. Kept here (not in CI) so tests pass the same everywhere.
+fallback("CLOUDINARY_API_KEY", "vitest-api-key");
+fallback("CLOUDINARY_API_SECRET", "vitest-api-secret");
 
 // Tests must NEVER send real email: strip Mailgun creds (now present in
 // .env.local) so the mailer always uses its console dev-log fallback — the

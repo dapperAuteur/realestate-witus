@@ -9,6 +9,9 @@ export default defineConfig({
       "server-only": path.resolve(__dirname, "vitest.server-only.ts"),
     },
   },
+  // tsconfig says jsx "preserve" (Next compiles it); tests that render a component
+  // need the automatic runtime instead of the classic React.createElement.
+  esbuild: { jsx: "automatic" },
   test: {
     setupFiles: ["./vitest.setup.ts"],
     // Integration tests round-trip to Neon.

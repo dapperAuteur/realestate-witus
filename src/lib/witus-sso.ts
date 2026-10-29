@@ -134,7 +134,8 @@ export const showWitusSignIn = cache(async (): Promise<boolean> => {
  * agency tenant domain for exactly the same reason:
  *
  *   - the silent "Continue as <name>" probe on the sign-in page, and
- *   - global sign-out, which redirects to the IdP's endsession endpoint.
+ *   - "Sign out of WitUS everywhere", which redirects to the IdP's endsession
+ *     endpoint (the plain "Sign out" is local everywhere and needs no gate).
  *
  * A single request from an agency's own domain both reveals that the ecosystem exists
  * AND tells it that someone visited that agency — so this is not merely "don't show a

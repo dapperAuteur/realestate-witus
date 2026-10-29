@@ -3,53 +3,68 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { auth, hasAuth } from "@/lib/auth";
-import { env, witusEndSessionEndpoint } from "@/lib/env";
-import { withPostLogoutRedirect } from "@/lib/silent-sso";
-import { witusEcosystemEnabled } from "@/lib/witus-sso";
+import { witusEverywhereSignOutUrl } from "@/lib/sign-out";
 
 /**
- * GLOBAL SIGN-OUT on the WitUS-branded platform host, purely local everywhere else.
+ * Two sign-out actions (BAM, 2026-10-29, witus task 128 option (b)):
  *
- * BAM's decision (2026-08-30): signing out of one WitUS app signs you out of all of
- * them. Ending only the local session leaves the IdP session alive, which — now that
- * the sign-in page offers "Continue as ..." — means signing out and coming back
- * offers to sign you straight back in, and reads as a broken logout.
+ *   - `signOutAction` ("Sign out") ends ONLY this app's session and returns to the
+ *     local home page. It never touches the IdP, on any host. Other WitUS apps and the
+ *     WitUS session itself stay signed in, so the next "Sign in with WitUS" goes
+ *     straight through.
+ *   - `signOutEverywhereAction` ("Sign out of WitUS everywhere") ends this app's
+ *     session AND the shared WitUS session at the IdP. It is offered only on the
+ *     WitUS-branded platform host. After the IdP the visitor lands on `origin + "/"`,
+ *     which 307s to "/en" here (src/middleware.ts): the locale belongs to this app,
+ *     not to the IdP's registry.
  *
- * ON AN AGENCY TENANT DOMAIN THIS STAYS ENTIRELY LOCAL. witusEcosystemEnabled is the
- * SAME gate that hides the sign-in button (src/lib/witus-sso.ts), resolved on the
- * server from the request Host, never from anything the form posted. An agency's staff
- * must not be redirected to accounts.witus.online on their way out any more than on
- * their way in: one request reveals the ecosystem exists and tells it someone visited
- * that agency. `lang` is the only client-supplied value here and it decides nothing
- * beyond which local page the local path returns to.
+ * This replaces the 2026-08-30 behaviour where the one plain button also ended the
+ * WitUS session: that left every other app signed in while silently ending WitUS,
+ * which surprised BAM.
  */
+
+/** Ends this app's Better Auth session. Awaited, and its failure swallowed. */
+async function endLocalSession(): Promise<void> {
+  if (!hasAuth()) return;
+  await auth()
+    .api.signOut({ headers: await headers() })
+    .catch(() => null);
+}
+
+/** "Sign out": this app only. Never navigates to the IdP. */
 export async function signOutAction(formData: FormData): Promise<void> {
   const lang = String(formData.get("lang") ?? "en");
+  await endLocalSession();
+  redirect(`/${lang}`);
+}
 
-  if (hasAuth()) {
-    await auth()
-      .api.signOut({ headers: await headers() })
-      .catch(() => null);
-  }
+/**
+ * "Sign out of WitUS everywhere": this app, then the shared WitUS session.
+ *
+ * ON AN AGENCY TENANT DOMAIN THIS STAYS ENTIRELY LOCAL, even though a server action is a
+ * public POST endpoint anyone can call from any host. witusEverywhereSignOutUrl uses
+ * the SAME gate that hides the sign-in button (witusEcosystemEnabled, src/lib/witus-sso.ts),
+ * resolved on the server from the request Host, never from anything the form posted.
+ * An agency's staff must not be redirected to accounts.witus.online on their way out any
+ * more than on their way in: one request reveals the ecosystem exists and tells it
+ * someone visited that agency. `lang` is the only client-supplied value here and it
+ * decides nothing beyond which local page the local path returns to.
+ */
+export async function signOutEverywhereAction(formData: FormData): Promise<void> {
+  const lang = String(formData.get("lang") ?? "en");
+
+  await endLocalSession();
 
   // ORDER IS THE SAFETY PROPERTY. The local session is destroyed above, so if the IdP
   // is unreachable or refuses the logout, the person is still signed out HERE. Never
   // hand off first and destroy locally afterwards: that turns any IdP failure into
   // "I clicked sign out and I am still signed in".
-  if (await witusEcosystemEnabled()) {
-    // The redirect target is built from BETTER_AUTH_URL, the same value the gate
-    // derives the branded host from, so post_logout_redirect_uri is exactly the
-    // `origin + "/"` the IdP registry recorded for slug `realestate` — in production,
-    // https://realestate.witus.online/. Trailing slash included; Better Auth
-    // exact-matches it. That "/" then 307s to "/en" here (src/middleware.ts), which is
-    // the intended shape: the locale belongs to this app, not to the IdP's registry.
-    const endSession = withPostLogoutRedirect(witusEndSessionEndpoint, env.BETTER_AUTH_URL);
-    // A full navigation off this origin, which is what a server-action redirect to an
-    // absolute URL performs. Null means this app is not a configured OIDC client (or
-    // BETTER_AUTH_URL is unusable), and sign-out falls back to today's local behaviour
-    // rather than navigating somewhere invented.
-    if (endSession) redirect(endSession);
-  }
+  const endSession = await witusEverywhereSignOutUrl();
+  // A full navigation off this origin, which is what a server-action redirect to an
+  // absolute URL performs. Null means an agency tenant host, or this app is not a configured
+  // OIDC client (or BETTER_AUTH_URL is unusable): sign-out stays local rather than
+  // navigating somewhere invented.
+  if (endSession) redirect(endSession);
 
   redirect(`/${lang}`);
 }

@@ -10,7 +10,8 @@
     "serviceAdminLink": "Service listings",
     "platformLink": "Platform admin",
     "signOut": "Sign out",
-    "signOutWitus": "Sign out of WitUS"
+    "signOutEverywhere": "Sign out of WitUS everywhere",
+    "signOutEverywhereHelp": "Also signs you out of WitUS. Other WitUS apps you are signed in to stay signed in until you sign out of them."
   },
   "home": {
     "comingSoon": "Launching soon",

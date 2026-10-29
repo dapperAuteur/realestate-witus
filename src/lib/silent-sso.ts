@@ -1,6 +1,6 @@
 // Ecosystem SSO, the two halves that need pure logic: the silent
-// "Continue as <name>" check on the sign-in page, and the RP-initiated global
-// sign-out. See src/lib/witus-sso.ts for the GATE that decides whether either
+// "Continue as <name>" check on the sign-in page, and the RP-initiated
+// "Sign out of WitUS everywhere". See src/lib/witus-sso.ts for the GATE that decides whether either
 // one runs at all — this file only implements what happens once it says yes.
 //
 // WHY THIS FILE IS PURE. It has no "server-only", no next/headers, no window
@@ -175,10 +175,10 @@ export function silentSsoEndpointFromDiscovery(
  * `end_session_endpoint` the discovery document advertises. Unlike the probe this
  * one DOES live under the Better Auth basePath.
  *
- * BAM chose GLOBAL sign-out (2026-08-30): signing out here signs you out of every
- * WitUS app. Ending only the local session leaves the IdP session alive, which
- * once "Continue as ..." is live means signing out and coming back offers to sign
- * you straight back in — which reads as a broken logout.
+ * Used ONLY by "Sign out of WitUS everywhere". The plain "Sign out" ends this
+ * app's session alone and never navigates here (BAM, 2026-10-29, witus task 128
+ * option (b)); this endpoint ends the shared WitUS session, after which the next
+ * "Sign in with WitUS" shows the WitUS login page again.
  */
 export function endSessionEndpointFromDiscovery(
   discoveryUrl: string | null | undefined,

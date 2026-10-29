@@ -119,8 +119,9 @@ export const witusSilentSsoEndpoint: string | null = hasWitusSso
   : null;
 
 /**
- * Where sign-out ends the SHARED WitUS session (BAM's decision, 2026-08-30: signing out
- * of one WitUS app signs you out of all of them).
+ * Where "Sign out of WitUS everywhere" ends the SHARED WitUS session. The plain
+ * "Sign out" never uses this; it ends only this app's session (BAM, 2026-10-29,
+ * witus task 128 option (b)).
  *
  * client_id is attached HERE and is REQUIRED: Better Auth rejects
  * post_logout_redirect_uri with `invalid_request` unless the request carries a

@@ -51,9 +51,11 @@ export async function signInWithWitus(formData: FormData): Promise<void> {
     redirect(`/${lang}/sign-in?status=unavailable`);
   }
 
-  const result = await auth().api.signInWithOAuth2({
+  // better-auth 1.7: Generic OAuth runs on the social-provider path, so this is
+  // signInSocial({ provider }) (was signInWithOAuth2({ providerId }) on 1.6).
+  const result = await auth().api.signInSocial({
     body: {
-      providerId: "witus",
+      provider: "witus",
       callbackURL: `/${lang}`,
       // Half of the loop guard, on the paths Better Auth CAN route: a failure after
       // it has parsed the OAuth state (token exchange, issuer mismatch) comes back to

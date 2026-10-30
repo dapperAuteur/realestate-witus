@@ -207,7 +207,7 @@ describe("TENANT ISOLATION: an agency tenant host makes zero requests to the IdP
     const code = stripComments(read("src/app/[lang]/sign-in/actions.ts"));
     expect(code).toContain("await showWitusSignIn()");
     const guard = code.indexOf("await showWitusSignIn()");
-    const start = code.indexOf("signInWithOAuth2");
+    const start = code.indexOf("signInSocial");
     expect(guard).toBeGreaterThan(-1);
     expect(guard).toBeLessThan(start);
   });

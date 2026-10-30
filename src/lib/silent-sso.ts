@@ -316,7 +316,9 @@ export async function runSilentSsoProbe(
  * having to guess a language the callback never carried.
  */
 export function silentSsoRecoveryPath(url: URL, signInPath = "/sign-in"): string | null {
-  if (!/\/oauth2\/callback\/witus\/?$/.test(url.pathname)) return null;
+  // better-auth 1.7 serves the callback at /api/auth/callback/witus (1.6, and the IdP-registered
+  // redirect URI, use /api/auth/oauth2/callback/witus); the pattern matches both.
+  if (!/\/callback\/witus\/?$/.test(url.pathname)) return null;
   if (!isSilentAuthFailure(url.searchParams.get("error"))) return null;
   return withAttemptMarker(signInPath);
 }

@@ -1,13 +1,16 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { SessionBar } from "@/components/session-bar";
 import { TenantHeader } from "@/components/tenant-header";
+import { PlatformHeader } from "@/components/platform-header";
 import { DEMO_TENANT_SLUG } from "@/lib/demo/seed";
 import { hasDemoLogin } from "@/lib/env";
 import { getSessionUser } from "@/lib/rbac";
 import { brandCssVars } from "@/lib/brand-presets";
 import { getDictionary, hasLocale } from "@/lib/dictionaries";
+import { isPlatformHost } from "@/lib/platform-host";
 import { fontPairCssVars } from "@/lib/fonts";
 import { tenantMetadata } from "@/lib/seo";
 import { resolveTenant } from "@/lib/tenant";
@@ -35,10 +38,15 @@ export default async function LangLayout({
   const dict = await getDictionary(lang);
 
   const tenant = await resolveTenant().catch(() => null);
+  const user = await getSessionUser().catch(() => null);
   const showDemoRibbon =
-    tenant?.slug === DEMO_TENANT_SLUG &&
-    hasDemoLogin &&
-    !(await getSessionUser().catch(() => null));
+    tenant?.slug === DEMO_TENANT_SLUG && hasDemoLogin && !user;
+  // Same platform test as the home and roadmap pages: a tenant flagged platform,
+  // or no tenant on a platform host. Agency hosts never get the platform header.
+  const onPlatform = Boolean(
+    tenant?.flags.platform ||
+      (!tenant && isPlatformHost((await headers()).get("host"))),
+  );
   const vars = {
     ...brandCssVars(tenant?.theme.presetKey),
     ...fontPairCssVars(tenant?.theme.fontPairKey),
@@ -63,6 +71,9 @@ export default async function LangLayout({
             {dict.demoRibbon.cta}
           </Link>
         </aside>
+      ) : null}
+      {onPlatform ? (
+        <PlatformHeader lang={lang} dict={dict} signedIn={Boolean(user)} />
       ) : null}
       {tenant && !tenant.flags.platform ? (
         <div className="print:hidden">

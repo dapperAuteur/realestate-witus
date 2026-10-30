@@ -8,7 +8,8 @@ import { witusEverywhereSignOutUrl } from "@/lib/sign-out";
 
 // Signed-in indicator + the door to the next surface (BAM: users could not
 // tell they were logged in or where admin lives). Renders NOTHING for
-// signed-out visitors — public pages stay clean; sign-in lives in the footer.
+// signed-out visitors: agency pages stay clean, and on the platform surface
+// PlatformHeader (rendered right below this bar) carries "Sign in".
 
 // Fixed id: the session bar renders once per page.
 const EVERYWHERE_HELP_ID = "sign-out-everywhere-help";

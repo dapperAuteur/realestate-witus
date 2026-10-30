@@ -1,9 +1,9 @@
 ---
 app: realestate
 name: RealEstate.WitUS
-stage: building
+stage: alpha
 url: https://realestate.witus.online
-updated: 2026-10-29
+updated: 2026-10-30
 ---
 
 ## Live now
@@ -18,6 +18,7 @@ updated: 2026-10-29
 - Agency tenancy, platform admin, support and audit log
 
 ## In progress
+- Waitlist signups on witus.online
 - Final testing before the first real listing (plan 08)
 
 ## Next

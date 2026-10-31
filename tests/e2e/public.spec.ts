@@ -29,7 +29,16 @@ test("platform landing renders with the roadmap door", async ({ page }) => {
   await expectAccessible(page);
 });
 
-test("roadmap page lists the build phases", async ({ page }) => {
+// Sign-in control rule (witus docs/shared-ui-ux-dx.md): the platform header
+// always offers "Sign in" to a signed-out visitor, named exactly that.
+test("platform header shows Sign in @smoke", async ({ page }) => {
+  await page.goto(`${PLATFORM}/en`);
+  const signIn = page.getByRole("banner").getByRole("link", { name: "Sign in", exact: true });
+  await expect(signIn).toBeVisible();
+  await expect(signIn).toHaveAttribute("href", "/en/sign-in");
+});
+
+test("roadmap page lists the build phases",async ({ page }) => {
   await page.goto(`${PLATFORM}/en/roadmap`);
   await expect(page.getByRole("heading", { level: 1 })).toContainText("Roadmap");
   await expect(page.getByText("Listings and 360 tours").first()).toBeVisible();

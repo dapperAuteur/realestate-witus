@@ -24,7 +24,7 @@
     "@photo-sphere-viewer/markers-plugin": "5.14.1",
     "@photo-sphere-viewer/virtual-tour-plugin": "5.14.1",
     "@photo-sphere-viewer/visible-range-plugin": "5.14.1",
-    "@sentry/nextjs": "^10.69.0",
+    "@sentry/nextjs": "^10.75.2",
     "@vercel/analytics": "^2.0.1",
     "better-auth": "^1.7.14",
     "drizzle-orm": "^0.44.2",

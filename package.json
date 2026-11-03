@@ -30,7 +30,7 @@
     "drizzle-orm": "^0.44.2",
     "leaflet": "1.9.4",
     "next": "^15.5.28",
-    "posthog-js": "^1.418.1",
+    "posthog-js": "^1.445.1",
     "react": "^19.1.0",
     "react-dom": "^19.1.0"
   },

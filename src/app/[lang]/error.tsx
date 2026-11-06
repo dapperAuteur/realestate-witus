@@ -6,7 +6,7 @@
 
 export default function LangError({ reset }: { error: Error; reset: () => void }) {
   return (
-    <main className="mx-auto flex min-h-dvh max-w-md flex-col items-center justify-center gap-4 px-6 text-center">
+    <main className="mx-auto flex min-h-[60vh] max-w-md flex-col items-center justify-center gap-4 px-6 text-center">
       <h1 className="text-2xl font-bold">Something went wrong</h1>
       <p role="alert" className="text-slate-600 dark:text-slate-400">
         The page hit an unexpected error. Nothing was charged. Please try again.

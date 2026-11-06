@@ -72,6 +72,21 @@ export default function GlobalError({
             >
               Back to home
             </a>
+            {/* The root layout and its header failed, so this shell carries Sign in itself. */}
+            {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
+            <a
+              href="/en/sign-in"
+              style={{
+                minHeight: "44px",
+                display: "inline-flex",
+                alignItems: "center",
+                padding: "0 1.5rem",
+                fontWeight: 600,
+                color: "inherit",
+              }}
+            >
+              Sign in
+            </a>
           </div>
         </main>
       </body>

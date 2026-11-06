@@ -1,13 +1,25 @@
+import { headers } from "next/headers";
 import Link from "next/link";
+import { NotFoundFooter } from "@/components/not-found-footer";
+import { isPlatformHost } from "@/lib/platform-host";
+import { resolveTenant } from "@/lib/tenant";
 
 // Catches every notFound() under /[lang] — wrong-role admin visits, unknown
 // tenants, stale listing slugs. not-found boundaries receive no params, so
 // links go to "/" (middleware sends it to the default locale) and the copy is
 // a sanctioned literal-string exception like error.tsx.
 
-export default function LangNotFound() {
+// The header (and its Sign in control) comes from the [lang] layout. The footer is the platform
+// footer, so it renders only on the platform surface, by the same test the layout uses.
+export default async function LangNotFound() {
+  const tenant = await resolveTenant().catch(() => null);
+  const onPlatform = Boolean(
+    tenant?.flags.platform ||
+      (!tenant && isPlatformHost((await headers()).get("host"))),
+  );
   return (
-    <main className="mx-auto flex min-h-dvh max-w-md flex-col items-center justify-center gap-4 px-6 text-center">
+    <>
+    <main className="mx-auto flex max-w-md flex-col items-center justify-center gap-4 px-6 text-center">
       <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">
         404
       </p>
@@ -35,5 +47,7 @@ export default function LangNotFound() {
         </Link>
       </div>
     </main>
+    {onPlatform ? <NotFoundFooter /> : null}
+    </>
   );
 }
